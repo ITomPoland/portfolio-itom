@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
+import { Text, useTexture } from '@react-three/drei';
 import gsap from 'gsap';
 
 // Use same font as App.jsx preload
@@ -59,17 +59,28 @@ const EntranceDoors = ({
 }) => {
     const leftDoorRef = useRef();
     const rightDoorRef = useRef();
+    const leftHandleRef = useRef();
+    const rightHandleRef = useRef();
     const groupRef = useRef();
     const [isOpen, setIsOpen] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
     const { camera } = useThree();
+    const frameTexture = useTexture('/textures/frame_sketch.png');
+    const doorLeftTexture = useTexture('/textures/door_left_sketch.png');
+    const doorRightTexture = useTexture('/textures/door_right_sketch.png');
+    const handleLeftTexture = useTexture('/textures/handle_left_sketch.png');
+    const handleRightTexture = useTexture('/textures/handle_right_sketch.png');
 
-    // Door dimensions - matching SegmentDoors
-    const doorWidth = 1.05;
-    const doorOpeningWidth = doorWidth * 2;
+    // Door dimensions - calculated from texture proportions (332x848 = 1:2.55)
+    const doorWidth = 0.94;
     const doorHeight = 2.4;
-    const wallThickness = 0.12;
+    const doorOpeningWidth = doorWidth * 2; // Both doors together
+    const wallThickness = 0.07;
+
+    // Frame dimensions from texture (718x877 = 1:1.22)
+    const frameWidth = doorOpeningWidth + 0.16; // Extra for frame borders
+    const frameHeight = frameWidth * (877 / 718); // Maintain texture aspect ratio
 
     const floorY = -corridorHeight / 2;
     const doorBottomY = floorY;
@@ -93,18 +104,34 @@ const EntranceDoors = ({
             }
         });
 
+        // Press handles down fully (like really opening)
+        if (leftHandleRef.current) {
+            tl.to(leftHandleRef.current.rotation, {
+                z: 0.4,
+                duration: 0.15,
+                ease: 'power2.out'
+            }, 0);
+        }
+        if (rightHandleRef.current) {
+            tl.to(rightHandleRef.current.rotation, {
+                z: -0.4,
+                duration: 0.15,
+                ease: 'power2.out'
+            }, 0);
+        }
+
         // Open doors - smoother angle (matches SegmentDoors)
         tl.to(leftDoorRef.current.rotation, {
             y: -Math.PI * 0.55,
             duration: 0.9,
             ease: 'power2.out'
-        }, 0);
+        }, 0.1);
 
         tl.to(rightDoorRef.current.rotation, {
             y: Math.PI * 0.55,
             duration: 0.9,
             ease: 'power2.out'
-        }, 0);
+        }, 0.1);
 
         // Camera flies through
         tl.to(camera.position, {
@@ -114,6 +141,78 @@ const EntranceDoors = ({
             ease: 'power2.inOut'
         }, 0.3);
     };
+
+    // Handle hover - doors slightly open to indicate interactivity
+    const handlePointerEnter = () => {
+        if (isOpen || isAnimating) return;
+        setIsHovered(true);
+        document.body.style.cursor = 'pointer';
+
+        // Slightly open doors on hover
+        gsap.to(leftDoorRef.current.rotation, {
+            y: -0.08,
+            duration: 0.3,
+            ease: 'power2.out'
+        });
+        gsap.to(rightDoorRef.current.rotation, {
+            y: 0.08,
+            duration: 0.3,
+            ease: 'power2.out'
+        });
+
+        // Rotate handles down slightly (hint effect)
+        if (leftHandleRef.current) {
+            gsap.to(leftHandleRef.current.rotation, {
+                z: 0.1,
+                duration: 0.2,
+                ease: 'power2.out'
+            });
+        }
+        if (rightHandleRef.current) {
+            gsap.to(rightHandleRef.current.rotation, {
+                z: -0.1,
+                duration: 0.2,
+                ease: 'power2.out'
+            });
+        }
+    };
+
+    const handlePointerLeave = () => {
+        if (isOpen || isAnimating) return;
+        setIsHovered(false);
+        document.body.style.cursor = 'auto';
+
+        // Close doors back
+        gsap.to(leftDoorRef.current.rotation, {
+            y: 0,
+            duration: 0.3,
+            ease: 'power2.out'
+        });
+        gsap.to(rightDoorRef.current.rotation, {
+            y: 0,
+            duration: 0.3,
+            ease: 'power2.out'
+        });
+
+        // Reset handles
+        if (leftHandleRef.current) {
+            gsap.to(leftHandleRef.current.rotation, {
+                z: 0,
+                duration: 0.2,
+                ease: 'power2.out'
+            });
+        }
+        if (rightHandleRef.current) {
+            gsap.to(rightHandleRef.current.rotation, {
+                z: 0,
+                duration: 0.2,
+                ease: 'power2.out'
+            });
+        }
+    };
+
+    // Frame center Y - aligned with doors
+    const frameCenterY = doorBottomY + frameHeight / 2;
 
     return (
         <group ref={groupRef} position={[position[0], 0, position[2]]}>
@@ -135,77 +234,92 @@ const EntranceDoors = ({
                 <meshStandardMaterial color="#f8f5f0" roughness={0.95} />
             </mesh>
 
-            {/* DOOR FRAME */}
-            {/* Top bar */}
-            <mesh position={[0, doorBottomY + doorHeight + 0.04, 0.03]}>
-                <boxGeometry args={[doorOpeningWidth + 0.08, 0.08, 0.14]} />
-                <meshStandardMaterial color="#1a1a1a" />
-            </mesh>
-            {/* Left post */}
-            <mesh position={[-doorOpeningWidth / 2 - 0.02, doorCenterY, 0.03]}>
-                <boxGeometry args={[0.06, doorHeight, 0.14]} />
-                <meshStandardMaterial color="#1a1a1a" />
-            </mesh>
-            {/* Right post */}
-            <mesh position={[doorOpeningWidth / 2 + 0.02, doorCenterY, 0.03]}>
-                <boxGeometry args={[0.06, doorHeight, 0.14]} />
-                <meshStandardMaterial color="#1a1a1a" />
+            {/* === TEXTURED FRAME === */}
+            <mesh position={[0, frameCenterY, 0.12]}>
+                <planeGeometry args={[frameWidth, frameHeight]} />
+                <meshStandardMaterial
+                    map={frameTexture}
+                    transparent={true}
+                    alphaTest={0.1}
+                    roughness={0.9}
+                    depthWrite={false}
+                />
             </mesh>
 
             {/* LEFT DOOR */}
             <group ref={leftDoorRef} position={[-doorWidth, doorCenterY, 0]}>
+                {/* Solid 3D Door Body */}
                 <mesh
-                    position={[doorWidth / 2, 0, 0.05]}
+                    position={[doorWidth / 2, 0, 0.06]}
                     onClick={handleClick}
-                    onPointerEnter={() => !isOpen && setIsHovered(true)}
-                    onPointerLeave={() => setIsHovered(false)}
+                    onPointerEnter={handlePointerEnter}
+                    onPointerLeave={handlePointerLeave}
                 >
-                    <boxGeometry args={[doorWidth, doorHeight - 0.05, 0.05]} />
+                    <boxGeometry args={[doorWidth, doorHeight, 0.04]} />
+                    <meshStandardMaterial color="#f8f5f0" roughness={0.9} />
+                </mesh>
+
+                {/* Texture Face */}
+                <mesh position={[doorWidth / 2, 0, 0.13]}>
+                    <planeGeometry args={[doorWidth, doorHeight]} />
                     <meshStandardMaterial
-                        color={isHovered ? '#e8e0d2' : '#f0e8dc'} // Interaction color
-                        roughness={0.9}
+                        map={doorLeftTexture}
+                        transparent={true}
+                        alphaTest={0.5}
+                        roughness={0.8}
                     />
                 </mesh>
-                <mesh position={[doorWidth / 2, 0.4, 0.08]}>
-                    <planeGeometry args={[doorWidth * 0.6, doorHeight * 0.25]} />
-                    <meshStandardMaterial color="#e8e0d2" roughness={1} />
-                </mesh>
-                <mesh position={[doorWidth / 2, -0.35, 0.08]}>
-                    <planeGeometry args={[doorWidth * 0.6, doorHeight * 0.25]} />
-                    <meshStandardMaterial color="#e8e0d2" roughness={1} />
-                </mesh>
-                <mesh position={[doorWidth - 0.1, 0, 0.1]}>
-                    <sphereGeometry args={[0.04, 10, 10]} />
-                    <meshStandardMaterial color="#222" metalness={0.7} roughness={0.25} />
-                </mesh>
+
+                {/* Handle Layer (animated) - pivot at screw center (292,459 on 332x848 texture) */}
+                <group ref={leftHandleRef} position={[doorWidth / 2 + 0.357, -0.099, 0.14]}>
+                    <mesh position={[-0.357, 0.099, 0]}>
+                        <planeGeometry args={[doorWidth, doorHeight]} />
+                        <meshStandardMaterial
+                            map={handleLeftTexture}
+                            transparent={true}
+                            alphaTest={0.5}
+                            depthWrite={false}
+                        />
+                    </mesh>
+                </group>
             </group>
 
             {/* RIGHT DOOR */}
             <group ref={rightDoorRef} position={[doorWidth, doorCenterY, 0]}>
+                {/* Solid 3D Door Body */}
                 <mesh
-                    position={[-doorWidth / 2, 0, 0.05]}
+                    position={[-doorWidth / 2, 0, 0.06]}
                     onClick={handleClick}
-                    onPointerEnter={() => !isOpen && setIsHovered(true)}
-                    onPointerLeave={() => setIsHovered(false)}
+                    onPointerEnter={handlePointerEnter}
+                    onPointerLeave={handlePointerLeave}
                 >
-                    <boxGeometry args={[doorWidth, doorHeight - 0.05, 0.05]} />
+                    <boxGeometry args={[doorWidth, doorHeight, 0.12]} />
+                    <meshStandardMaterial color="#f8f5f0" roughness={0.9} />
+                </mesh>
+
+                {/* Texture Face */}
+                <mesh position={[-doorWidth / 2, 0, 0.13]}>
+                    <planeGeometry args={[doorWidth, doorHeight]} />
                     <meshStandardMaterial
-                        color={isHovered ? '#e8e0d2' : '#f0e8dc'} // Interaction color
-                        roughness={0.9}
+                        map={doorRightTexture}
+                        transparent={true}
+                        alphaTest={0.5}
+                        roughness={0.8}
                     />
                 </mesh>
-                <mesh position={[-doorWidth / 2, 0.4, 0.08]}>
-                    <planeGeometry args={[doorWidth * 0.6, doorHeight * 0.25]} />
-                    <meshStandardMaterial color="#e8e0d2" roughness={1} />
-                </mesh>
-                <mesh position={[-doorWidth / 2, -0.35, 0.08]}>
-                    <planeGeometry args={[doorWidth * 0.6, doorHeight * 0.25]} />
-                    <meshStandardMaterial color="#e8e0d2" roughness={1} />
-                </mesh>
-                <mesh position={[-doorWidth + 0.1, 0, 0.1]}>
-                    <sphereGeometry args={[0.04, 10, 10]} />
-                    <meshStandardMaterial color="#222" metalness={0.7} roughness={0.25} />
-                </mesh>
+
+                {/* Handle Layer (animated) - pivot at screw center (40,459 on 332x848 texture) */}
+                <group ref={rightHandleRef} position={[-doorWidth / 2 - 0.357, -0.099, 0.14]}>
+                    <mesh position={[0.357, 0.099, 0]}>
+                        <planeGeometry args={[doorWidth, doorHeight]} />
+                        <meshStandardMaterial
+                            map={handleRightTexture}
+                            transparent={true}
+                            alphaTest={0.5}
+                            depthWrite={false}
+                        />
+                    </mesh>
+                </group>
             </group>
 
             {/* FLOATING ARROW GUIDE */}

@@ -20,15 +20,26 @@ const Preloader = ({ onComplete, ready }) => {
   // 1. ROBUST CSS-DRIVEN PROGRESS
   // ---------------------------------------------------------------------------
   useEffect(() => {
-    // If active, use real progress. If not active (finished), go to 100.
-    let target = active ? realProgress : 100;
+    // user wants the circle to reflect the ENTIRE wait.
+    // Download (active=true) is only part of it. Scene mounting/compiling (active=false, ready=false) is the rest.
+    // So we map download progress (0-100) to visual progress (0-85).
+    // The last 15% is reserved for the "ready" state (mounting/compiling).
 
-    // Awwwards Polish:
-    // If assets are loaded but scene isn't ready (React mounting/Shader compilation),
-    // clamp visuals at 95-99% so the user feels we are "still working".
-    // Only snap to 100% when absolutely ready to open.
-    if ((!active || target >= 100) && !ready) {
-      target = 99;
+    let target = 0;
+
+    if (active) {
+      // While downloading: 0 -> 85
+      target = (realProgress / 100) * 85;
+    } else {
+      // Downloads done.
+      if (ready) {
+        // Scene reported ready -> 100%
+        target = 100;
+      } else {
+        // Downloads done, but waiting for mount/shaders -> stuck at 85-90%
+        // We can slowly creep it up a tiny bit to show "alive", but keep it under 100
+        target = 90;
+      }
     }
 
     setVisualProgress(target);

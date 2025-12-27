@@ -142,15 +142,9 @@ const CorridorSegment = ({
                 color="#fffaf0"
                 distance={15}
             />
-            {doors.map((door, i) => (
-                <pointLight
-                    key={`light-${i}`}
-                    position={[door.side === 'left' ? -1.5 : 1.5, 1.5, zOffset + door.relativeZ]}
-                    intensity={0.3}
-                    color="#fffaf0"
-                    distance={5}
-                />
-            ))}
+            {/* Optimization: Removed per-door lights (4 per segment) to reduce draw calls/fragment shader cost on mobile.
+                The doors have 'glow' meshes and neon text which provide enough visual cue.
+            */}
 
             {/* === SEGMENT END DOORS (hidden during entrance to avoid conflict) === */}
             {!hideSegmentDoors && (

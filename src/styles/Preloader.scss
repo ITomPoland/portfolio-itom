@@ -10,65 +10,60 @@
     @include flex-column-center;
     z-index: $z-preloader;
     background-color: $color-white;
+    background-image: url('/textures/paper-texture.png');
+    background-size: cover;
+    background-position: center;
+    background-blend-mode: multiply;
+
+    // Portal Mask
+    // Initially fully opaque (white/visible) - hole size is 0
+    --mask-size: 0%;
+    -webkit-mask-image: radial-gradient(circle at center, transparent var(--mask-size), black calc(var(--mask-size) + 0.5px));
+    mask-image: radial-gradient(circle at center, transparent var(--mask-size), black calc(var(--mask-size) + 0.5px));
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
 
     // Content wrapper
     &__content {
         @include flex-column-center;
-        gap: 1.5rem;
+        position: relative;
     }
 
     // Logo
     &__logo {
         display: flex;
         align-items: center;
-        font-size: clamp(3rem, 8vw, 5rem);
+        justify-content: center;
+        font-size: clamp(4rem, 12vw, 8rem); // Much Larger
         font-family: $font-title;
-        font-weight: 400;
-        letter-spacing: 0.02em;
+        font-weight: 700; // Bold
+        letter-spacing: 0.1em;
         color: $color-black;
     }
 
+    &__logo-text {
+        color: $color-black;
+    }
+
+    &__logo-accent-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 0.7em;
+        height: 1em;
+        margin: 0 0.05em;
+        position: relative;
+    }
+
     &__logo-accent {
-        color: $color-neon-green;
-    }
-
-    // Progress percentage
-    &__progress {
-        margin-top: 1rem;
-    }
-
-    &__percent {
-        font-family: $font-primary;
-        font-size: clamp(1rem, 3vw, 1.4rem);
-        font-weight: 300;
-        color: #666;
-        letter-spacing: 0.1em;
-    }
-
-    // Loading text
-    &__text {
-        font-family: $font-handwritten;
-        font-size: clamp(1.2rem, 3vw, 1.6rem);
-        color: #888;
-        min-height: 2em;
-        text-align: center;
-    }
-
-    // Progress bar
-    &__bar {
-        width: clamp(150px, 40vw, 250px);
-        height: 2px;
-        background: #eee;
-        border-radius: 2px;
-        overflow: hidden;
-        margin-top: 0.5rem;
-    }
-
-    &__bar-fill {
         width: 100%;
         height: 100%;
-        background: $color-neon-green;
-        transform-origin: left;
-        transition: transform 0.3s ease-out;
+        color: $color-neon-green;
+        transform-origin: center center;
+        overflow: visible;
+
+        circle {
+            vector-effect: non-scaling-stroke;
+        }
     }
 }

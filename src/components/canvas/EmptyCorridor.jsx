@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
+import { useTexture } from '@react-three/drei';
 
 /**
  * EmptyCorridor Component
@@ -11,6 +12,11 @@ import * as THREE from 'three';
 const EmptyCorridor = ({ cameraZ = 10 }) => {
     const corridorWidth = 15; // Wide floor
     const corridorHeight = 3.5; // Standard height for floor level calculation
+
+    // Load floor texture
+    const floorTexture = useTexture('/textures/floor_paper.webp');
+    floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
+    floorTexture.repeat.set(4, 20); // Adjust repeat to match aspect ratio (2816x1536)
 
     // Generate corridor segments around camera
     const segments = useMemo(() => {
@@ -33,6 +39,7 @@ const EmptyCorridor = ({ cameraZ = 10 }) => {
                     zStart={zStart}
                     corridorWidth={corridorWidth}
                     corridorHeight={corridorHeight}
+                    floorTexture={floorTexture}
                 />
             ))}
         </group>
@@ -42,27 +49,27 @@ const EmptyCorridor = ({ cameraZ = 10 }) => {
 /**
  * Single empty corridor segment
  */
-const CorridorSegmentEmpty = ({ zStart, corridorWidth, corridorHeight }) => {
+const CorridorSegmentEmpty = ({ zStart, corridorWidth, corridorHeight, floorTexture }) => {
     const length = 40;
     const zCenter = zStart - length / 2;
 
     return (
         <group>
-            {/* Floor */}
+            {/* Floor with Paper Texture */}
             <mesh
                 position={[0, -corridorHeight / 2, zCenter]}
                 rotation={[-Math.PI / 2, 0, 0]}
             >
                 <planeGeometry args={[corridorWidth, length]} />
-                <meshStandardMaterial color="#f5f2eb" roughness={1} metalness={0} />
+                <meshStandardMaterial
+                    map={floorTexture}
+                    transparent={true}
+                    alphaTest={0.1}
+                    roughness={1}
+                    metalness={0}
+                    color="#ffffff" // Keep white base
+                />
             </mesh>
-
-            {/* Floor grid */}
-            <gridHelper
-                args={[length, length * 2, '#d5d5d5', '#e8e8e8']}
-                position={[0, -corridorHeight / 2 + 0.01, zCenter]}
-                rotation={[0, Math.PI / 2, 0]}
-            />
 
             {/* Simple lighting */}
             <pointLight

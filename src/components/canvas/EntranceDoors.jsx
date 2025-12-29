@@ -38,7 +38,9 @@ const EntranceDoors = ({
     const doorBackTexture = useTexture('/textures/doors/door_back_left_sketch.webp');
     const edgeTexture = useTexture('/textures/doors/pien.webp');
     const bricksTexture = useTexture('/textures/doors/wall_bricks_2.webp');
+    const stonePathTexture = useTexture('/textures/stone-path.webp');
 
+    // Door dimensions - calculated from texture proportions (332x848 = 1:2.55)
     // Door dimensions - calculated from texture proportions (332x848 = 1:2.55)
     const doorWidth = 0.94;
     const doorHeight = 2.4;
@@ -219,26 +221,45 @@ const EntranceDoors = ({
     // Frame center Y - aligned with doors
     const frameCenterY = doorBottomY + frameHeight / 2;
 
-    const facadeYOffset = -1.65; // PRZESUNIĘCIE OBRAZKA GÓRA/DÓŁ (np. -1.5 to w dół, 1.0 to w górę)
+    const facadeYOffset = -1.65;
+
+
+    const pathWidth = frameWidth + 0.4;
+    // New texture is 1005x2317 (approx 1:2.3 ratio). 
+    // Width 2.44 * 2.3 = ~5.6 height.
+    const pathLength = 5.62;
 
     return (
         <group ref={groupRef} position={[position[0], 0, position[2]]}>
+
+            {/* === STONE PATH FLOOR (On Top) === */}
+            <mesh
+                position={[0, floorY + 0.02, pathLength / 2]}
+                rotation={[-Math.PI / 2, 0, 0]}
+            >
+                <planeGeometry args={[pathWidth, pathLength]} />
+                <meshStandardMaterial
+                    map={stonePathTexture}
+                    transparent={true}
+                />
+            </mesh>
+
             {/* LEFT WALL PANEL */}
             <mesh position={[-(doorOpeningWidth / 2 + sideWallWidth / 2), wallCenterY, 0]}>
                 <boxGeometry args={[sideWallWidth, corridorHeight, wallThickness]} />
-                <meshStandardMaterial color="#f8f5f0" roughness={0.95} />
+                <meshStandardMaterial color="#ffffff" roughness={0.95} />
             </mesh>
 
             {/* RIGHT WALL PANEL */}
             <mesh position={[(doorOpeningWidth / 2 + sideWallWidth / 2), wallCenterY, 0]}>
                 <boxGeometry args={[sideWallWidth, corridorHeight, wallThickness]} />
-                <meshStandardMaterial color="#f8f5f0" roughness={0.95} />
+                <meshStandardMaterial color="#ffffff" roughness={0.95} />
             </mesh>
 
             {/* TOP WALL PANEL */}
             <mesh position={[0, topWallCenterY, 0]}>
                 <boxGeometry args={[doorOpeningWidth, topWallHeight, wallThickness]} />
-                <meshStandardMaterial color="#f8f5f0" roughness={0.95} />
+                <meshStandardMaterial color="#ffffff" roughness={0.95} />
             </mesh>
 
             {/* === BRICK FACADE === */}

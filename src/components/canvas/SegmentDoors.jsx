@@ -12,7 +12,7 @@ import gsap from 'gsap';
 const SegmentDoors = ({
     position = [0, 0, 0],
     corridorHeight = 3.5,
-    corridorWidth = 4
+    corridorWidth = 7
 }) => {
     const leftDoorRef = useRef();
     const rightDoorRef = useRef();

@@ -5,6 +5,7 @@ import InfiniteCorridorManager from './InfiniteCorridorManager';
 import EntranceDoors from './EntranceDoors';
 import EmptyCorridor from './EmptyCorridor';
 import useInfiniteCamera from '../../hooks/useInfiniteCamera';
+import SignSystem from './SignSystem';
 
 // Positioning:
 // - Segment -1's SegmentDoors are at Z=15
@@ -71,16 +72,20 @@ const Experience = ({ isLoaded, onSceneReady }) => {
 
             {/* === ENTRANCE DOORS (visible until entered) === */}
             {!hasEntered && (
-                <EntranceDoors
-                    position={[0, 0, ENTRANCE_DOORS_Z]}
-                    onComplete={handleEntranceComplete}
-                />
+                <>
+                    <EntranceDoors
+                        position={[0, 0, ENTRANCE_DOORS_Z]}
+                        onComplete={handleEntranceComplete}
+                    />
+                    <SignSystem position={[0, 0, ENTRANCE_DOORS_Z]} />
+                </>
             )}
 
             {/* === INFINITE CORRIDOR (segment -1 SegmentDoors hidden during entrance) === */}
             <InfiniteCorridorManager
                 onDoorEnter={handleDoorEnter}
                 hideDoorsForSegments={hasEntered ? [] : [-1]} // Hide segment -1's doors until entered
+                clipSegmentNeg1={!hasEntered} // Clip segment -1 visualization until entered
             />
         </>
     );

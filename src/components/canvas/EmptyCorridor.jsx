@@ -9,8 +9,8 @@ import * as THREE from 'three';
  * Used during preloader auto-scroll.
  */
 const EmptyCorridor = ({ cameraZ = 10 }) => {
-    const corridorWidth = 4;
-    const corridorHeight = 3.5;
+    const corridorWidth = 15; // Wide floor
+    const corridorHeight = 3.5; // Standard height for floor level calculation
 
     // Generate corridor segments around camera
     const segments = useMemo(() => {
@@ -63,53 +63,6 @@ const CorridorSegmentEmpty = ({ zStart, corridorWidth, corridorHeight }) => {
                 position={[0, -corridorHeight / 2 + 0.01, zCenter]}
                 rotation={[0, Math.PI / 2, 0]}
             />
-
-            {/* Ceiling */}
-            <mesh
-                position={[0, corridorHeight / 2, zCenter]}
-                rotation={[Math.PI / 2, 0, 0]}
-            >
-                <planeGeometry args={[corridorWidth, length]} />
-                <meshStandardMaterial color="#fefefe" roughness={1} />
-            </mesh>
-
-            {/* Left Wall */}
-            <mesh
-                position={[-corridorWidth / 2, 0, zCenter]}
-                rotation={[0, Math.PI / 2, 0]}
-            >
-                <planeGeometry args={[length, corridorHeight]} />
-                <meshStandardMaterial color="#faf8f5" roughness={1} />
-            </mesh>
-
-            {/* Right Wall */}
-            <mesh
-                position={[corridorWidth / 2, 0, zCenter]}
-                rotation={[0, -Math.PI / 2, 0]}
-            >
-                <planeGeometry args={[length, corridorHeight]} />
-                <meshStandardMaterial color="#faf8f5" roughness={1} />
-            </mesh>
-
-            {/* Baseboard */}
-            <mesh position={[-corridorWidth / 2 + 0.01, -corridorHeight / 2 + 0.08, zCenter]} rotation={[0, Math.PI / 2, 0]}>
-                <planeGeometry args={[length, 0.06]} />
-                <meshBasicMaterial color="#ddd" side={THREE.DoubleSide} />
-            </mesh>
-            <mesh position={[corridorWidth / 2 - 0.01, -corridorHeight / 2 + 0.08, zCenter]} rotation={[0, -Math.PI / 2, 0]}>
-                <planeGeometry args={[length, 0.06]} />
-                <meshBasicMaterial color="#ddd" side={THREE.DoubleSide} />
-            </mesh>
-
-            {/* Crown molding */}
-            <mesh position={[-corridorWidth / 2 + 0.01, corridorHeight / 2 - 0.05, zCenter]} rotation={[0, Math.PI / 2, 0]}>
-                <planeGeometry args={[length, 0.04]} />
-                <meshBasicMaterial color="#eee" side={THREE.DoubleSide} />
-            </mesh>
-            <mesh position={[corridorWidth / 2 - 0.01, corridorHeight / 2 - 0.05, zCenter]} rotation={[0, -Math.PI / 2, 0]}>
-                <planeGeometry args={[length, 0.04]} />
-                <meshBasicMaterial color="#eee" side={THREE.DoubleSide} />
-            </mesh>
 
             {/* Simple lighting */}
             <pointLight

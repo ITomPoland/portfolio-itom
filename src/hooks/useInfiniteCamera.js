@@ -147,23 +147,7 @@ const useInfiniteCamera = ({
         }
     }, [handleDeviceOrientation]);
 
-    // Handle door hover events (dispatched from Door.jsx)
-    useEffect(() => {
-        const handleDoorHover = (e) => {
-            if (!enabledRef.current) return;
-            // e.detail.direction: 'left', 'right', or null (leave)
-            if (e.detail.direction === 'left') {
-                targetGlance.current = -glanceIntensity * 0.5; // Very subtle turn
-            } else if (e.detail.direction === 'right') {
-                targetGlance.current = glanceIntensity * 0.5; // Very subtle turn
-            } else {
-                targetGlance.current = 0;
-            }
-        };
-
-        window.addEventListener('doorHover', handleDoorHover);
-        return () => window.removeEventListener('doorHover', handleDoorHover);
-    }, [glanceIntensity]);
+    // (Removed manual doorHover listener - replaced with auto-glance in useFrame)
 
     useEffect(() => {
         // Desktop events
@@ -206,9 +190,53 @@ const useInfiniteCamera = ({
             justEnabled.current = false;
         }
 
-        // Glance toward doors on hover (targetGlance set by doorHover events)
-        // Very slow lerp for smooth transition
-        glanceOffset.current = THREE.MathUtils.lerp(glanceOffset.current, targetGlance.current, 0.04);
+        // Auto-glance proximity check
+        const zOffset = 10 - (currentSegment.current * segmentLength);
+        let bestStrength = 0;
+        let bestDir = 0;
+
+        // Tune these to shift the timing as requested
+        const START_DIST = 24; // Start looking early
+        const PEAK_DIST = 8;   // Max rotation happening BEFORE the door
+        const END_DIST = -2;   // Fully release just after passing (or 0 for exactly at door)
+
+        // Check doors in current segment
+        for (const door of DOOR_POSITIONS) {
+            const doorGlobalZ = zOffset + door.z;
+            const dist = currentZ.current - doorGlobalZ; // Positive = approaching
+
+            let strength = 0;
+
+            if (dist > PEAK_DIST && dist < START_DIST) {
+                // Approach Phase: Ramp Up 0 -> 1
+                strength = (START_DIST - dist) / (START_DIST - PEAK_DIST);
+            } else if (dist <= PEAK_DIST && dist > END_DIST) {
+                // Release Phase: Ramp Down 1 -> 0
+                // This starts centering the camera BEFORE we even pass the door
+                strength = (dist - END_DIST) / (PEAK_DIST - END_DIST);
+            }
+
+            if (strength > 0) {
+                // Smooth ease
+                const easedStrength = strength * (2 - strength); // Ease out
+
+                const dir = door.side === 'left' ? -1 : 1;
+                if (easedStrength > bestStrength) {
+                    bestStrength = easedStrength;
+                    bestDir = dir;
+                }
+            }
+        }
+
+        // Stronger multiplier (3.5x) for deeper glance
+        targetGlance.current = bestDir * bestStrength * glanceIntensity * 3.5;
+
+        // Dynamic smoothing: slow to look (0.03), fast to release (0.08)
+        // This stops the camera from "dragging" after passing the door
+        const isReleasing = Math.abs(targetGlance.current) < Math.abs(glanceOffset.current);
+        const lerpSpeed = isReleasing ? 0.08 : 0.03;
+
+        glanceOffset.current = THREE.MathUtils.lerp(glanceOffset.current, targetGlance.current, lerpSpeed);
 
         // Smooth swipe glance (mobile horizontal swipe)
         swipeGlance.current = THREE.MathUtils.lerp(swipeGlance.current, targetSwipeGlance.current, 0.08);

@@ -1,49 +1,13 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Text, useTexture } from '@react-three/drei';
+import * as THREE from 'three';
 import gsap from 'gsap';
 
 // Use same font as App.jsx preload
 const FONT_URL = 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff';
 
-const NeonArrow = ({ position }) => {
-    const arrowRef = useRef();
 
-    useFrame((state) => {
-        if (arrowRef.current) {
-            // Bobbing animation
-            arrowRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.1;
-        }
-    });
-
-    return (
-        <group ref={arrowRef} position={position}>
-            <Text
-                font={FONT_URL}
-                fontSize={0.6} // Large and visible
-                color="#39FF14"
-                anchorX="center"
-                anchorY="middle"
-                outlineWidth={0.02}
-                outlineColor="#1a1a1a"
-            >
-                ↓
-            </Text>
-            {/* Glow effect duplicate */}
-            <Text
-                font={FONT_URL}
-                position={[0, 0, -0.02]}
-                fontSize={0.6}
-                color="#39FF14"
-                fillOpacity={0.5}
-                anchorX="center"
-                anchorY="middle"
-            >
-                ↓
-            </Text>
-        </group>
-    );
-};
 
 /**
  * EntranceDoors Component - 3D Entrance to the Corridor
@@ -54,8 +18,8 @@ const NeonArrow = ({ position }) => {
 const EntranceDoors = ({
     position = [0, 0, 22],
     onComplete,
-    corridorHeight = 3.5,
-    corridorWidth = 4
+    corridorHeight = 8, // Taller wall
+    corridorWidth = 15 // Wider wall
 }) => {
     const leftDoorRef = useRef();
     const rightDoorRef = useRef();
@@ -73,6 +37,7 @@ const EntranceDoors = ({
     const handleRightTexture = useTexture('/textures/doors/handle_right_sketch.webp');
     const doorBackTexture = useTexture('/textures/doors/door_back_left_sketch.webp');
     const edgeTexture = useTexture('/textures/doors/pien.webp');
+    const bricksTexture = useTexture('/textures/doors/wall_bricks_2.png');
 
     // Door dimensions - calculated from texture proportions (332x848 = 1:2.55)
     const doorWidth = 0.94;
@@ -84,7 +49,8 @@ const EntranceDoors = ({
     const frameWidth = doorOpeningWidth + 0.16; // Extra for frame borders
     const frameHeight = frameWidth * (877 / 718); // Maintain texture aspect ratio
 
-    const floorY = -corridorHeight / 2;
+    // Floor Y must remain at standard level (-1.75) regardless of wall height
+    const floorY = -1.75;
     const doorBottomY = floorY;
     const doorCenterY = doorBottomY + doorHeight / 2;
     const wallCenterY = floorY + corridorHeight / 2;
@@ -213,8 +179,47 @@ const EntranceDoors = ({
         }
     };
 
+    // Generate Vignette Alpha Map for fading edges
+    const alphaMap = useMemo(() => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+
+        // 1. Horizontal Gradient (Fade Sides)
+        // Black (Transparent) -> White (Opaque) -> Black (Transparent)
+        const gH = ctx.createLinearGradient(0, 0, 512, 0);
+        gH.addColorStop(0, 'black');
+        gH.addColorStop(0.2, 'white'); // Fade in from left (20%)
+        gH.addColorStop(0.8, 'white'); // Start fading out to right (at 80%)
+        gH.addColorStop(1, 'black');
+
+        ctx.fillStyle = gH;
+        ctx.fillRect(0, 0, 512, 512);
+
+        // 2. Vertical Gradient (Fade Top)
+        // Multiply with Horizontal to combine fades
+        ctx.globalCompositeOperation = 'multiply';
+
+        const gV = ctx.createLinearGradient(0, 0, 0, 512);
+        gV.addColorStop(0, 'black');
+        gV.addColorStop(0.4, 'white'); // Fade in from top (40%)
+        gV.addColorStop(1, 'white');   // Bottom is fully opaque
+
+        ctx.fillStyle = gV;
+        ctx.fillRect(0, 0, 512, 512);
+
+        // Reset composite
+        ctx.globalCompositeOperation = 'source-over';
+
+        const texture = new THREE.CanvasTexture(canvas);
+        return texture;
+    }, []);
+
     // Frame center Y - aligned with doors
     const frameCenterY = doorBottomY + frameHeight / 2;
+
+    const facadeYOffset = -1.65; // PRZESUNIĘCIE OBRAZKA GÓRA/DÓŁ (np. -1.5 to w dół, 1.0 to w górę)
 
     return (
         <group ref={groupRef} position={[position[0], 0, position[2]]}>
@@ -234,6 +239,24 @@ const EntranceDoors = ({
             <mesh position={[0, topWallCenterY, 0]}>
                 <boxGeometry args={[doorOpeningWidth, topWallHeight, wallThickness]} />
                 <meshStandardMaterial color="#f8f5f0" roughness={0.95} />
+            </mesh>
+
+            {/* === BRICK FACADE === */}
+            {/* 
+                DOSTOSOWANIE OBRAZKA (TEXTURE ADJUSTMENT):
+                1. args={[Szerokość, Wysokość]} - Rozmiar obrazka
+                2. facadeYOffset - Przesunięcie góra/dół (np. -1 obniży, 1 podwyższy)
+            */}
+            <mesh position={[0, wallCenterY + facadeYOffset, wallThickness / 2 + 0.01]}>
+                {/* args={[Szerokość, Wysokość]} - Zmieniaj te liczby (np. 7, 8) */}
+                <planeGeometry args={[11., 4.7]} />
+                <meshStandardMaterial
+                    map={bricksTexture}
+                    alphaMap={alphaMap}
+                    transparent={true}
+                    alphaTest={0.01}
+                    roughness={0.9}
+                />
             </mesh>
 
             {/* === TEXTURED FRAME === */}
@@ -346,11 +369,6 @@ const EntranceDoors = ({
                     </mesh>
                 </group>
             </group>
-
-            {/* FLOATING ARROW GUIDE */}
-            {!isOpen && (
-                <NeonArrow position={[0, doorBottomY + doorHeight + 0.3, 0.4]} />
-            )}
 
             {/* Warm lighting */}
             <pointLight

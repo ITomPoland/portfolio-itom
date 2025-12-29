@@ -10,6 +10,7 @@ import gsap from 'gsap';
 const Door = ({
     position,
     side = 'left',
+    rotationY = null, // Optional explicit rotation override
     label,
     icon,
     color = '#f5f0e6',
@@ -123,22 +124,22 @@ const Door = ({
         }
     });
 
-    const doorRotationY = side === 'left' ? Math.PI / 2 : -Math.PI / 2;
+    const doorRotationY = rotationY !== null ? rotationY : (side === 'left' ? Math.PI / 2 : -Math.PI / 2);
 
     return (
         <group position={position} rotation={[0, doorRotationY, 0]} ref={frameRef}>
             {/* === FLOATING LABEL (always visible) === */}
             <group position={[0, doorHeight / 2 + 0.5, 0.3]}>
                 {/* Label border (back layer) */}
-                <mesh position={[0, 0, -0.02]} renderOrder={1}>
+                <mesh position={[0, 0, -0.02]}>
                     <planeGeometry args={[label.length * 0.08 + 0.35, 0.3]} />
-                    <meshBasicMaterial color="#1a1a1a" depthTest={false} />
+                    <meshBasicMaterial color="#1a1a1a" />
                 </mesh>
 
                 {/* Label background (middle layer) */}
-                <mesh position={[0, 0, -0.01]} renderOrder={2}>
+                <mesh position={[0, 0, -0.01]}>
                     <planeGeometry args={[label.length * 0.08 + 0.3, 0.25]} />
-                    <meshBasicMaterial color="#ffffff" depthTest={false} />
+                    <meshBasicMaterial color="#ffffff" />
                 </mesh>
 
                 {/* Label text (front layer) */}
@@ -204,11 +205,9 @@ const Door = ({
                     onClick={handleClick}
                     onPointerEnter={() => {
                         setIsHovered(true);
-                        window.dispatchEvent(new CustomEvent('doorHover', { detail: { direction: side } }));
                     }}
                     onPointerLeave={() => {
                         setIsHovered(false);
-                        window.dispatchEvent(new CustomEvent('doorHover', { detail: { direction: null } }));
                     }}
                 >
                     <planeGeometry args={[doorWidth, doorHeight]} />

@@ -37,7 +37,7 @@ const EntranceDoors = ({
     const handleRightTexture = useTexture('/textures/doors/handle_right_sketch.webp');
     const doorBackTexture = useTexture('/textures/doors/door_back_left_sketch.webp');
     const edgeTexture = useTexture('/textures/doors/pien.webp');
-    const bricksTexture = useTexture('/textures/doors/wall_bricks_2.png');
+    const bricksTexture = useTexture('/textures/doors/wall_bricks_2.webp');
 
     // Door dimensions - calculated from texture proportions (332x848 = 1:2.55)
     const doorWidth = 0.94;

@@ -9,11 +9,11 @@ import './styles/main.scss';
 
 // --- ASSET PRELOADING ---
 // Explicitly preload heavy assets to ensure they are tracked by useProgress
-useTexture.preload('/images/avatar-thinking.png');
-useTexture.preload('/textures/paper-texture.png');
-useTexture.preload('/images/avatar-happy.png');
-useTexture.preload('/images/avatar-hero.png');
-useTexture.preload('/images/ink-splash.png');
+useTexture.preload('/images/avatar-thinking.webp');
+useTexture.preload('/textures/paper-texture.webp');
+useTexture.preload('/images/avatar-happy.webp');
+useTexture.preload('/images/avatar-hero.webp');
+useTexture.preload('/images/ink-splash.webp');
 
 const FONT_URL = 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff';
 

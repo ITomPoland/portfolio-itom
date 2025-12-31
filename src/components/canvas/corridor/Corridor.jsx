@@ -12,7 +12,7 @@ const Corridor = ({ length = 100 }) => {
     const corridorHeight = 3.5;
 
     // Load paper texture
-    const paperTexture = useTexture('/textures/paper-texture.png');
+    const paperTexture = useTexture('/textures/paper-texture.webp');
 
     useMemo(() => {
         paperTexture.wrapS = paperTexture.wrapT = THREE.RepeatWrapping;

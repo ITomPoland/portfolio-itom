@@ -13,7 +13,7 @@ const Avatar = ({ position = [0, -0.4, 2] }) => {
     const [dimensions, setDimensions] = useState({ width: 2.4, height: 3.0 });
 
     // Load avatar texture
-    const texture = useTexture('/images/avatar-thinking.png');
+    const texture = useTexture('/images/avatar-thinking.webp');
     texture.colorSpace = THREE.SRGBColorSpace;
 
     // Calculate proper aspect ratio

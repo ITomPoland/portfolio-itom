@@ -10,7 +10,7 @@ import * as THREE from 'three';
  */
 const PaperBackground = () => {
     // Load paper texture
-    const paperTexture = useTexture('/textures/paper-texture.png');
+    const paperTexture = useTexture('/textures/paper-texture.webp');
 
     useMemo(() => {
         paperTexture.wrapS = paperTexture.wrapT = THREE.RepeatWrapping;

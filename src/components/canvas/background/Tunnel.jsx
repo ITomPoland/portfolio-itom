@@ -13,7 +13,7 @@ const Tunnel = ({ parallax = { x: 0, y: 0 } }) => {
     const meshRef = useRef();
 
     // Load paper texture
-    const paperTexture = useTexture('/textures/paper-texture.png');
+    const paperTexture = useTexture('/textures/paper-texture.webp');
 
     // Configure texture for tiling
     useMemo(() => {

@@ -31,7 +31,8 @@ const CorridorSegment = ({
     segmentIndex = 0,
     onDoorEnter,
     hideSegmentDoors = false, // Hide only SegmentDoors while keeping content preloaded
-    zClip = 100000 // Clipping plane (render everything with Z < zClip)
+    zClip = 100000, // Clipping plane (render everything with Z < zClip)
+    setCameraOverride // Function to take over camera control
 }) => {
     // Calculate Z offset based on segment index
     // Segment 0 starts at Z=10, goes to Z=-70
@@ -152,6 +153,7 @@ const CorridorSegment = ({
                     icon={door.icon}
                     color={door.color}
                     onEnter={() => onDoorEnter?.(door.id)}
+                    setCameraOverride={setCameraOverride}
                 />
             ))}
 

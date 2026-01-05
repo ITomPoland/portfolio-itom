@@ -14,7 +14,8 @@ import CorridorSegment, { SEGMENT_LENGTH } from './CorridorSegment';
 const InfiniteCorridorManager = ({
     onDoorEnter,
     hideDoorsForSegments = [], // Segments that should hide their SegmentDoors
-    clipSegmentNeg1 = false // Whether to clip segment -1 at EntranceDoors
+    clipSegmentNeg1 = false, // Whether to clip segment -1 at EntranceDoors
+    setCameraOverride // Function to take over camera control
 }) => {
     const { camera } = useThree();
     const [activeSegments, setActiveSegments] = useState([0]);
@@ -53,6 +54,7 @@ const InfiniteCorridorManager = ({
                     onDoorEnter={onDoorEnter}
                     hideSegmentDoors={hideDoorsForSegments.includes(segmentIndex)}
                     zClip={clipSegmentNeg1 && segmentIndex === -1 ? 22 : 100000}
+                    setCameraOverride={setCameraOverride}
                 />
             ))}
         </group>

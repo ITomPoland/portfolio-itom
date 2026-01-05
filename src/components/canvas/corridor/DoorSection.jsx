@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { Text, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import gsap from 'gsap';
+import RoomInterior from './RoomInterior';
 
 // Constants from CorridorSegment
 const WALL_X_OUTER = 3.5;
@@ -16,12 +17,20 @@ const WALL_DZ = DOOR_Z_SPAN; // 4
 const WALL_LENGTH = Math.sqrt(WALL_DX * WALL_DX + WALL_DZ * WALL_DZ);
 const BASE_WALL_ANGLE = Math.atan2(WALL_DX, WALL_DZ); // Sawtooth angle (~24 degrees)
 
+// Camera look-at angle when aligning with door (adjust this to fix alignment)
+// Math.PI * 0.33 is ~60 degrees
+const DOOR_LOOK_ANGLE = Math.PI * 0.334;
+
+// Camera X offset when aligning with door (adjust this to move camera left/right relative to door)
+// Higher value = further from door center horizontally
+const DOOR_ALIGN_X = 1.2;
+
 // Door texture mapping - maps label to texture file
 const DOOR_TEXTURES = {
-    'THE GALLERY': '/textures/corridor/doors/drzwiprojekty.png',
-    'THE STUDIO': '/textures/corridor/doors/drzwisocial.png',
-    'DEV DIARY': '/textures/corridor/doors/drzwiabout.png',
-    "LET'S CONNECT": '/textures/corridor/doors/drzwikontakt.png',
+    'THE GALLERY': '/textures/corridor/doors/drzwiprojekty.webp',
+    'THE STUDIO': '/textures/corridor/doors/drzwisocial.webp',
+    'DEV DIARY': '/textures/corridor/doors/drzwiabout.webp',
+    "LET'S CONNECT": '/textures/corridor/doors/drzwikontakt.webp',
 };
 
 /**
@@ -38,7 +47,8 @@ const DoorSection = ({
     label,
     icon,
     onEnter,
-    autoCloseDelay = 3000
+    autoCloseDelay = 3000,
+    setCameraOverride // Function to take control of camera from hook
 }) => {
     const groupRef = useRef(); // Main group that tilts
     const doorRef = useRef();
@@ -47,23 +57,49 @@ const DoorSection = ({
     const [isOpen, setIsOpen] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
     const [isNear, setIsNear] = useState(false);
+    const [isInsideRoom, setIsInsideRoom] = useState(false);
+    const [isTiltLocked, setIsTiltLocked] = useState(false); // Lock tilt when entering room
+    const [shouldRenderRoom, setShouldRenderRoom] = useState(false); // Lazy loading state
     const { camera } = useThree();
     const closeTimerRef = useRef(null);
+
+    // Save camera state before entering room (for ESC exit)
+    // Save camera state before entering room (for ESC exit)
+    // Now saving FULL rotation (x, y, z) to prevent snap on exit
+    const savedCameraState = useRef({ x: 0, y: 0, z: 0, rotationX: 0, rotationY: 0, rotationZ: 0 });
+    // Save position ALIGNED with door (intermediate step for exit)
+    const doorAlignedState = useRef({ x: 0, y: 0, z: 0, rotationY: 0 });
+    // Save position after flying through corridor (before final rotation) 
+    const roomEntryState = useRef({ x: 0, y: 0, z: 0, rotationY: 0 });
 
     // Dynamic tilt state
     const currentTilt = useRef(0);
 
     // Load wall texture
-    const wallTexture = useTexture('/textures/corridor/wall_texture.webp');
-    wallTexture.wrapS = wallTexture.wrapT = THREE.RepeatWrapping;
-    wallTexture.repeat.set(WALL_LENGTH / 2, CORRIDOR_HEIGHT / 2);
+    const originalWallTexture = useTexture('/textures/corridor/wall_texture.webp');
+
+    // Clone texture to have independent repeat settings (fixes scaling issues)
+    const wallTexture = useMemo(() => {
+        const tex = originalWallTexture.clone();
+        tex.needsUpdate = true;
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+
+        // ShapeGeometry uses world-space UVs (1 unit = 1 meter), unlike PlaneGeometry (0..1)
+        // We want 1 repeat every 2 meters (0.5 density), so we set repeat to 0.5
+        tex.repeat.set(0.5, 0.5);
+
+        // Adjust offset to center texture (optional, nice for alignment)
+        tex.offset.set(0.5, 0.5);
+
+        return tex;
+    }, [originalWallTexture]);
 
     // Load door textures - use the right texture based on label
     const doorTexturePath = DOOR_TEXTURES[label] || DOOR_TEXTURES['THE GALLERY'];
     const doorTexture = useTexture(doorTexturePath);
-    const frameTexture = useTexture('/textures/corridor/doors/ramkasingledoors.png');
-    const handleTexture = useTexture('/textures/corridor/doors/klamkadodrzwi.png');
-    const doorBackTexture = useTexture('/textures/corridor/doors/backsingledoors.png');
+    const frameTexture = useTexture('/textures/corridor/doors/ramkasingledoors.webp');
+    const handleTexture = useTexture('/textures/corridor/doors/klamkadodrzwi.webp');
+    const doorBackTexture = useTexture('/textures/corridor/doors/backsingledoors.webp');
 
     // Door dimensions - based on texture aspect ratio (door texture ~1:2.5)
     const doorWidth = 1.13;
@@ -128,20 +164,26 @@ const DoorSection = ({
     useFrame(() => {
         if (!groupRef.current) return;
 
-        const distance = Math.abs(camera.position.z - position[2]);
-        const near = distance < 8;
-        if (near !== isNear) {
-            setIsNear(near);
-        }
-
         let targetTilt = BASE_TILT;
 
-        if (distance < TILT_START && distance > TILT_PEAK) {
-            const t = (TILT_START - distance) / (TILT_START - TILT_PEAK);
-            const easedT = t * (2 - t); // easeOutQuad
-            targetTilt = BASE_TILT + (MAX_TILT - BASE_TILT) * easedT;
-        } else if (distance <= TILT_PEAK) {
+        // If tilt is locked (clicked/entering), force it to MAX_TILT (fully facing user)
+        if (isTiltLocked) {
             targetTilt = MAX_TILT;
+        } else {
+            // Normal proximity-based tilting
+            const distance = Math.abs(camera.position.z - position[2]);
+            const near = distance < 8;
+            if (near !== isNear) {
+                setIsNear(near);
+            }
+
+            if (distance < TILT_START && distance > TILT_PEAK) {
+                const t = (TILT_START - distance) / (TILT_START - TILT_PEAK);
+                const easedT = t * (2 - t); // easeOutQuad
+                targetTilt = BASE_TILT + (MAX_TILT - BASE_TILT) * easedT;
+            } else if (distance <= TILT_PEAK) {
+                targetTilt = MAX_TILT;
+            }
         }
 
         // Smooth interpolation
@@ -191,20 +233,96 @@ const DoorSection = ({
 
         setIsAnimating(true);
 
+        // Take control of camera from hook
+        setCameraOverride?.(true);
+
+        // Lock tilt so the corridor doesn't rotate while we fly through
+        setIsTiltLocked(true);
+
+        // Save camera state BEFORE entering (for ESC exit)
+        // Save camera state BEFORE entering (for ESC exit)
+        savedCameraState.current = {
+            x: camera.position.x,
+            y: camera.position.y,
+            z: camera.position.z,
+            rotationX: camera.rotation.x,
+            rotationY: camera.rotation.y,
+            rotationZ: camera.rotation.z
+        };
+
+        // Get door world position
         const doorWorldPos = new THREE.Vector3();
         groupRef.current.getWorldPosition(doorWorldPos);
 
-        const cameraTargetZ = doorWorldPos.z + 2.5;
-        const cameraTargetX = side === 'left' ? -0.3 : 0.3;
+        // Camera moves to be at door's Z level (so door is centered when we look at it)
+        // and slightly towards the door's side
+        const cameraTargetZ = doorWorldPos.z;
+        const cameraTargetX = side === 'left' ? DOOR_ALIGN_X : -DOOR_ALIGN_X;
 
+        // Calculate the target rotation to look at the door
+        // We need to account for the camera PARENT's rotation (sway), so we get a consistent WORLD angle
+        // Current Sway (Parent Rotation) + Camera Rotation = World Rotation
+        // World Rotation Target = DOOR_LOOK_ANGLE
+        // Camera Target = World Target - Parent Rotation
+
+        let parentRotationY = 0;
+        if (camera.parent) {
+            // Get parent's world rotation Y (approximate, assuming mostly Y rotation for sway)
+            const parentWorldQuat = new THREE.Quaternion();
+            camera.parent.getWorldQuaternion(parentWorldQuat);
+            const parentEuler = new THREE.Euler().setFromQuaternion(parentWorldQuat, 'YXZ');
+            parentRotationY = parentEuler.y;
+        }
+
+        const worldTargetRotationY = side === 'left'
+            ? DOOR_LOOK_ANGLE   // Target WORLD angle
+            : -DOOR_LOOK_ANGLE; // Target WORLD angle
+
+        // Compensate for parent sway to get consistent local rotation
+        const targetRotationY = worldTargetRotationY - parentRotationY;
+
+        // Store initial rotation
+        const startRotationY = camera.rotation.y;
+
+        // Create a proxy object for the rotation animation
+        const rotationProxy = { y: startRotationY };
+
+        // Animate camera position and rotation simultaneously
         gsap.to(camera.position, {
             x: cameraTargetX,
             z: cameraTargetZ,
             duration: 1.0,
-            ease: 'power2.inOut',
-            onComplete: () => openDoor()
+            ease: 'power2.inOut'
         });
-    }, [camera, side, isOpen, isAnimating]);
+
+        gsap.to(rotationProxy, {
+            y: targetRotationY,
+            duration: 1.0,
+            ease: 'power2.inOut',
+            onUpdate: () => {
+                camera.rotation.y = rotationProxy.y;
+            },
+            onComplete: () => {
+                // Save aligned state for reverse animation
+                doorAlignedState.current = {
+                    x: camera.position.x,
+                    y: camera.position.y,
+                    z: camera.position.z,
+                    rotationY: camera.rotation.y
+                };
+
+                // Lazy Load Room:
+                // 1. Camera is now aligned.
+                // 2. Start rendering the room.
+                setShouldRenderRoom(true);
+
+                // 3. Wait a tiny bit for React to mount the component, then open door
+                setTimeout(() => {
+                    openDoor();
+                }, 50);
+            }
+        });
+    }, [camera, side, isOpen, isAnimating, setCameraOverride]);
 
     const openDoor = useCallback(() => {
         if (!doorRef.current) return;
@@ -226,12 +344,115 @@ const DoorSection = ({
             duration: 0.7,
             ease: 'power2.out',
             onComplete: () => {
-                setIsAnimating(false);
-                onEnter?.();
-                closeTimerRef.current = setTimeout(() => closeDoor(), autoCloseDelay);
+                // Door is open, now fly camera through the door
+                // Get the direction the camera is looking AT THE START
+                const direction = new THREE.Vector3();
+                camera.getWorldDirection(direction);
+
+                const flyDistance = 25; // Fly through corridor (15) + into room
+
+                // Calculate TARGET position BEFORE animating (so flight path is straight)
+                const targetX = camera.position.x + direction.x * flyDistance;
+                const targetZ = camera.position.z + direction.z * flyDistance;
+
+                // STEP 1: Fly camera forward in a STRAIGHT LINE
+                gsap.to(camera.position, {
+                    x: targetX,
+                    z: targetZ,
+                    duration: 1.5,
+                    ease: 'power2.inOut',
+                    onComplete: () => {
+                        // Save position AFTER flight
+                        roomEntryState.current = {
+                            x: camera.position.x,
+                            y: camera.position.y,
+                            z: camera.position.z,
+                            rotationY: camera.rotation.y
+                        };
+
+                        // NO ROTATION needed - we are already looking perpendicular to corridor
+                        // Just mark as inside
+                        setIsAnimating(false);
+                        setIsInsideRoom(true);
+                        onEnter?.();
+                    }
+                });
             }
         });
-    }, [side, onEnter, autoCloseDelay]);
+    }, [side, onEnter, camera]);
+
+    // Exit room function - TRUE REVERSE animation (like rewinding video)
+    const exitRoom = useCallback(() => {
+        if (!isInsideRoom || isAnimating) return;
+
+        setIsAnimating(true);
+
+        const saved = savedCameraState.current;
+        const aligned = doorAlignedState.current;
+
+        // REVERSE STEP 1: Walk backwards through corridor to ALIGNED position (in front of door)
+        // This prevents clipping through walls
+        gsap.to(camera.position, {
+            x: aligned.x,
+            y: aligned.y,
+            z: aligned.z,
+            duration: 1.5,
+            ease: 'power2.inOut',
+            onComplete: () => {
+                // REVERSE STEP 2: Move back to original center position & rotate to original view
+                // This is the reverse of the "align to door" animation
+
+                // 2a. Position
+                gsap.to(camera.position, {
+                    x: saved.x,
+                    y: saved.y,
+                    z: saved.z,
+                    duration: 1.0,
+                    ease: 'power2.inOut'
+                });
+
+                // 2b. Rotation (Full restore to avoid snap)
+                // We typically only animate Y for smoothness, but we should restore X/Z at the end too
+                const rotationProxy = { y: camera.rotation.y };
+
+                // Animate Y rotation smoothly
+                gsap.to(rotationProxy, {
+                    y: saved.rotationY,
+                    duration: 1.0,
+                    ease: 'power2.inOut',
+                    onUpdate: () => {
+                        camera.rotation.y = rotationProxy.y;
+                    },
+                    onComplete: () => {
+                        // Restore precise full rotation (including X/Z pitch/roll) before returning control
+                        camera.rotation.set(saved.rotationX, saved.rotationY, saved.rotationZ);
+
+                        setIsInsideRoom(false);
+                        setIsAnimating(false);
+                        setIsTiltLocked(false); // Unlock tilt
+                        // Unload room after exiting to save resources
+                        setShouldRenderRoom(false);
+
+                        closeDoor();
+                        // Return camera control to hook
+                        setCameraOverride?.(false);
+                    }
+                });
+            }
+        });
+    }, [isInsideRoom, isAnimating, camera, setCameraOverride]);
+
+    // ESC key listener for exiting room
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape' && isInsideRoom && !isAnimating) {
+                exitRoom();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isInsideRoom, isAnimating, exitRoom]);
 
     const closeDoor = useCallback(() => {
         if (!doorRef.current || !isOpen) return;
@@ -315,6 +536,17 @@ const DoorSection = ({
     // Handle position on door (based on texture - handle is on the right side for left doors)
     const handlePivotX = side === 'left' ? doorWidth * 0.25 : -doorWidth * 0.25;
 
+    // Sign texture mapping
+    const SIGN_TEXTURES = {
+        'THE GALLERY': '/textures/corridor/thegallerysign.webp',
+        'THE STUDIO': '/textures/corridor/thestudiosign.webp',
+        'DEV DIARY': '/textures/corridor/aboutsign.webp',
+        "LET'S CONNECT": '/textures/corridor/contactsign.webp',
+    };
+
+    const signTextureUrl = SIGN_TEXTURES[label];
+    const signTexture = useTexture(signTextureUrl || SIGN_TEXTURES['THE GALLERY']); // Fallback
+
     return (
         // Outer group at pivot position (outer edge of wall)
         <group position={[pivotX, position[1], position[2]]}>
@@ -327,25 +559,23 @@ const DoorSection = ({
 
                 {/* Door and frame - centered on wall */}
                 <group position={[wallOffsetX, -0.4, 0]}>
-                    {/* === FLOATING LABEL === */}
-                    <group position={[0, doorHeight / 2 + 0.5, 0.1]}>
-                        <mesh position={[0, 0, -0.02]}>
-                            <planeGeometry args={[label.length * 0.08 + 0.35, 0.3]} />
-                            <meshBasicMaterial color="#1a1a1a" />
+                    {/* === TEXTURED SIGN === */}
+                    <group position={[0, doorHeight / 2 + 0.45, 0.08]}>
+                        {/* 
+                            WIELKOŚĆ TABLICZKI (SIGN SIZE):
+                            Zmień liczby w args={[Szerokość, Wysokość]}
+                            Obecnie: 1.3 szerokości, 0.65 wysokości
+                        */}
+                        <mesh>
+                            {/* Adjusted size for the signs - assuming rectangular aspect ratio */}
+                            <planeGeometry args={[1.3, 0.65]} />
+                            <meshStandardMaterial
+                                map={signTexture}
+                                transparent={true}
+                                alphaTest={0.1}
+                                roughness={0.8}
+                            />
                         </mesh>
-                        <mesh position={[0, 0, -0.01]}>
-                            <planeGeometry args={[label.length * 0.08 + 0.3, 0.25]} />
-                            <meshBasicMaterial color="#ffffff" />
-                        </mesh>
-                        <Text
-                            position={[0, 0, 0.01]}
-                            fontSize={0.12}
-                            color="#1a1a1a"
-                            anchorX="center"
-                            anchorY="middle"
-                        >
-                            {icon} {label}
-                        </Text>
                     </group>
 
                     {/* === DOOR FRAME (textured) === */}
@@ -360,15 +590,9 @@ const DoorSection = ({
                         />
                     </mesh>
 
-                    {/* === DOOR INTERIOR (Backing Volume) === */}
-                    <mesh position={[0, -0.149, -1.0]} rotation={[0, 0, 0]}>
-                        <boxGeometry args={[frameWidth - 0.1, frameHeight - 0.1, 2]} />
-                        <meshStandardMaterial
-                            color="#f5f5f5"
-                            roughness={0.9}
-                            side={THREE.BackSide} /* Render inside of box */
-                        />
-                    </mesh>
+                    {/* === DOOR INTERIOR CORRIDOR + ROOM === */}
+                    {/* Always render, but pass showRoom prop for lazy loading giant room */}
+                    <RoomInterior label={label} showRoom={shouldRenderRoom} />
 
                     {/* === DOOR PANEL (pivots for opening) === */}
                     {/* Pivot Z at 0.01 to be slightly behind frame but in front of wall if needed, or just flush */}

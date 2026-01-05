@@ -46,6 +46,9 @@ const useInfiniteCamera = ({
     const targetSwipeGlance = useRef(0);
     const useGyroscope = useRef(false);
 
+    // Camera override - when true, external code (like DoorSection) controls camera
+    const cameraOverride = useRef(false);
+
     // Limits for swipe glance (in radians, ~15 degrees each way)
     const MAX_SWIPE_GLANCE = 0.26;
 
@@ -177,6 +180,11 @@ const useInfiniteCamera = ({
 
     // Main camera update loop
     useFrame(() => {
+        // If camera override is active, let external code control the camera
+        if (cameraOverride.current) {
+            return;
+        }
+
         const scrollActive = scrollEnabledRef.current;
         const parallaxActive = parallaxEnabledRef.current;
 
@@ -280,9 +288,20 @@ const useInfiniteCamera = ({
         }
     });
 
+    // Function to enable/disable camera override
+    const setCameraOverride = (active) => {
+        cameraOverride.current = active;
+        if (!active) {
+            // When releasing override, sync our state with current camera position
+            targetZ.current = camera.position.z;
+            currentZ.current = camera.position.z;
+        }
+    };
+
     return {
         getCurrentSegment: () => currentSegment.current,
         getCameraZ: () => currentZ.current,
+        setCameraOverride, // Allow external code to take over camera
         requestGyroscopePermission // Expose for UI button (iOS needs user interaction)
     };
 };

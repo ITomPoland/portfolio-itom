@@ -34,7 +34,7 @@ const Experience = ({ isLoaded, onSceneReady }) => {
     }, [onSceneReady]);
 
     // Camera control - both scroll and parallax only work after entering
-    useInfiniteCamera({
+    const { setCameraOverride } = useInfiniteCamera({
         segmentLength: 80,
         scrollSpeed: 0.025,
         parallaxIntensity: 0.4,
@@ -83,6 +83,7 @@ const Experience = ({ isLoaded, onSceneReady }) => {
                 onDoorEnter={handleDoorEnter}
                 hideDoorsForSegments={hasEntered ? [] : [-1]} // Hide segment -1's doors until entered
                 clipSegmentNeg1={!hasEntered} // Clip segment -1 visualization until entered
+                setCameraOverride={setCameraOverride}
             />
         </>
     );

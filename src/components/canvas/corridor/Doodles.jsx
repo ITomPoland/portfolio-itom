@@ -2,6 +2,7 @@ import { useRef, useMemo, useState, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
+import { usePerformance } from '../../../context/PerformanceContext';
 
 /**
  * Doodles Component - Hand-drawn Sketch Elements
@@ -16,6 +17,8 @@ import * as THREE from 'three';
 const Doodles = () => {
     const groupRef = useRef();
     const { camera, pointer, viewport } = useThree();
+    const { tier } = usePerformance();
+    const isLowTier = tier === 'LOW';
 
     // Track dodge amounts for scatter effect
     const dodgeMultiplier = useRef(0);
@@ -141,22 +144,27 @@ const Doodles = () => {
                 floatAmount={0.025}
             />
 
-            {/* Animated hand-drawn stars */}
-            <AnimatedStar position={[-1.5, 1.2, 0]} scale={0.1} speed={0.4} dodgeDir={[-1.2, 0.3]} dodgeRef={dodgeMultiplier} />
-            <AnimatedStar position={[1.6, 0.8, -0.5]} scale={0.08} speed={0.5} dodgeDir={[1.0, 0.4]} dodgeRef={dodgeMultiplier} />
-            <AnimatedStar position={[-1.2, 0.1, 0.5]} scale={0.06} speed={0.3} dodgeDir={[-0.8, -0.2]} dodgeRef={dodgeMultiplier} />
-            <AnimatedStar position={[1.3, 1.4, -1]} scale={0.07} speed={0.6} dodgeDir={[0.9, 0.5]} dodgeRef={dodgeMultiplier} />
+            {/* Minor decorative elements - HIDDEN on LOW tier for performance */}
+            {!isLowTier && (
+                <>
+                    {/* Animated hand-drawn stars */}
+                    <AnimatedStar position={[-1.5, 1.2, 0]} scale={0.1} speed={0.4} dodgeDir={[-1.2, 0.3]} dodgeRef={dodgeMultiplier} />
+                    <AnimatedStar position={[1.6, 0.8, -0.5]} scale={0.08} speed={0.5} dodgeDir={[1.0, 0.4]} dodgeRef={dodgeMultiplier} />
+                    <AnimatedStar position={[-1.2, 0.1, 0.5]} scale={0.06} speed={0.3} dodgeDir={[-0.8, -0.2]} dodgeRef={dodgeMultiplier} />
+                    <AnimatedStar position={[1.3, 1.4, -1]} scale={0.07} speed={0.6} dodgeDir={[0.9, 0.5]} dodgeRef={dodgeMultiplier} />
 
-            {/* Hand-drawn circles */}
-            <DoodleCircle position={[1.2, -0.2, 0.2]} scale={0.05} dodgeDir={[1.0, -0.3]} dodgeRef={dodgeMultiplier} />
-            <DoodleCircle position={[-1.3, 1.0, 0.3]} scale={0.04} dodgeDir={[-0.9, 0.4]} dodgeRef={dodgeMultiplier} />
+                    {/* Hand-drawn circles */}
+                    <DoodleCircle position={[1.2, -0.2, 0.2]} scale={0.05} dodgeDir={[1.0, -0.3]} dodgeRef={dodgeMultiplier} />
+                    <DoodleCircle position={[-1.3, 1.0, 0.3]} scale={0.04} dodgeDir={[-0.9, 0.4]} dodgeRef={dodgeMultiplier} />
 
-            {/* Squiggly decorative lines */}
-            <Squiggle position={[-1.6, 0.5, -0.3]} rotation={0.2} dodgeDir={[-1.1, 0.1]} dodgeRef={dodgeMultiplier} />
-            <Squiggle position={[1.4, 0.3, 0.2]} rotation={-0.3} dodgeDir={[1.2, 0.0]} dodgeRef={dodgeMultiplier} />
+                    {/* Squiggly decorative lines */}
+                    <Squiggle position={[-1.6, 0.5, -0.3]} rotation={0.2} dodgeDir={[-1.1, 0.1]} dodgeRef={dodgeMultiplier} />
+                    <Squiggle position={[1.4, 0.3, 0.2]} rotation={-0.3} dodgeDir={[1.2, 0.0]} dodgeRef={dodgeMultiplier} />
 
-            {/* Thought bubble near avatar */}
-            <ThoughtBubble position={[0.9, 0.7, 0.5]} dodgeDir={[0.8, 0.3]} dodgeRef={dodgeMultiplier} />
+                    {/* Thought bubble near avatar */}
+                    <ThoughtBubble position={[0.9, 0.7, 0.5]} dodgeDir={[0.8, 0.3]} dodgeRef={dodgeMultiplier} />
+                </>
+            )}
         </group>
     );
 };

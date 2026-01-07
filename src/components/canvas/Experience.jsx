@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, Suspense } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 
 import InfiniteCorridorManager from './corridor/InfiniteCorridorManager';
@@ -90,18 +90,12 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
             )}
 
             {/* === INFINITE CORRIDOR (segment -1 SegmentDoors hidden during entrance) === */}
-            {/* Wrapped in Suspense to allow Entrance to show while Corridor loads in background */}
-            {/* Only start loading corridor AFTER preloader is done (isLoaded) to prevent animation lag */}
-            {isLoaded && (
-                <Suspense fallback={null}>
-                    <InfiniteCorridorManager
-                        onDoorEnter={handleDoorEnter}
-                        hideDoorsForSegments={hasEntered ? [] : [-1]} // Hide segment -1's doors until entered
-                        clipSegmentNeg1={!hasEntered} // Clip segment -1 visualization until entered
-                        setCameraOverride={setCameraOverride}
-                    />
-                </Suspense>
-            )}
+            <InfiniteCorridorManager
+                onDoorEnter={handleDoorEnter}
+                hideDoorsForSegments={hasEntered ? [] : [-1]} // Hide segment -1's doors until entered
+                clipSegmentNeg1={!hasEntered} // Clip segment -1 visualization until entered
+                setCameraOverride={setCameraOverride}
+            />
         </>
     );
 };

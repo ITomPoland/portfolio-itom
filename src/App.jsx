@@ -90,6 +90,7 @@ function AppContent() {
                 onSceneReady={handleSceneReady}
                 performanceTier={tier} // Pass tier to Experience
               />
+              <Preload all />
             </Suspense>
           </Canvas>
         </div>

@@ -27,6 +27,8 @@ const DOOR_Z_SPAN = 4;
 // Angle of the wall relative to the corridor axis
 const WALL_ANGLE = Math.atan2(WALL_X_OUTER - WALL_X_INNER, DOOR_Z_SPAN);
 
+import { usePerformance } from '../../../context/PerformanceContext';
+
 const CorridorSegment = ({
     segmentIndex = 0,
     onDoorEnter,
@@ -34,6 +36,9 @@ const CorridorSegment = ({
     zClip = 100000, // Clipping plane (render everything with Z < zClip)
     setCameraOverride // Function to take over camera control
 }) => {
+    const { tier } = usePerformance();
+    const isHighTier = tier === 'HIGH';
+
     // Calculate Z offset based on segment index
     // Segment 0 starts at Z=10, goes to Z=-70
     const zOffset = 10 - (segmentIndex * SEGMENT_LENGTH);
@@ -158,8 +163,8 @@ const CorridorSegment = ({
                 />
             ))}
 
-            {/* === DECORATIONS === */}
-            {decorations.map((dec, i) => (
+            {/* === DECORATIONS (Flying elements - only for HIGH tier) === */}
+            {isHighTier && decorations.map((dec, i) => (
                 <mesh key={i} position={[dec.x, dec.y, zOffset + dec.relZ]}>
                     <octahedronGeometry args={[0.05, 0]} />
                     <meshBasicMaterial

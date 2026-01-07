@@ -83,7 +83,7 @@ export const AudioProvider = ({ children }) => {
         activeSounds.current[soundName] = audio;
 
         // Simulation log
-        console.log(`[Audio] Playing ${soundName} (loop: ${loop}, vol: ${audio.volume.toFixed(2)})`);
+        // console.log(`[Audio] Playing ${soundName} (loop: ${loop}, vol: ${audio.volume.toFixed(2)})`);
 
         // Attempt to play
         const playPromise = audio.play();
@@ -91,13 +91,13 @@ export const AudioProvider = ({ children }) => {
         if (playPromise !== undefined) {
             playPromise.catch(error => {
                 if (error.name === 'NotAllowedError') {
-                    console.warn('[Audio] Auto-play blocked. Waiting for interaction.');
-                    // We could mark audioEnabled = false here
+                    // console.warn('[Audio] Auto-play blocked. Waiting for interaction.');
+                    // Common in browsers before user interacts. Silent fail is preferred to spam.
                 } else if (error.name === 'NotSupportedError' || error.message.includes('404')) {
-                    console.warn(`[Audio] File not found or not supported: ${path}. (This is expected if files are missing)`);
+                   // console.warn(`[Audio] File not found or not supported: ${path}. (This is expected if files are missing)`);
                 } else {
                     // Other errors (e.g. 404 often comes as a network error event on the element, not the promise)
-                    console.warn('[Audio] Play error:', error);
+                   // console.warn('[Audio] Play error:', error);
                 }
             });
         }
@@ -105,7 +105,7 @@ export const AudioProvider = ({ children }) => {
         // Return a handle to stop it
         return {
             stop: () => {
-                console.log(`[Audio] Stopping ${soundName}`);
+                // console.log(`[Audio] Stopping ${soundName}`);
                 audio.pause();
                 audio.currentTime = 0;
                 delete activeSounds.current[soundName];

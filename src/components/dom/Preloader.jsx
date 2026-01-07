@@ -3,11 +3,101 @@ import { useProgress } from '@react-three/drei';
 import gsap from 'gsap';
 import { useAudio } from '../../context/AudioManager';
 
+// Reusable SVG Line Component
+const TearLineSVG = ({ svgPathData, pathLength, strokeDashoffset }) => (
+  <svg
+    className="preloader__overlay"
+    viewBox="0 0 100 100"
+    preserveAspectRatio="none"
+    style={{ pointerEvents: 'none' }}
+  >
+    <path
+      d={svgPathData}
+      fill="none"
+      stroke="#1a1a1a"
+      strokeWidth="0.1"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{
+        strokeDasharray: pathLength,
+        strokeDashoffset: strokeDashoffset,
+      }}
+    />
+  </svg>
+);
+
+// New Ring Loader - Cleaner circle that spins around text
+const RingLoader = () => (
+  <div className="preloader__ring">
+    <svg width="120" height="120" viewBox="0 0 100 100" style={{ overflow: 'visible' }}>
+       <circle 
+         cx="50" cy="50" r="45"
+         fill="none" 
+         stroke="#000" 
+         strokeWidth="1.5"
+         strokeLinecap="round"
+         strokeDasharray="10 15"
+         opacity="0.8"
+       />
+       <circle 
+         cx="50" cy="50" r="35"
+         fill="none" 
+         stroke="#000" 
+         strokeWidth="1"
+         strokeLinecap="round"
+         strokeDasharray="5 10"
+         opacity="0.5"
+         style={{
+           animation: 'ring-spin-reverse 4s linear infinite',
+           transformOrigin: '50% 50%'
+         }}
+       />
+    </svg>
+    <style>{`
+      @keyframes ring-spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+      @keyframes ring-spin-reverse {
+        0% { transform: rotate(360deg); }
+        100% { transform: rotate(0deg); }
+      }
+      .preloader__ring {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 120px;
+        height: 120px;
+        pointer-events: none;
+        z-index: 5;
+        animation: ring-spin 10s linear infinite;
+      }
+    `}</style>
+  </div>
+);
+
+const percentageStyle = {
+  position: 'absolute',
+  top: '50%',
+  left: '0',
+  width: '100%',
+  transform: 'translateY(-50%)',
+  textAlign: 'center',
+  zIndex: 20,
+  fontFamily: "'Inter', sans-serif",
+  fontSize: '2rem',
+  fontWeight: 'bold',
+  mixBlendMode: 'multiply',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  overflow: 'visible'
+};
+
 const Preloader = ({ onComplete, ready }) => {
   const [isDone, setIsDone] = useState(false);
   const { progress: realProgress, active } = useProgress();
   const { play } = useAudio();
-
   // Track audio handle to stop loop
   const pencilSoundRef = useRef(null);
 
@@ -15,7 +105,6 @@ const Preloader = ({ onComplete, ready }) => {
   const containerRef = useRef(null);
   const leftHalfRef = useRef(null);
   const rightHalfRef = useRef(null);
-  // Removed single svgPathRef as we now have two lines inside the halves
 
   // Track visual progress
   const [targetProgress, setTargetProgress] = useState(0);
@@ -80,25 +169,21 @@ const Preloader = ({ onComplete, ready }) => {
 
   // Handle Pencil Sound
   useEffect(() => {
-    // Start playing pencil if we are loading and not finished
-    // AND not already playing
     if (displayProgress < 99 && !pencilSoundRef.current) {
       pencilSoundRef.current = play('pencil', { loop: true, volume: 0.5 });
     }
-    // Stop playing if we are done
     else if (displayProgress >= 99 && pencilSoundRef.current) {
       pencilSoundRef.current.stop();
       pencilSoundRef.current = null;
     }
 
     return () => {
-      // Cleanup on unmount or if deps change messily
       if (pencilSoundRef.current) {
         pencilSoundRef.current.stop();
         pencilSoundRef.current = null;
       }
     };
-  }, [displayProgress, play]); // Re-eval if play function changes (it shouldn't) or progress updates
+  }, [displayProgress, play]);
 
   useEffect(() => {
     const tracker = { val: displayProgress };
@@ -145,7 +230,6 @@ const Preloader = ({ onComplete, ready }) => {
   const startExit = () => {
     exitStarted.current = true;
 
-    // Final audio check
     if (pencilSoundRef.current) {
       pencilSoundRef.current.stop();
       pencilSoundRef.current = null;
@@ -161,8 +245,6 @@ const Preloader = ({ onComplete, ready }) => {
 
     // 1. Wait a moment 
     tl.to({}, { duration: 0.3 });
-
-    // REMOVED: Hiding the drawn line. Now it splits!
 
     // 2. Tear Apart
     tl.to(leftHalfRef.current, {
@@ -193,29 +275,6 @@ const Preloader = ({ onComplete, ready }) => {
   const strokeDashoffset = pathLength - (pathLength * safeProgress) / 100;
   const percentageText = `${Math.round(safeProgress)}%`;
 
-  // Reusable SVG Line Component to ensure consistency
-  const TearLineSVG = () => (
-    <svg
-      className="preloader__overlay" // Keep class for positioning (absolute 0 0)
-      viewBox="0 0 100 100"
-      preserveAspectRatio="none"
-      style={{ pointerEvents: 'none' }}
-    >
-      <path
-        d={svgPathData}
-        fill="none"
-        stroke="#1a1a1a"
-        strokeWidth="0.1"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        style={{
-          strokeDasharray: pathLength,
-          strokeDashoffset: strokeDashoffset,
-        }}
-      />
-    </svg>
-  );
-
   return (
     <div className="preloader" ref={containerRef}>
       {/* LEFT HALF */}
@@ -225,11 +284,13 @@ const Preloader = ({ onComplete, ready }) => {
         style={{ clipPath: leftClipPoly }}
       >
         {/* Content: Percentage & Line */}
-        <div className="preloader__percentage">
+        <div className="preloader__percentage" style={percentageStyle}>
           {percentageText}
+          <RingLoader />
         </div>
+        
         {/* SVG is now INSIDE the clipped half */}
-        <TearLineSVG />
+        <TearLineSVG svgPathData={svgPathData} pathLength={pathLength} strokeDashoffset={strokeDashoffset} />
       </div>
 
       {/* RIGHT HALF */}
@@ -239,14 +300,14 @@ const Preloader = ({ onComplete, ready }) => {
         style={{ clipPath: rightClipPoly }}
       >
         {/* Content: Percentage & Line */}
-        <div className="preloader__percentage">
+        <div className="preloader__percentage" style={percentageStyle}>
           {percentageText}
+          <RingLoader />
         </div>
-        {/* SVG is now INSIDE the clipped half */}
-        <TearLineSVG />
-      </div>
 
-      {/* REMOVED: Standalone Overlay SVG */}
+        {/* SVG is now INSIDE the clipped half */}
+        <TearLineSVG svgPathData={svgPathData} pathLength={pathLength} strokeDashoffset={strokeDashoffset} />
+      </div>
     </div>
   );
 };

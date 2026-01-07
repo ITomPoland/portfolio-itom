@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, Suspense } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 
 import InfiniteCorridorManager from './corridor/InfiniteCorridorManager';
@@ -22,7 +22,7 @@ const ENTRANCE_DOORS_Z = 22;
  * 2. Click doors -> they open + camera flies through
  * 3. Behind doors: infinite corridor with ITOM
  */
-const Experience = ({ isLoaded, onSceneReady }) => {
+const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
     const [hasEntered, setHasEntered] = useState(false);
     const [currentRoom, setCurrentRoom] = useState(null);
 
@@ -55,11 +55,20 @@ const Experience = ({ isLoaded, onSceneReady }) => {
         console.log('Entering:', doorId);
     }, []);
 
+    // Optimization: Low tier has simpler lighting
+    const isLowTier = performanceTier === 'LOW';
+
     return (
         <>
             {/* === GLOBAL LIGHTING === */}
-            <ambientLight intensity={2.2} />
-            <directionalLight position={[5, 10, 5]} intensity={0.8} color="#ffffff" />
+            <ambientLight intensity={isLowTier ? 2.5 : 2.2} />
+            <directionalLight 
+                position={[5, 10, 5]} 
+                intensity={0.8} 
+                color="#ffffff" 
+                castShadow={!isLowTier} 
+                shadow-mapSize={[1024, 1024]} 
+            />
             <directionalLight position={[-5, 8, -10]} intensity={0.4} color="#ffffff" />
 
             {/* === EMPTY CORRIDOR (provides context during entrance) === */}
@@ -69,22 +78,30 @@ const Experience = ({ isLoaded, onSceneReady }) => {
 
             {/* === ENTRANCE DOORS (visible until entered) === */}
             {!hasEntered && (
-                <>
-                    <EntranceDoors
-                        position={[0, 0, ENTRANCE_DOORS_Z]}
-                        onComplete={handleEntranceComplete}
-                    />
-                    <SignSystem position={[0, 0, ENTRANCE_DOORS_Z]} />
-                </>
+                <EntranceDoors
+                    position={[0, 0, ENTRANCE_DOORS_Z]}
+                    onComplete={handleEntranceComplete}
+                />
+            )}
+            
+            {/* Separate SignSystem to avoid fragment nesting issues if any */}
+            {!hasEntered && (
+                <SignSystem position={[0, 0, ENTRANCE_DOORS_Z]} />
             )}
 
             {/* === INFINITE CORRIDOR (segment -1 SegmentDoors hidden during entrance) === */}
-            <InfiniteCorridorManager
-                onDoorEnter={handleDoorEnter}
-                hideDoorsForSegments={hasEntered ? [] : [-1]} // Hide segment -1's doors until entered
-                clipSegmentNeg1={!hasEntered} // Clip segment -1 visualization until entered
-                setCameraOverride={setCameraOverride}
-            />
+            {/* Wrapped in Suspense to allow Entrance to show while Corridor loads in background */}
+            {/* Only start loading corridor AFTER preloader is done (isLoaded) to prevent animation lag */}
+            {isLoaded && (
+                <Suspense fallback={null}>
+                    <InfiniteCorridorManager
+                        onDoorEnter={handleDoorEnter}
+                        hideDoorsForSegments={hasEntered ? [] : [-1]} // Hide segment -1's doors until entered
+                        clipSegmentNeg1={!hasEntered} // Clip segment -1 visualization until entered
+                        setCameraOverride={setCameraOverride}
+                    />
+                </Suspense>
+            )}
         </>
     );
 };

@@ -4,6 +4,7 @@ import { Preload, useTexture, Text, PerformanceMonitor } from '@react-three/drei
 
 import Preloader from './components/dom/Preloader';
 import { AudioProvider, useAudio } from './context/AudioManager';
+import { PerformanceProvider, usePerformance } from './context/PerformanceContext';
 import AudioControls from './components/ui/AudioControls';
 
 // Lazy load the heavy 3D experience
@@ -37,15 +38,12 @@ const GlobalAudioEnabler = () => {
   return null;
 };
 
-function App() {
+function AppContent() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
-  const [dpr, setDpr] = useState(1.5);
-
-  useLayoutEffect(() => {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    setDpr(isMobile ? 1 : [1, 2]);
-  }, []);
+  
+  // Use Performance Context
+  const { settings, downgradeTier, tier } = usePerformance();
 
   const handleSceneReady = useCallback(() => {
     requestAnimationFrame(() => {
@@ -67,24 +65,31 @@ function App() {
               far: 150
             }}
             gl={{
-              antialias: true,
+              antialias: settings.antialias,
               alpha: false,
-              powerPreference: 'high-performance',
-              localClippingEnabled: true
+              powerPreference: settings.powerPreference,
+              localClippingEnabled: true,
+              failIfMajorPerformanceCaveat: true
             }}
-            dpr={dpr}
+            dpr={settings.dpr}
+            shadows={settings.shadows}
           >
             <color attach="background" args={['#fafafa']} />
             <fog attach="fog" args={['#fafafa', 15, 50]} />
 
+            {/* Scale performance down if fps drops */}
             <PerformanceMonitor
-              onDecline={() => setDpr(1)}
+              onDecline={() => downgradeTier()}
+              flipflops={3}
+              onFallback={() => downgradeTier()}
             />
 
             <Suspense fallback={null}>
-              <Experience isLoaded={isLoaded} onSceneReady={handleSceneReady} />
-              <Text font={FONT_URL} visible={false}>preload</Text>
-              <Preload all />
+              <Experience 
+                isLoaded={isLoaded} 
+                onSceneReady={handleSceneReady}
+                performanceTier={tier} // Pass tier to Experience
+              />
             </Suspense>
           </Canvas>
         </div>
@@ -113,4 +118,10 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <PerformanceProvider>
+      <AppContent />
+    </PerformanceProvider>
+  );
+}

@@ -80,18 +80,6 @@ const Avatar = ({ position = [10, -20, 30] }) => {
 
     return (
         <group ref={groupRef} position={position}>
-            {/* Shadow/depth layer for sketchy effect */}
-            <mesh position={[0.02, -0.02, -0.01]}>
-                <planeGeometry args={[dimensions.width, dimensions.height]} />
-                <meshBasicMaterial
-                    map={texture}
-                    transparent={true}
-                    opacity={0.15}
-                    side={THREE.DoubleSide}
-                    depthWrite={false}
-                />
-            </mesh>
-
             {/* Main avatar */}
             <mesh ref={meshRef}>
                 <planeGeometry args={[dimensions.width, dimensions.height]} />

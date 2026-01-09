@@ -5,7 +5,8 @@ import { Preload, useTexture, Text, PerformanceMonitor } from '@react-three/drei
 import Preloader from './components/dom/Preloader';
 import { AudioProvider, useAudio } from './context/AudioManager';
 import { PerformanceProvider, usePerformance } from './context/PerformanceContext';
-import AudioControls from './components/ui/AudioControls';
+import { SceneProvider } from './context/SceneContext';
+import NavigationUI from './components/ui/NavigationUI';
 
 // Lazy load the heavy 3D experience
 const Experience = lazy(() => import('./components/canvas/Experience'));
@@ -52,68 +53,59 @@ function AppContent() {
 
   return (
     <AudioProvider>
-      <GlobalAudioEnabler />
-      <div className="app">
-        {/* Full screen 3D Canvas */}
-        <div className="canvas-wrapper">
-          <Canvas
-            camera={{
-              position: [0, 0.2, 28],
-              fov: 60,
-              near: 0.1,
-              far: 150
-            }}
-            gl={{
-              antialias: settings.antialias,
-              alpha: false,
-              powerPreference: settings.powerPreference,
-              localClippingEnabled: true,
-              failIfMajorPerformanceCaveat: true
-            }}
-            dpr={settings.dpr}
-            shadows={settings.shadows}
-          >
-            <color attach="background" args={['#fafafa']} />
-            <fog attach="fog" args={['#fafafa', 15, 50]} />
+      <SceneProvider>
+        <GlobalAudioEnabler />
+        <div className="app">
+          {/* Full screen 3D Canvas */}
+          <div className="canvas-wrapper">
+            <Canvas
+              camera={{
+                position: [0, 0.2, 28],
+                fov: 60,
+                near: 0.1,
+                far: 150
+              }}
+              gl={{
+                antialias: settings.antialias,
+                alpha: false,
+                powerPreference: settings.powerPreference,
+                localClippingEnabled: true,
+                failIfMajorPerformanceCaveat: true
+              }}
+              dpr={settings.dpr}
+              shadows={settings.shadows}
+            >
+              <color attach="background" args={['#fafafa']} />
+              <fog attach="fog" args={['#fafafa', 15, 50]} />
 
-            {/* Scale performance down if fps drops */}
-            <PerformanceMonitor
-              onDecline={() => downgradeTier()}
-              flipflops={3}
-              onFallback={() => downgradeTier()}
-            />
-
-            <Suspense fallback={null}>
-              <Experience
-                isLoaded={isLoaded}
-                onSceneReady={handleSceneReady}
-                performanceTier={tier} // Pass tier to Experience
+              {/* Scale performance down if fps drops */}
+              <PerformanceMonitor
+                onDecline={() => downgradeTier()}
+                flipflops={3}
+                onFallback={() => downgradeTier()}
               />
-              <Preload all />
-            </Suspense>
-          </Canvas>
+
+              <Suspense fallback={null}>
+                <Experience
+                  isLoaded={isLoaded}
+                  onSceneReady={handleSceneReady}
+                  performanceTier={tier}
+                />
+                <Preload all />
+              </Suspense>
+            </Canvas>
+          </div>
+
+          {/* Navigation UI - Hamburger, Map, Back, Audio */}
+          {isLoaded && <NavigationUI />}
+
+          {/* 2D Preloader */}
+          <Preloader
+            ready={sceneReady}
+            onComplete={() => setIsLoaded(true)}
+          />
         </div>
-
-        {/* UI Overlay */}
-        <div className="ui-overlay">
-          {isLoaded && (
-            <>
-              <div className="instructions">
-                <p>🖱️ Scroll to walk • Click doors to enter</p>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Audio Controls - Always Visible */}
-        <AudioControls />
-
-        {/* 2D Preloader */}
-        <Preloader
-          ready={sceneReady}
-          onComplete={() => setIsLoaded(true)}
-        />
-      </div>
+      </SceneProvider>
     </AudioProvider>
   );
 }

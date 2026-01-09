@@ -4,6 +4,7 @@ import { Text, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import RoomInterior from './RoomInterior';
+import { useScene } from '../../../context/SceneContext';
 
 // Constants from CorridorSegment
 const WALL_X_OUTER = 3.5;
@@ -63,6 +64,9 @@ const DoorSection = ({
     const [shouldRenderRoom, setShouldRenderRoom] = useState(false); // Lazy loading state
     const { camera } = useThree();
     const closeTimerRef = useRef(null);
+
+    // Get exit request signal from context
+    const { exitRequested, clearExitRequest, exitRoom: contextExitRoom, enterRoom } = useScene();
 
     // Save camera state before entering room (for ESC exit)
     // Save camera state before entering room (for ESC exit)
@@ -378,12 +382,16 @@ const DoorSection = ({
                         // Just mark as inside
                         setIsAnimating(false);
                         setIsInsideRoom(true);
+
+                        // Update context state with room label
+                        enterRoom(label);
+
                         onEnter?.();
                     }
                 });
             }
         });
-    }, [side, onEnter, camera]);
+    }, [side, onEnter, camera, enterRoom, label]);
 
     // Exit room function - TRUE REVERSE animation (like rewinding video)
     const exitRoom = useCallback(() => {
@@ -437,6 +445,9 @@ const DoorSection = ({
                         // Unload room after exiting to save resources
                         setShouldRenderRoom(false);
 
+                        // Update context state
+                        contextExitRoom();
+
                         closeDoor();
                         // Return camera control to hook
                         setCameraOverride?.(false);
@@ -444,7 +455,7 @@ const DoorSection = ({
                 });
             }
         });
-    }, [isInsideRoom, isAnimating, camera, setCameraOverride]);
+    }, [isInsideRoom, isAnimating, camera, setCameraOverride, contextExitRoom]);
 
     // ESC key listener for exiting room
     useEffect(() => {
@@ -457,6 +468,14 @@ const DoorSection = ({
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [isInsideRoom, isAnimating, exitRoom]);
+
+    // Listen for exit request from UI back button
+    useEffect(() => {
+        if (exitRequested && isInsideRoom && !isAnimating) {
+            clearExitRequest(); // Clear the request immediately
+            exitRoom(); // Trigger the exit animation
+        }
+    }, [exitRequested, isInsideRoom, isAnimating, clearExitRequest, exitRoom]);
 
     const closeDoor = useCallback(() => {
         if (!doorRef.current || !isOpen) return;

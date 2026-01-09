@@ -6,6 +6,7 @@ import EntranceDoors from './entrance/EntranceDoors';
 import EmptyCorridor from './entrance/EmptyCorridor';
 import useInfiniteCamera from '../../hooks/useInfiniteCamera';
 import SignSystem from './entrance/SignSystem';
+import { useScene } from '../../context/SceneContext';
 
 // Positioning:
 // - Segment -1's SegmentDoors are at Z=15
@@ -23,8 +24,8 @@ const ENTRANCE_DOORS_Z = 22;
  * 3. Behind doors: infinite corridor with ITOM
  */
 const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
-    const [hasEntered, setHasEntered] = useState(false);
-    const [currentRoom, setCurrentRoom] = useState(null);
+    // Use SceneContext for room state
+    const { hasEntered, markEntered, enterRoom } = useScene();
 
     const { camera } = useThree();
 
@@ -46,14 +47,14 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
 
     // Handle entrance complete
     const handleEntranceComplete = useCallback(() => {
-        setHasEntered(true);
-    }, []);
+        markEntered();
+    }, [markEntered]);
 
     // Handle door enter from inside corridor
     const handleDoorEnter = useCallback((doorId) => {
-        setCurrentRoom(doorId);
+        enterRoom(doorId);
         console.log('Entering:', doorId);
-    }, []);
+    }, [enterRoom]);
 
     // Optimization: Low tier has simpler lighting
     const isLowTier = performanceTier === 'LOW';
@@ -62,12 +63,12 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
         <>
             {/* === GLOBAL LIGHTING === */}
             <ambientLight intensity={isLowTier ? 2.5 : 2.2} />
-            <directionalLight 
-                position={[5, 10, 5]} 
-                intensity={0.8} 
-                color="#ffffff" 
-                castShadow={!isLowTier} 
-                shadow-mapSize={[1024, 1024]} 
+            <directionalLight
+                position={[5, 10, 5]}
+                intensity={0.8}
+                color="#ffffff"
+                castShadow={!isLowTier}
+                shadow-mapSize={[1024, 1024]}
             />
             <directionalLight position={[-5, 8, -10]} intensity={0.4} color="#ffffff" />
 
@@ -83,7 +84,7 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
                     onComplete={handleEntranceComplete}
                 />
             )}
-            
+
             {/* Separate SignSystem to avoid fragment nesting issues if any */}
             {!hasEntered && (
                 <SignSystem position={[0, 0, ENTRANCE_DOORS_Z]} />

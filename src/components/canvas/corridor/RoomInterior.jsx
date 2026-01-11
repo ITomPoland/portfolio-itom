@@ -31,7 +31,7 @@ const SUBTITLES = {
  * Memoized room geometry to prevent re-renders and improve performance.
  * Contains corridor + giant room at the end.
  */
-const RoomInterior = memo(({ label, showRoom }) => {
+const RoomInterior = memo(({ label, showRoom, onReady }) => {
     const { corridorWidth, corridorHeight, corridorDepth, roomWidth, roomHeight, roomDepth } = ROOM_CONFIG;
     const halfDepth = corridorDepth / 2;
     const roomZ = -corridorDepth - roomDepth / 2;
@@ -108,7 +108,7 @@ const RoomInterior = memo(({ label, showRoom }) => {
                         // === NEW STUDIO ROOM ===
                         <group position={[0, -0.5, -corridorDepth]}>
                             <Suspense fallback={null}>
-                                <StudioRoom showRoom={showRoom} />
+                                <StudioRoom showRoom={showRoom} onReady={onReady} />
                             </Suspense>
                         </group>
                     ) : label === 'THE ABOUT' ? (

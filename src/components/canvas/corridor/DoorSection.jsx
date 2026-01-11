@@ -62,6 +62,7 @@ const DoorSection = ({
     const [isInsideRoom, setIsInsideRoom] = useState(false);
     const [isTiltLocked, setIsTiltLocked] = useState(false); // Lock tilt when entering room
     const [shouldRenderRoom, setShouldRenderRoom] = useState(false); // Lazy loading state
+    const [roomReady, setRoomReady] = useState(false); // Room signaled it's ready
     const { camera } = useThree();
     const closeTimerRef = useRef(null);
 
@@ -322,12 +323,8 @@ const DoorSection = ({
                 // Lazy Load Room:
                 // 1. Camera is now aligned.
                 // 2. Start rendering the room.
+                // 3. Door will open when room signals ready via onReady callback
                 setShouldRenderRoom(true);
-
-                // 3. Wait a tiny bit for React to mount the component, then open door
-                setTimeout(() => {
-                    openDoor();
-                }, 50);
             }
         });
     }, [camera, side, isOpen, isAnimating, setCameraOverride]);
@@ -383,15 +380,28 @@ const DoorSection = ({
                         setIsAnimating(false);
                         setIsInsideRoom(true);
 
-                        // Update context state with room label
-                        enterRoom(label);
-
-                        onEnter?.();
+                        // Defer context update to next frame to prevent stutter
+                        requestAnimationFrame(() => {
+                            enterRoom(label);
+                            onEnter?.();
+                        });
                     }
                 });
             }
         });
     }, [side, onEnter, camera, enterRoom, label]);
+
+    // Handle room ready callback - open door when room is fully loaded
+    // Use ref to prevent multiple calls (state might not update fast enough)
+    const roomReadyRef = useRef(false);
+
+    const handleRoomReady = useCallback(() => {
+        // Guard: only call openDoor once
+        if (roomReadyRef.current) return;
+        roomReadyRef.current = true;
+        setRoomReady(true);
+        openDoor();
+    }, [openDoor]);
 
     // Exit room function - TRUE REVERSE animation (like rewinding video)
     const exitRoom = useCallback(() => {
@@ -439,18 +449,25 @@ const DoorSection = ({
                         // Restore precise full rotation (including X/Z pitch/roll) before returning control
                         camera.rotation.set(saved.rotationX, saved.rotationY, saved.rotationZ);
 
+                        // Spread state updates across frames to prevent jank
+                        // Frame 1: Critical state
                         setIsInsideRoom(false);
                         setIsAnimating(false);
-                        setIsTiltLocked(false); // Unlock tilt
-                        // Unload room after exiting to save resources
-                        setShouldRenderRoom(false);
 
-                        // Update context state
-                        contextExitRoom();
+                        requestAnimationFrame(() => {
+                            // Frame 2: Reset room state
+                            setIsTiltLocked(false);
+                            setRoomReady(false);
+                            roomReadyRef.current = false;
 
-                        closeDoor();
-                        // Return camera control to hook
-                        setCameraOverride?.(false);
+                            requestAnimationFrame(() => {
+                                // Frame 3: Cleanup and context
+                                setShouldRenderRoom(false);
+                                contextExitRoom();
+                                closeDoor();
+                                setCameraOverride?.(false);
+                            });
+                        });
                     }
                 });
             }
@@ -615,7 +632,7 @@ const DoorSection = ({
 
                     {/* === DOOR INTERIOR CORRIDOR + ROOM === */}
                     {/* Always render, but pass showRoom prop for lazy loading giant room */}
-                    <RoomInterior label={label} showRoom={shouldRenderRoom} />
+                    <RoomInterior label={label} showRoom={shouldRenderRoom} onReady={handleRoomReady} />
 
                     {/* === DOOR PANEL (pivots for opening) === */}
                     {/* Pivot Z at 0.01 to be slightly behind frame but in front of wall if needed, or just flush */}

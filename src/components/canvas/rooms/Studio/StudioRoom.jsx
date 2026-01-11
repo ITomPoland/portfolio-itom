@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { CONTENT_DATA, PLATFORM_CONFIG, getLatestContent } from './contentData';
@@ -20,7 +19,7 @@ const VERTICAL_SPACING = 2.5; // Space between monitor rings
 const TOWER_Y_START = -5; // Starting Y offset for tower (negative = lower) -> CONTROLS HEIGHT (UP/DOWN)
 const TOWER_Z_START = -10; // Starting Z position (negative = further away) -> CONTROLS DISTANCE
 
-const StudioRoom = ({ showRoom }) => {
+const StudioRoom = ({ showRoom, onReady }) => {
     const groupRef = useRef();
     const towerRef = useRef();
     const { camera, size } = useThree();
@@ -76,9 +75,20 @@ const StudioRoom = ({ showRoom }) => {
 
     // Monitor Y offsets for falling animation (mutable)
     const monitorOffsets = useRef([]);
+    // Refs to monitor meshes for direct position updates (avoids 28 useFrame hooks)
+    const monitorRefs = useRef([]);
+
+    // Signal that room is ready for door to open
+    useEffect(() => {
+        // Small delay to ensure all geometry is created
+        const timer = setTimeout(() => {
+            onReady?.();
+        }, 100);
+        return () => clearTimeout(timer);
+    }, [onReady]);
 
     // Build cylindrical tower - all monitors at same radius, shuffled content, staggered heights
-    const monitors = useMemo(() => {
+    const monitorData = useMemo(() => {
         const items = [];
 
         // Shuffle content for mixed appearance (seeded for consistency)
@@ -142,8 +152,17 @@ const StudioRoom = ({ showRoom }) => {
         // Initialize offsets
         monitorOffsets.current = items.map(() => 0);
 
-        return items;
+        // Pre-compute totalHeight for seamless loop (avoid calculating in useFrame)
+        const minBaseY = Math.min(...items.map(m => m.baseY));
+        const maxBaseY = Math.max(...items.map(m => m.baseY));
+        const totalHeight = maxBaseY - minBaseY + VERTICAL_SPACING;
+
+        return { items, totalHeight };
     }, [latestContent.id]);
+
+    // Destructure for easier access
+    const monitors = monitorData.items;
+    const totalHeight = monitorData.totalHeight;
 
     // Need a ref for lastY too
     const lastYRef = useRef(0);
@@ -399,11 +418,8 @@ const StudioRoom = ({ showRoom }) => {
             const targetDrift = fallSpeed.current > 0 ? BASE_FALL_SPEED : -BASE_FALL_SPEED;
             fallSpeed.current = THREE.MathUtils.lerp(fallSpeed.current, targetDrift, 1.0 - SPEED_DECAY);
 
-            // Calculate total height of all monitors for seamless loop
-            const minBaseY = Math.min(...monitors.map(m => m.baseY));
-            const maxBaseY = Math.max(...monitors.map(m => m.baseY));
-            const totalHeight = maxBaseY - minBaseY + VERTICAL_SPACING;
-
+            // totalHeight is now pre-computed in useMemo for performance
+            // Update all monitor offsets and positions in a single loop (no child useFrames needed)
             monitors.forEach((monitor, index) => {
                 // Update offset
                 monitorOffsets.current[index] -= fallSpeed.current * delta;
@@ -419,6 +435,12 @@ const StudioRoom = ({ showRoom }) => {
                 } else if (currentY > totalHeight - 2 && fallSpeed.current < 0) {
                     // Moving Up -> Reset to bottom
                     monitorOffsets.current[index] -= totalHeight;
+                }
+
+                // Direct DOM update - bypass React reconciliation for performance
+                const ref = monitorRefs.current[index];
+                if (ref) {
+                    ref.position.y = monitor.baseY + monitorOffsets.current[index];
                 }
             });
         }
@@ -444,7 +466,7 @@ const StudioRoom = ({ showRoom }) => {
                         key={item.id}
                         item={item}
                         index={index}
-                        offsetsRef={monitorOffsets}
+                        meshRef={(el) => { monitorRefs.current[index] = el; }}
                         isHovered={hoveredId === item.id}
                         isSelected={selectedMonitor?.id === item.id}
                         onHover={(hovered) => setHoveredId(hovered ? item.id : null)}
@@ -454,49 +476,16 @@ const StudioRoom = ({ showRoom }) => {
                 ))}
             </group>
 
-            {/* Instruction Text */}
-            <Text position={[0, 0.5, -5]} fontSize={0.25} color="#666">
-                Drag to Spin • Click to View
-            </Text>
+            {/* TODO: Add instruction as texture or HTML overlay later */}
         </group>
     );
 };
 
 // ===========================================
-// MONITOR BLOCK COMPONENT
+// MONITOR BLOCK COMPONENT (Simplified - no useFrame)
 // ===========================================
-const MonitorBlock = ({ item, index, offsetsRef, isHovered, isSelected, onHover, onClick, disabled }) => {
-    const meshRef = useRef();
-    const scanlineRef = useRef();
-
-    useEffect(() => {
-        if (meshRef.current) {
-            gsap.to(meshRef.current.scale, {
-                x: isHovered && !disabled ? 1.05 : 1,
-                y: isHovered && !disabled ? 1.05 : 1,
-                z: isHovered && !disabled ? 1.05 : 1,
-                duration: 0.25,
-                ease: 'power2.out'
-            });
-        }
-    }, [isHovered, disabled]);
-
-    useFrame((state) => {
-        // Read current offset from ref (updated by parent)
-        const yOffset = offsetsRef?.current?.[index] || 0;
-        const currentY = item.baseY + yOffset;
-
-        if (scanlineRef.current) {
-            scanlineRef.current.position.y = Math.sin(state.clock.elapsedTime * 3 + currentY) * item.height * 0.35;
-        }
-
-        // Update Y position for falling animation
-        if (meshRef.current) {
-            meshRef.current.position.y = currentY;
-        }
-    });
-
-    const platformColor = item.platformConfig.color;
+const MonitorBlock = ({ item, meshRef, isHovered, isSelected, onHover, onClick, disabled }) => {
+    // Position.y is updated directly by parent's useFrame via meshRef
 
     return (
         <group
@@ -519,73 +508,11 @@ const MonitorBlock = ({ item, index, offsetsRef, isHovered, isSelected, onHover,
                 onClick();
             }}
         >
-            {/* Monitor Case */}
+            {/* Simple device box - will be replaced with textured mesh later */}
             <mesh>
                 <boxGeometry args={[item.width, item.height, item.depth]} />
-                <meshStandardMaterial color="#1a1a1a" roughness={0.4} metalness={0.1} />
+                <meshStandardMaterial color={item.platformConfig.color} roughness={0.4} metalness={0.1} />
             </mesh>
-
-            {/* Screen bezel */}
-            <mesh position={[0, 0, item.depth / 2 + 0.005]}>
-                <boxGeometry args={[item.width * 0.9, item.height * 0.85, 0.01]} />
-                <meshStandardMaterial color="#0a0a0a" />
-            </mesh>
-
-            {/* Screen */}
-            <mesh position={[0, 0, item.depth / 2 + 0.015]}>
-                <planeGeometry args={[item.width * 0.82, item.height * 0.75]} />
-                <meshBasicMaterial color={platformColor} />
-            </mesh>
-
-            {/* Glow on hover */}
-            {isHovered && !disabled && (
-                <pointLight
-                    position={[0, 0, item.depth / 2 + 0.3]}
-                    color={platformColor}
-                    intensity={1.5}
-                    distance={2}
-                />
-            )}
-
-            {/* Scanline */}
-            <mesh ref={scanlineRef} position={[0, 0, item.depth / 2 + 0.02]}>
-                <planeGeometry args={[item.width * 0.82, 0.015]} />
-                <meshBasicMaterial color="#ffffff" opacity={0.12} transparent />
-            </mesh>
-
-            {/* On Air indicator */}
-            {item.isLatest && (
-                <mesh position={[item.width / 2 - 0.15, item.height / 2 - 0.1, item.depth / 2 + 0.03]}>
-                    <sphereGeometry args={[0.05, 16, 16]} />
-                    <meshBasicMaterial color="#ff0000" />
-                </mesh>
-            )}
-
-            {/* Platform icon */}
-            <Text
-                position={[0, -item.height / 2 + 0.12, item.depth / 2 + 0.02]}
-                fontSize={0.1}
-                color="#ffffff"
-                anchorX="center"
-            >
-                {item.platformConfig.icon}
-            </Text>
-
-            {/* Title on hover */}
-            {isHovered && !disabled && (
-                <Text
-                    position={[0, item.height / 2 + 0.2, 0]}
-                    fontSize={0.12}
-                    color="#ffffff"
-                    anchorX="center"
-                    maxWidth={2}
-                    textAlign="center"
-                    outlineWidth={0.01}
-                    outlineColor="#000000"
-                >
-                    {item.title}
-                </Text>
-            )}
         </group>
     );
 };

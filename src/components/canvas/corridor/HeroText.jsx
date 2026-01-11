@@ -51,6 +51,8 @@ const HeroText = ({ position = [0, 0.3, 0] }) => {
     const splitAmount = useRef(0);
     const targetSplit = useRef(0);
     const floatY = useRef(0);
+    // Pre-allocate Vector3 to avoid per-frame garbage collection
+    const worldPosVec = useRef(new THREE.Vector3());
 
     // Letter positions for ITOM split effect
     const letters = useMemo(() => [
@@ -75,9 +77,8 @@ const HeroText = ({ position = [0, 0.3, 0] }) => {
         const time = state.clock.elapsedTime;
 
         // === SPLIT LOGIC based on camera distance ===
-        const worldPos = new THREE.Vector3();
-        groupRef.current.getWorldPosition(worldPos);
-        const distance = camera.position.z - worldPos.z;
+        groupRef.current.getWorldPosition(worldPosVec.current);
+        const distance = camera.position.z - worldPosVec.current.z;
 
         const SPLIT_START = 3;
         const SPLIT_PEAK = 0;
@@ -179,21 +180,12 @@ const HeroText = ({ position = [0, 0.3, 0] }) => {
 const easeOutQuad = (t) => t * (2 - t);
 
 /**
- * Small decorative star with rotation animation
+ * Small decorative star - STATIC to avoid useFrame overhead
+ * Parent HeroText already handles all animations
  */
 const SmallStar = ({ position, scale = 0.1 }) => {
-    const ref = useRef();
-
-    useFrame((state) => {
-        if (ref.current) {
-            ref.current.rotation.z = state.clock.elapsedTime * 0.25;
-            const pulse = scale * (1 + Math.sin(state.clock.elapsedTime * 1.8) * 0.12);
-            ref.current.scale.setScalar(pulse);
-        }
-    });
-
     return (
-        <group ref={ref} position={position} scale={scale}>
+        <group position={position} scale={scale}>
             {[0, 1, 2, 3].map((i) => (
                 <mesh key={i} rotation={[0, 0, (i * Math.PI) / 4]}>
                     <planeGeometry args={[1, 0.12]} />

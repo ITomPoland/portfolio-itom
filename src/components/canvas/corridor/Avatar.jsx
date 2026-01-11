@@ -42,6 +42,9 @@ const Avatar = ({ position = [10, -20, 30] }) => {
         }
     }, [texture]);
 
+    // Pre-allocate Vector3 to avoid per-frame garbage collection
+    const worldPosVec = useRef(new THREE.Vector3());
+
     // Main animation loop with WOW effects
     useFrame((state) => {
         if (!groupRef.current || !meshRef.current) return;
@@ -49,9 +52,8 @@ const Avatar = ({ position = [10, -20, 30] }) => {
         const time = state.clock.elapsedTime;
 
         // === DODGE LOGIC ===
-        const worldPos = new THREE.Vector3();
-        groupRef.current.getWorldPosition(worldPos);
-        const distance = camera.position.z - worldPos.z;
+        groupRef.current.getWorldPosition(worldPosVec.current);
+        const distance = camera.position.z - worldPosVec.current.z;
 
         // Dodge parameters - matches HeroText timing
         const DODGE_START = 3;  // Was 5, now same as text

@@ -3,15 +3,27 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { Text, useTexture, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import gsap from 'gsap';
+import { useScene } from '../../../../context/SceneContext';
 
 const PROJECT_COUNT = 5; // Placeholder count
 const GAP = 2.5; // Distance between cards
 
+// Placeholder project data
+const PROJECTS = [
+    { id: 0, title: 'Project Alpha', description: 'A cool web app built with React and Three.js', url: 'https://example.com' },
+    { id: 1, title: 'Project Beta', description: 'E-commerce platform with modern design', url: 'https://example.com' },
+    { id: 2, title: 'Project Gamma', description: 'Interactive portfolio website', url: 'https://example.com' },
+    { id: 3, title: 'Project Delta', description: 'Mobile-first dashboard application', url: 'https://example.com' },
+    { id: 4, title: 'Project Epsilon', description: 'Creative agency landing page', url: 'https://example.com' },
+];
+
 const GalleryRoom = ({ showRoom, onReady }) => {
+    const { openOverlay } = useScene();
     const groupRef = useRef();
     const [scrollOffset, setScrollOffset] = useState(0);
     const targetScroll = useRef(0);
     const currentScroll = useRef(0);
+    const [selectedCard, setSelectedCard] = useState(null); // Track which card is animating/selected
 
     // Track if we've signaled ready
     const hasSignaledReady = useRef(false);
@@ -39,29 +51,18 @@ const GalleryRoom = ({ showRoom, onReady }) => {
     useEffect(() => {
         const handleWheel = (e) => {
             if (!showRoom) return;
-            // Horizontal scroll feeling
+            e.preventDefault(); // Prevent browser scroll blocking
+            // Horizontal scroll feeling - NO CLAMP for infinity!
             targetScroll.current += e.deltaY * 0.005;
-            // Clamp scroll to projects range
-            const maxScroll = (PROJECT_COUNT - 1) * GAP;
-            targetScroll.current = THREE.MathUtils.clamp(targetScroll.current, -2, maxScroll + 2);
         };
 
-        window.addEventListener('wheel', handleWheel);
+        window.addEventListener('wheel', handleWheel, { passive: false });
         return () => window.removeEventListener('wheel', handleWheel);
     }, [showRoom]);
 
     useFrame((state, delta) => {
         // Smooth scroll damping
         currentScroll.current = THREE.MathUtils.lerp(currentScroll.current, targetScroll.current, delta * 5);
-
-        // DEBUG LOGGING (Run every ~60 frames)
-        if (state.clock.elapsedTime % 1 < 0.02) {
-            console.log("CAMERA POS:", state.camera.position);
-            console.log("CAMERA ROT:", state.camera.rotation);
-            const worldPos = new THREE.Vector3();
-            groupRef.current?.getWorldPosition(worldPos);
-            console.log("GALLERY WORLD POS:", worldPos);
-        }
     });
 
     // --- GEOMETRY & MATERIALS ---
@@ -103,29 +104,44 @@ const GalleryRoom = ({ showRoom, onReady }) => {
 
     return (
         <group ref={groupRef}>
-            {/* === THE BALCONY === */}
+            {/* ============================================
+                🎛️ POSITIONING GUIDE - EDIT THESE VALUES:
+                
+                BALCONY GROUP:    position={[X, Y, Z]} on line below
+                                  Y = height, Z = forward/back
+                
+                FLOOR:           position={[X, Y, Z]} - center point
+                                  planeGeometry args={[width, depth]}
+                
+                RAILING:         position Z on mesh (line ~109, ~116)
+                                  RAILING_HEIGHT at top of file
+                
+                CLOTHESLINE:     position={[X, Y, Z]} group (line ~124)
+                                  Cards Y/Z in ProjectCard useFrame
+                ============================================ */}
+
             {/* Shifted so camera stands on the edge */}
-            <group position={[0, -0.7, -1]}>
-                {/* Floor - Extended Deeply */}
+            <group position={[0, -0.7, -2]}>
+                {/* Floor - ends at railing */}
                 <mesh
                     rotation={[-Math.PI / 2, 0, 0]}
-                    position={[0, 0, -5]} // Center point pushed back
+                    position={[0, 0, -1.3]}
                 >
-                    <planeGeometry args={[10, 14]} /> {/* Much deeper floor */}
+                    <planeGeometry args={[15, 6.6]} /> {/* width=10, depth=5 */}
                     <primitive object={materials.floor} />
                 </mesh>
 
-                {/* Railing - Pushed far back */}
+                {/* Railing */}
                 <group position={[0, 0, -2]}>
-                    {/* Top Rail */}
-                    <mesh position={[0, RAILING_HEIGHT, -8]}> {/* Z = -10 global approx */}
-                        <boxGeometry args={[10, 0.1, 0.2]} />
+                    {/* Top Rail - Extended wider */}
+                    <mesh position={[0, RAILING_HEIGHT, -2.5]}>
+                        <boxGeometry args={[20, 0.1, 0.2]} />
                         <primitive object={materials.railing} />
                     </mesh>
 
-                    {/* Posts */}
-                    {[-4.8, -2.5, 0, 2.5, 4.8].map((x, i) => (
-                        <mesh key={i} position={[x, RAILING_HEIGHT / 2, -8]}>
+                    {/* Posts - more for wider railing */}
+                    {[-9, -6.5, -4, -1.5, 1.5, 4, 6.5, 9].map((x, i) => (
+                        <mesh key={i} position={[x, RAILING_HEIGHT / 2, -2.5]}>
                             <boxGeometry args={[0.1, RAILING_HEIGHT, 0.1]} />
                             <primitive object={materials.railing} />
                         </mesh>
@@ -133,7 +149,8 @@ const GalleryRoom = ({ showRoom, onReady }) => {
                 </group>
 
                 {/* === CLOTHESLINE SYSTEM === */}
-                <group position={[0, 0.5, -9]}> {/* Pushed behind railing */}
+                {/* 🎛️ LAUNDRY HEIGHT: Change Y below (currently 1.2) to raise/lower */}
+                <group position={[0, 1.2, -3]}>
                     {/* The Rope */}
                     <mesh geometry={ropeGeometry} material={materials.rope} />
 
@@ -146,6 +163,21 @@ const GalleryRoom = ({ showRoom, onReady }) => {
                             currentScroll={currentScroll}
                             materials={materials}
                             curve={curve}
+                            isSelected={selectedCard === i}
+                            onSelect={(cardData) => {
+                                setSelectedCard(i);
+                                // After animation completes, open overlay
+                                // setTimeout(() => {
+                                //     openOverlay({
+                                //         title: PROJECTS[i].title,
+                                //         description: PROJECTS[i].description,
+                                //         url: PROJECTS[i].url,
+                                //         date: '2025',
+                                //         platformConfig: { label: 'Gallery Project' }
+                                //     });
+                                // }, 600); // Match GSAP animation duration
+                            }}
+                            onDeselect={() => setSelectedCard(null)}
                         />
                     ))}
                 </group>
@@ -162,34 +194,78 @@ const GalleryRoom = ({ showRoom, onReady }) => {
 };
 
 // Sub-component for individual project cards
-const ProjectCard = ({ index, currentScroll, materials, curve }) => {
+const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, onSelect, onDeselect }) => {
     const cardRef = useRef();
+    const [hovered, setHovered] = useState(false);
+    const [isAnimating, setIsAnimating] = useState(false);
+
+    // Store original position for return animation
+    const originalPos = useRef({ x: 0, y: 0, z: 0 });
+
     // Random sway properties
     const swaySpeed = useRef(Math.random() * 0.5 + 0.5);
     const swayOffset = useRef(Math.random() * 100);
 
+    // Click handler - trigger pull-down animation
+    const handleClick = (e) => {
+        e.stopPropagation();
+        if (isAnimating || isSelected) return;
+
+        setIsAnimating(true);
+
+        // Store current position before animating
+        if (cardRef.current) {
+            originalPos.current = {
+                x: cardRef.current.position.x,
+                y: cardRef.current.position.y,
+                z: cardRef.current.position.z
+            };
+        }
+
+        // GSAP animation: Just simple aggressive pull down
+        gsap.to(cardRef.current.position, {
+            y: originalPos.current.y - 0.8,   // Minimal drop down
+            // z: originalPos.current.z,      // Keep original Z (no flying to camera)
+            // x: originalPos.current.x,      // Keep original X (no centering)
+            duration: 0.3,                    // Fast/Aggressive
+            ease: 'back.out(2)',              // Little bounce at end
+            onComplete: () => {
+                onSelect?.({ index });
+            }
+        });
+
+        // Also rotate slightly for "detached" feel
+        gsap.to(cardRef.current.rotation, {
+            z: -0.1,
+            x: 0.15,  // Tilt toward viewer
+            duration: 0.7,
+            ease: 'power2.out'
+        });
+    };
+
+    // Cursor change on hover
+    useEffect(() => {
+        document.body.style.cursor = hovered && !isSelected ? 'pointer' : 'auto';
+        return () => { document.body.style.cursor = 'auto'; };
+    }, [hovered, isSelected]);
+
     useFrame((state) => {
         if (!cardRef.current) return;
 
-        // Calculate position along the horizontal axis based on scroll
-        // Center the collection (index * gap) minus scroll
-        const initialX = (index - 2) * GAP; // Centered around 0 for 5 items
-        const xPos = initialX - currentScroll.current + ((index * GAP)); // Adjusted
+        // Skip position updates if card is animating or selected
+        if (isAnimating || isSelected) return;
 
-        // We want to map this xPos to the curve
-        // Simple approximation: find point on curve where x matches xPos
-        // Since curve is mostly along X, we can estimate t roughly
-        // Range of curve X is approx -10 to 10.
+        // INFINITY SCROLL: Wrap displayX within visible range
+        const totalWidth = PROJECT_COUNT * GAP;
+        let rawX = (index * GAP) - currentScroll.current;
 
-        // Let's manually position for now relative to center
-        // The projects move LEFT as we scroll RIGHT (standard feel)
-        const displayX = (index * GAP) - currentScroll.current;
+        // Wrap around: keep cards within -halfWidth to +halfWidth
+        const halfWidth = totalWidth / 2;
+        let displayX = ((rawX + halfWidth) % totalWidth + totalWidth) % totalWidth - halfWidth;
 
-        // To stick to the curve, we find the Y and Z for this X
-        // Function of the parabola/catenary approx: y = a*x^2 + c
-        // Our points: (0, 2), (10, 3) -> y = 0.01*x^2 + 2
-        const yBase = 2 + 0.01 * (displayX * displayX);
-        const zBase = -5 - 0.01 * (displayX * displayX); // Slight curve back
+        // Catenary curve: cards dip slightly in center, rise at edges
+        const yBase = 1.8 + 0.02 * (displayX * displayX);
+        const zBase = -2 - 0.01 * (displayX * displayX);
 
         cardRef.current.position.set(displayX, yBase, zBase);
 
@@ -199,6 +275,7 @@ const ProjectCard = ({ index, currentScroll, materials, curve }) => {
 
         // Rotate slightly based on movement + wind
         cardRef.current.rotation.z = wind;
+        cardRef.current.rotation.x = 0;
 
         // Visibility Check (fade out if too far)
         const dist = Math.abs(displayX);
@@ -207,7 +284,12 @@ const ProjectCard = ({ index, currentScroll, materials, curve }) => {
     });
 
     return (
-        <group ref={cardRef}>
+        <group
+            ref={cardRef}
+            onClick={handleClick}
+            onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
+            onPointerOut={() => setHovered(false)}
+        >
             {/* Clothespin (Top Center) */}
             <mesh position={[0, 0, 0]}>
                 <boxGeometry args={[0.05, 0.1, 0.05]} />
@@ -216,7 +298,10 @@ const ProjectCard = ({ index, currentScroll, materials, curve }) => {
 
             {/* The Paper / Card hanging down */}
             {/* Pivot is at top (0,0,0) so we offset mesh down */}
-            <group position={[0, -1.1, 0]}>
+            <group
+                position={[0, -1.1, 0]}
+                scale={hovered ? 1.08 : 1}
+            >
                 <mesh material={materials.card}>
                     <planeGeometry args={[1.5, 2]} />
                 </mesh>

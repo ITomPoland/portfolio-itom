@@ -9,15 +9,16 @@ import { useScene } from '../../../../context/SceneContext';
 // ============================================
 // CONFIG - Adjust these values as needed
 // ============================================
-const CAMERA_Y_OFFSET = -4; // Negative = camera lower, Positive = camera higher
-const CAMERA_ZOOM_DISTANCE = 4; // Distance from monitor front when zoomed in
+const CAMERA_Y_OFFSET = -6; // Negative = camera lower, Positive = camera higher
+const CAMERA_ZOOM_DISTANCE = 3; // Distance from monitor front when zoomed in
 const CAMERA_PAN_RIGHT = 1; // How far camera moves right after zoom (for content panel space)
 const TOWER_RADIUS = 2.2; // All monitors at same distance from center (smaller = narrower)
 const MONITORS_PER_RING = 4; // How many monitors per vertical level
 const FALL_SPEED = 0.3; // How fast monitors fall down
 const TOWER_HEIGHT = 12; // Total visible height of tower
 const VERTICAL_SPACING = 2.5; // Space between monitor rings
-const TOWER_Y_START = -3; // Starting Y offset for tower (negative = lower)
+const TOWER_Y_START = -5; // Starting Y offset for tower (negative = lower) -> CONTROLS HEIGHT (UP/DOWN)
+const TOWER_Z_START = -10; // Starting Z position (negative = further away) -> CONTROLS DISTANCE
 
 const StudioRoom = ({ showRoom }) => {
     const groupRef = useRef();
@@ -34,7 +35,7 @@ const StudioRoom = ({ showRoom }) => {
         return {
             zoomDistance: isMobile ? 2 : isTablet ? 3 : CAMERA_ZOOM_DISTANCE,
             panRight: isMobile ? 0 : isTablet ? 0.5 : CAMERA_PAN_RIGHT,
-            panDown: isMobile ? 8 : 0, // Positive = camera DOWN = monitor at TOP
+            panDown: isMobile ? 9.7 : 0, // Positive = camera DOWN = monitor at TOP
             yOffset: isMobile ? 2.5 : isTablet ? -3 : CAMERA_Y_OFFSET,
             isMobile, // Pass through boolean
         };
@@ -46,11 +47,22 @@ const StudioRoom = ({ showRoom }) => {
     const originalCameraX = useRef(null);
 
     // State
-    const [isDragging, setIsDragging] = useState(false);
-    const [lastX, setLastX] = useState(0);
-    const [dragDistance, setDragDistance] = useState(0);
+    const isDraggingRef = useRef(false);
+    const lastXRef = useRef(0);
+    const [dragDistance, setDragDistance] = useState(0); // Keep this state as it might be used for rendering or effects, currently used in logic but safe to keep or refactor. Actually used in dependency arrays.
+
+    // Physics
     const rotationVelocity = useRef(0);
-    const autoRotationSpeed = 0.12;
+    const autoRotationSpeed = useRef(0.12); // Now a ref to support changing direction
+    const DRAG_SENSITIVITY = 0.008; // Increased from 0.005
+    const FRICTION = 0.98; // Increased from 0.95 (longer spin)
+
+    // Vertical Fall Physics
+    const fallSpeed = useRef(FALL_SPEED); // Start with default
+    const BASE_FALL_SPEED = FALL_SPEED;
+    const SCROLL_SENSITIVITY = 0.006; // Tripled from 0.002
+    const SWIPE_SENSITIVITY = 0.005; // Adjusted
+    const SPEED_DECAY = 0.985; // Slower return to normal (was 0.96)
 
     // Content State
     const [selectedMonitor, setSelectedMonitor] = useState(null);
@@ -133,31 +145,105 @@ const StudioRoom = ({ showRoom }) => {
         return items;
     }, [latestContent.id]);
 
+    // Need a ref for lastY too
+    const lastYRef = useRef(0);
+
     // --- INTERACTION ---
     const handlePointerDown = (e) => {
         if (isAnimating) return;
-        setIsDragging(true);
-        setLastX(e.clientX);
+        // e.preventDefault(); // Might block scroll, good for custom drag
+        e.stopPropagation(); // Stop bubbling
+
+        isDraggingRef.current = true;
+        lastXRef.current = e.clientX;
+        lastYRef.current = e.clientY; // Store init Y
         setDragDistance(0);
         rotationVelocity.current = 0;
+
+        // Disable auto-rotate immediately
+        document.body.style.cursor = 'grabbing';
     };
 
-    const handlePointerUp = () => {
-        setIsDragging(false);
-    };
+    const handlePointerUp = useCallback(() => {
+        isDraggingRef.current = false;
+        document.body.style.cursor = 'auto';
+    }, []);
 
-    const handlePointerMove = (e) => {
-        if (!isDragging || !towerRef.current || isAnimating) return;
+    const handlePointerMove = useCallback((e) => {
+        if (!isDraggingRef.current || !towerRef.current || isAnimating) return;
 
-        const deltaX = e.clientX - lastX;
-        setLastX(e.clientX);
-        setDragDistance(prev => prev + Math.abs(deltaX));
-        rotationVelocity.current = deltaX * 0.005;
+        const clientX = e.clientX || (e.touches && e.touches[0]?.clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0]?.clientY);
+
+        if (!clientX || !clientY) return;
+
+        const deltaX = clientX - lastXRef.current;
+        const deltaY = clientY - lastYRef.current; // Vertical delta
+
+        lastXRef.current = clientX;
+        lastYRef.current = clientY;
+
+        setDragDistance(prev => prev + Math.abs(deltaX) + Math.abs(deltaY)); // Add Y check
+
+        // HORIZONTAL -> Rotation
+        if (Math.abs(deltaX) > 1) {
+            autoRotationSpeed.current = Math.sign(deltaX) * 0.12;
+        }
+        rotationVelocity.current = deltaX * DRAG_SENSITIVITY;
         towerRef.current.rotation.y += rotationVelocity.current;
-    };
+
+        // VERTICAL -> Fall Speed (Inverted: Drag UP = move contents UP = negative speed) (Actually drag logic is usually "pull", so drag up = move up)
+        // If I drag UP (deltaY negative), content should move UP (negative offset change)? in 2D touch scrolling, drag up = content moves up (showing bottom).
+        // Let's match standard "Direct Manipulation": Finger goes up -> Content goes up.
+        // Content Y is `baseY + offset`. Moving UP means increasing Y?
+        // Wait, "Falling" is reducing Y (monitorOffsets -= speed).
+        // So positive speed = falling down. Negative speed = going up.
+        // Drag UP (deltaY < 0). We want monitors to go UP (Move towards +Y).
+        // So drag UP -> make speed NEGATIVE.
+        // Drag DOWN (deltaY > 0) -> make speed POSITIVE (fall faster).
+
+        // We add directly to speed to give momentum "throw" feel, but since this is continuous move, maybe direct mapping + inertia?
+        // Let's try adding to velocity logic similar to rotation.
+
+        // Drag DOWN (deltaY > 0) should increase fallSpeed (more positive).
+        // Drag UP (deltaY < 0) should decrease fallSpeed (more negative).
+        fallSpeed.current += deltaY * SWIPE_SENSITIVITY;
+
+    }, [isAnimating]);
+
+    // Wheel Listener for Desktop
+    useEffect(() => {
+        const handleWheel = (e) => {
+            // e.deltaY > 0 means scroll DOWN.
+            // Scroll DOWN -> Monitors go DOWN (Speed +).
+            // Scroll UP -> Monitors go UP (Speed -).
+            fallSpeed.current += e.deltaY * SCROLL_SENSITIVITY;
+        };
+
+        window.addEventListener('wheel', handleWheel);
+        return () => window.removeEventListener('wheel', handleWheel);
+    }, []);
+
+    // Global Event Listeners for seamless drag
+    useEffect(() => {
+        window.addEventListener('pointerup', handlePointerUp);
+        window.addEventListener('pointermove', handlePointerMove);
+        // Also touch events for mobile if pointer events fail (though React usually patches)
+        window.addEventListener('touchend', handlePointerUp);
+        window.addEventListener('touchmove', handlePointerMove); // Native touchmove
+
+        return () => {
+            window.removeEventListener('pointerup', handlePointerUp);
+            window.removeEventListener('pointermove', handlePointerMove);
+            window.removeEventListener('touchend', handlePointerUp);
+            window.removeEventListener('touchmove', handlePointerMove);
+        };
+    }, [handlePointerUp, handlePointerMove]);
 
     // STEP 1 ONLY: Rotate tower to center the clicked monitor
     const handleMonitorClick = useCallback((item) => {
+        // Prevent click if we were dragging
+        if (dragDistance > 5 || isAnimating || !towerRef.current) return;
         if (dragDistance > 5 || isAnimating || !towerRef.current) return;
 
         setIsAnimating(true);
@@ -298,20 +384,21 @@ const StudioRoom = ({ showRoom }) => {
         }
     }, [camera]);
 
-    useEffect(() => {
-        window.addEventListener('pointerup', handlePointerUp);
-        return () => window.removeEventListener('pointerup', handlePointerUp);
-    }, []);
+    // Cleaned up old listener effect that is now handled by the global effect above
 
     useFrame((state, delta) => {
         if (!towerRef.current) return;
 
-        // Auto-rotate when idle
-        if (!isDragging && !isAnimating && !selectedMonitor) {
-            towerRef.current.rotation.y += autoRotationSpeed * delta + rotationVelocity.current;
-            rotationVelocity.current *= 0.95;
+        // Auto-rotate and Physics when idle
+        if (!isDraggingRef.current && !isAnimating && !selectedMonitor) {
+            towerRef.current.rotation.y += autoRotationSpeed.current * delta + rotationVelocity.current;
+            rotationVelocity.current *= FRICTION;
 
-            // FALLING ANIMATION - only when no monitor selected
+            // Decay fall speed back to base speed (but keep direction!)
+            // If going down (>0), drift to positive base. If going up (<0), drift to negative base.
+            const targetDrift = fallSpeed.current > 0 ? BASE_FALL_SPEED : -BASE_FALL_SPEED;
+            fallSpeed.current = THREE.MathUtils.lerp(fallSpeed.current, targetDrift, 1.0 - SPEED_DECAY);
+
             // Calculate total height of all monitors for seamless loop
             const minBaseY = Math.min(...monitors.map(m => m.baseY));
             const maxBaseY = Math.max(...monitors.map(m => m.baseY));
@@ -319,15 +406,19 @@ const StudioRoom = ({ showRoom }) => {
 
             monitors.forEach((monitor, index) => {
                 // Update offset
-                monitorOffsets.current[index] -= FALL_SPEED * delta;
+                monitorOffsets.current[index] -= fallSpeed.current * delta;
 
                 // Calculate current Y
                 const currentY = monitor.baseY + monitorOffsets.current[index];
 
                 // If below threshold (-2), teleport to top (seamless loop)
-                if (currentY < -2) {
-                    // Add totalHeight to current offset to teleport to top
+                // If moving UP (negative speed), we need to check TOP threshold too!
+                if (currentY < -2 && fallSpeed.current > 0) {
+                    // Falling Down -> Reset to top
                     monitorOffsets.current[index] += totalHeight;
+                } else if (currentY > totalHeight - 2 && fallSpeed.current < 0) {
+                    // Moving Up -> Reset to bottom
+                    monitorOffsets.current[index] -= totalHeight;
                 }
             });
         }
@@ -339,10 +430,15 @@ const StudioRoom = ({ showRoom }) => {
             {/* THE INFINITE TOWER */}
             <group
                 ref={towerRef}
-                position={[0, TOWER_Y_START, -15]}
+                position={[0, TOWER_Y_START, TOWER_Z_START]}
                 onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
             >
+                {/* Invisible Hit Cylinder for easier drag interaction */}
+                <mesh visible={false}>
+                    <cylinderGeometry args={[TOWER_RADIUS + 0.5, TOWER_RADIUS + 0.5, TOWER_HEIGHT * 1.5, 16]} />
+                    <meshBasicMaterial />
+                </mesh>
+
                 {monitors.map((item, index) => (
                     <MonitorBlock
                         key={item.id}

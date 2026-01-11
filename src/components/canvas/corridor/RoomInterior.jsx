@@ -10,9 +10,9 @@ const ContactRoom = lazy(() => import('../rooms/Contact/ContactRoom'));
 
 // Room configurations
 const ROOM_CONFIG = {
-    corridorWidth: 1.25,  // frameWidth - 0.1
+    corridorWidth: 2.2,   // Wider "vestibule" feeling
     corridorHeight: 2.4,  // frameHeight - 0.1
-    corridorDepth: 15,
+    corridorDepth: 2,     // Shorter - quick transition
     roomWidth: 30,
     roomHeight: 20,
     roomDepth: 25

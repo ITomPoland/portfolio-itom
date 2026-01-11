@@ -206,12 +206,12 @@ const StudioRoom = ({ showRoom, onReady }) => {
         if (!clientX || !clientY) return;
 
         const deltaX = clientX - lastXRef.current;
-        const deltaY = clientY - lastYRef.current; // Vertical delta
+        const deltaY = clientY - lastYRef.current;
 
         lastXRef.current = clientX;
         lastYRef.current = clientY;
 
-        setDragDistance(prev => prev + Math.abs(deltaX) + Math.abs(deltaY)); // Add Y check
+        setDragDistance(prev => prev + Math.abs(deltaX) + Math.abs(deltaY));
 
         // HORIZONTAL -> Rotation
         if (Math.abs(deltaX) > 1) {
@@ -220,21 +220,7 @@ const StudioRoom = ({ showRoom, onReady }) => {
         rotationVelocity.current = deltaX * DRAG_SENSITIVITY;
         towerRef.current.rotation.y += rotationVelocity.current;
 
-        // VERTICAL -> Fall Speed (Inverted: Drag UP = move contents UP = negative speed) (Actually drag logic is usually "pull", so drag up = move up)
-        // If I drag UP (deltaY negative), content should move UP (negative offset change)? in 2D touch scrolling, drag up = content moves up (showing bottom).
-        // Let's match standard "Direct Manipulation": Finger goes up -> Content goes up.
-        // Content Y is `baseY + offset`. Moving UP means increasing Y?
-        // Wait, "Falling" is reducing Y (monitorOffsets -= speed).
-        // So positive speed = falling down. Negative speed = going up.
-        // Drag UP (deltaY < 0). We want monitors to go UP (Move towards +Y).
-        // So drag UP -> make speed NEGATIVE.
-        // Drag DOWN (deltaY > 0) -> make speed POSITIVE (fall faster).
-
-        // We add directly to speed to give momentum "throw" feel, but since this is continuous move, maybe direct mapping + inertia?
-        // Let's try adding to velocity logic similar to rotation.
-
-        // Drag DOWN (deltaY > 0) should increase fallSpeed (more positive).
-        // Drag UP (deltaY < 0) should decrease fallSpeed (more negative).
+        // VERTICAL -> Fall Speed
         fallSpeed.current += deltaY * SWIPE_SENSITIVITY;
 
     }, [isAnimating]);

@@ -78,14 +78,23 @@ const StudioRoom = ({ showRoom, onReady }) => {
     // Refs to monitor meshes for direct position updates (avoids 28 useFrame hooks)
     const monitorRefs = useRef([]);
 
-    // Signal that room is ready for door to open
-    useEffect(() => {
-        // Small delay to ensure all geometry is created
-        const timer = setTimeout(() => {
+    // Track if we've signaled ready
+    const hasSignaledReady = useRef(false);
+    const frameCount = useRef(0);
+    const FRAMES_TO_WAIT = 5; // Wait for 5 actual render frames
+
+    // Real render-based ready detection - count actual rendered frames
+    useFrame(() => {
+        if (hasSignaledReady.current) return;
+
+        frameCount.current++;
+
+        // After N frames have been rendered, we know GPU has drawn the content
+        if (frameCount.current >= FRAMES_TO_WAIT) {
+            hasSignaledReady.current = true;
             onReady?.();
-        }, 400); // Wait for GPU to finish rendering
-        return () => clearTimeout(timer);
-    }, [onReady]);
+        }
+    });
 
     // Build cylindrical tower - all monitors at same radius, shuffled content, staggered heights
     const monitorData = useMemo(() => {

@@ -13,13 +13,22 @@ const GalleryRoom = ({ showRoom, onReady }) => {
     const targetScroll = useRef(0);
     const currentScroll = useRef(0);
 
-    // Signal that room is ready for door to open
-    useEffect(() => {
-        const timer = setTimeout(() => {
+    // Track if we've signaled ready
+    const hasSignaledReady = useRef(false);
+    const frameCount = useRef(0);
+    const FRAMES_TO_WAIT = 5; // Wait for 5 actual render frames
+
+    // Real render-based ready detection - count actual rendered frames
+    useFrame(() => {
+        if (hasSignaledReady.current) return;
+
+        frameCount.current++;
+
+        if (frameCount.current >= FRAMES_TO_WAIT) {
+            hasSignaledReady.current = true;
             onReady?.();
-        }, 400); // Wait for GPU to finish rendering
-        return () => clearTimeout(timer);
-    }, [onReady]);
+        }
+    });
 
     // Config
     const BALCONY_WIDTH = 5;

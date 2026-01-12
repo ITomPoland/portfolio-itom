@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 import { useScene } from '../../../../context/SceneContext';
 
-const PROJECT_COUNT = 5; // Placeholder count
+const PROJECT_COUNT = 10; // Placeholder count
 const GAP = 2.5; // Distance between cards
 
 // Placeholder project data
@@ -47,6 +47,39 @@ const GalleryRoom = ({ showRoom, onReady }) => {
     const BALCONY_DEPTH = 3;
     const RAILING_HEIGHT = 1.1;
 
+    // Function to scroll to a specific project index (center it)
+    const scrollToIndex = (index, onComplete) => {
+        // Calculate where this index currently appears (relative to current scroll)
+        const totalWidth = PROJECT_COUNT * GAP;
+        const targetScrollValue = index * GAP;
+        const currentScrollValue = currentScroll.current;
+        
+        // Find the shortest path (accounting for infinity scroll wrap)
+        let diff = targetScrollValue - currentScrollValue;
+        
+        // Normalize diff to be within [-halfWidth, halfWidth]
+        const halfWidth = totalWidth / 2;
+        while (diff > halfWidth) diff -= totalWidth;
+        while (diff < -halfWidth) diff += totalWidth;
+        
+        // Target is current + shortest diff
+        const finalTarget = currentScrollValue + diff;
+        
+        // Animate BOTH targetScroll and currentScroll so there's no lerp delay
+        gsap.to(targetScroll, {
+            current: finalTarget,
+            duration: 0.5,
+            ease: 'power2.inOut'
+        });
+        
+        gsap.to(currentScroll, {
+            current: finalTarget,
+            duration: 0.5,
+            ease: 'power2.inOut',
+            onComplete: onComplete  // Callback fires when currentScroll actually reaches target
+        });
+    };
+
     // --- INTERACTION ---
     useEffect(() => {
         const handleWheel = (e) => {
@@ -81,7 +114,7 @@ const GalleryRoom = ({ showRoom, onReady }) => {
         return {
             floor: floorMat,
             railing: new THREE.MeshStandardMaterial({ color: '#2a2a2a', roughness: 0.8 }), // Dark iron/wood
-            rope: new THREE.MeshStandardMaterial({ color: '#5C4033', roughness: 1 }), // Dark brown rope
+            rope: new THREE.MeshStandardMaterial({ color: '#000000', roughness: 1 }), // Black rope
             card: new THREE.MeshStandardMaterial({ color: '#ffffff', side: THREE.DoubleSide, roughness: 0.6 }) // White paper
         };
     }, [floorTexture]);
@@ -89,11 +122,11 @@ const GalleryRoom = ({ showRoom, onReady }) => {
     // Clothesline Curve - Adjusted to be higher and more visible
     const curve = useMemo(() => {
         return new THREE.CatmullRomCurve3([
-            new THREE.Vector3(-8, 2.5, -4),
-            new THREE.Vector3(-4, 2.0, -3.5),
+            new THREE.Vector3(-16, 3.5, -6),
+            new THREE.Vector3(-8, 2.5, -4.5),
             new THREE.Vector3(0, 1.8, -3),   // Closest point
-            new THREE.Vector3(4, 2.0, -3.5),
-            new THREE.Vector3(8, 2.5, -4),
+            new THREE.Vector3(8, 2.5, -4.5),
+            new THREE.Vector3(16, 3.5, -6),
         ]);
     }, []);
 
@@ -101,6 +134,34 @@ const GalleryRoom = ({ showRoom, onReady }) => {
     const ropeGeometry = useMemo(() => {
         return new THREE.TubeGeometry(curve, 64, 0.015, 8, false);
     }, [curve]);
+
+    // Floor Shape (Trapezoid/Triangle) - Narrow at entrance, Wide at railing
+    const floorShape = useMemo(() => {
+        const shape = new THREE.Shape();
+        
+        // --- INSTRUKCJA EDYCJI KSZTAŁTU (HOW TO EDIT) ---
+        // X = Pierwsza liczba (Szerokość). Np. 1.1 to połowa szerokości 2.2.
+        // Y = Druga liczba (Głębokość). 
+        //     -2.0 to TYŁ (przy wejściu). 
+        //     4.6 to PRZÓD (przy barierce).
+        
+        // 1. Lewy Tył (Przy wejściu)
+        shape.moveTo(-1.1, -2.0); 
+        
+        // 2. Prawy Tył (Przy wejściu)
+        shape.lineTo(1.1, -2.0);  
+        
+        // 3. Prawy Przód (Szeroki balkon)
+        shape.lineTo(7.5, 4);   
+        
+        // 4. Lewy Przód (Szeroki balkon)
+        shape.lineTo(-7.5, 4);  
+        
+        // Zamknięcie kształtu (powrót do początku)
+        shape.lineTo(-1.1, -2.0); 
+        
+        return shape;
+    }, []);
 
     return (
         <group ref={groupRef}>
@@ -122,17 +183,17 @@ const GalleryRoom = ({ showRoom, onReady }) => {
 
             {/* Shifted so camera stands on the edge */}
             <group position={[0, -0.7, -2]}>
-                {/* Floor - ends at railing */}
+                {/* Floor - Trapezoid/Triangle Shape */}
                 <mesh
                     rotation={[-Math.PI / 2, 0, 0]}
-                    position={[0, 0, -1.3]}
+                    position={[0, 0, 0]} 
                 >
-                    <planeGeometry args={[15, 6.6]} /> {/* width=10, depth=5 */}
+                    <shapeGeometry args={[floorShape]} /> 
                     <primitive object={materials.floor} />
                 </mesh>
 
                 {/* Railing */}
-                <group position={[0, 0, -2]}>
+                <group position={[0, 0, -1.4]}>
                     {/* Top Rail - Extended wider */}
                     <mesh position={[0, RAILING_HEIGHT, -2.5]}>
                         <boxGeometry args={[20, 0.1, 0.2]} />
@@ -150,7 +211,7 @@ const GalleryRoom = ({ showRoom, onReady }) => {
 
                 {/* === CLOTHESLINE SYSTEM === */}
                 {/* 🎛️ LAUNDRY HEIGHT: Change Y below (currently 1.2) to raise/lower */}
-                <group position={[0, 1.2, -3]}>
+                <group position={[0, 1.6, -4]}>
                     {/* The Rope */}
                     <mesh geometry={ropeGeometry} material={materials.rope} />
 
@@ -164,6 +225,7 @@ const GalleryRoom = ({ showRoom, onReady }) => {
                             materials={materials}
                             curve={curve}
                             isSelected={selectedCard === i}
+                            scrollToIndex={scrollToIndex}
                             onSelect={(cardData) => {
                                 setSelectedCard(i);
                                 // After animation completes, open overlay
@@ -194,10 +256,11 @@ const GalleryRoom = ({ showRoom, onReady }) => {
 };
 
 // Sub-component for individual project cards
-const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, onSelect, onDeselect }) => {
+const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, scrollToIndex, onSelect, onDeselect }) => {
     const cardRef = useRef();
     const [hovered, setHovered] = useState(false);
-    const [isAnimating, setIsAnimating] = useState(false);
+    const [isAnimating, setIsAnimating] = useState(false);  // True ONLY during flip animation
+    const [isScrolling, setIsScrolling] = useState(false);  // True during scroll phase
 
     // Store original position for return animation
     const originalPos = useRef({ x: 0, y: 0, z: 0 });
@@ -206,13 +269,8 @@ const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, onSel
     const swaySpeed = useRef(Math.random() * 0.5 + 0.5);
     const swayOffset = useRef(Math.random() * 100);
 
-    // Click handler - trigger pull-down animation
-    const handleClick = (e) => {
-        e.stopPropagation();
-        if (isAnimating || isSelected) return;
-
-        setIsAnimating(true);
-
+    // The actual fly animation (called after scroll centers the card)
+    const startFlyAnimation = () => {
         // Store current position before animating
         if (cardRef.current) {
             originalPos.current = {
@@ -222,24 +280,182 @@ const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, onSel
             };
         }
 
-        // GSAP animation: Just simple aggressive pull down
-        gsap.to(cardRef.current.position, {
-            y: originalPos.current.y - 0.8,   // Minimal drop down
-            // z: originalPos.current.z,      // Keep original Z (no flying to camera)
-            // x: originalPos.current.x,      // Keep original X (no centering)
-            duration: 0.3,                    // Fast/Aggressive
-            ease: 'back.out(2)',              // Little bounce at end
+        // Target position: in front of camera (after the flip)
+        const targetX = 0;
+        const targetY = -1;
+        const targetZ = 1;
+
+        const timeline = gsap.timeline({
             onComplete: () => {
+                setIsAnimating(false);
                 onSelect?.({ index });
             }
         });
 
-        // Also rotate slightly for "detached" feel
-        gsap.to(cardRef.current.rotation, {
-            z: -0.1,
-            x: 0.15,  // Tilt toward viewer
-            duration: 0.7,
+        // ===== PHASE 1: Quick tug DOWN (detach feel) =====
+        timeline.to(cardRef.current.position, {
+            y: originalPos.current.y - 0.6,
+            duration: 0.12,
             ease: 'power2.out'
+        });
+
+        timeline.to(cardRef.current.rotation, {
+            x: 0.4,
+            z: -0.1,
+            duration: 0.12,
+            ease: 'power2.out'
+        }, '<');
+
+        // ===== PHASE 2: Smooth arc with paper flutter =====
+        timeline.to(cardRef.current.position, {
+            y: originalPos.current.y + 0.8,
+            x: originalPos.current.x * 0.4,
+            z: originalPos.current.z + 2,
+            duration: 0.3,
+            ease: 'sine.out'
+        });
+
+        timeline.to(cardRef.current.rotation, {
+            x: Math.PI * 0.6,
+            z: 0.12,
+            y: -0.05,
+            duration: 0.3,
+            ease: 'sine.inOut'
+        }, '<');
+
+        // ===== PHASE 3: Complete flip while floating forward =====
+        timeline.to(cardRef.current.position, {
+            y: targetY + 0.3,
+            x: targetX,
+            z: targetZ + 0.5,
+            duration: 0.28,
+            ease: 'sine.inOut'
+        });
+
+        timeline.to(cardRef.current.rotation, {
+            x: Math.PI,
+            z: -0.08,
+            y: 0.03,
+            duration: 0.28,
+            ease: 'sine.inOut'
+        }, '<');
+
+        // ===== PHASE 4: Gentle settle into final position =====
+        timeline.to(cardRef.current.position, {
+            y: targetY,
+            x: targetX,
+            z: targetZ,
+            duration: 0.2,
+            ease: 'circ.out'
+        });
+
+        timeline.to(cardRef.current.rotation, {
+            x: Math.PI,
+            y: 0,
+            z: 0,
+            duration: 0.25,
+            ease: 'sine.out'
+        }, '<');
+
+        // Gentle scale
+        timeline.to(cardRef.current.scale, {
+            x: 1.15,
+            y: 1.15,
+            z: 1.15,
+            duration: 0.2,
+            ease: 'sine.out'
+        }, '-=0.15');
+    };
+
+    // Click handler - fly to camera OR return to clothesline
+    const handleClick = (e) => {
+        e.stopPropagation();
+        if (isAnimating) return;
+
+        // ===== RETURN TO CLOTHESLINE (REVERSE of fly animation) =====
+        if (isSelected) {
+            setIsAnimating(true);
+
+            const timeline = gsap.timeline({
+                onComplete: () => {
+                    setIsAnimating(false);
+                    onDeselect?.();
+                }
+            });
+
+            // REVERSE PHASE 4: Lift from final position
+            timeline.to(cardRef.current.position, {
+                y: originalPos.current.y + 0.8,
+                x: originalPos.current.x * 0.4,
+                z: originalPos.current.z + 2,
+                duration: 0.25,
+                ease: 'sine.out'
+            });
+
+            timeline.to(cardRef.current.rotation, {
+                x: Math.PI * 0.6,
+                z: 0.12,
+                y: -0.05,
+                duration: 0.25,
+                ease: 'sine.out'
+            }, '<');
+
+            // Reset scale
+            timeline.to(cardRef.current.scale, {
+                x: 1,
+                y: 1,
+                z: 1,
+                duration: 0.2,
+                ease: 'sine.out'
+            }, '<');
+
+            // REVERSE PHASE 3: Arc back over railing (reverse flip)
+            timeline.to(cardRef.current.position, {
+                y: originalPos.current.y + 0.5,
+                x: originalPos.current.x * 0.7,
+                z: originalPos.current.z + 0.8,
+                duration: 0.3,
+                ease: 'sine.inOut'
+            });
+
+            timeline.to(cardRef.current.rotation, {
+                x: 0.4,
+                z: -0.1,
+                y: 0,
+                duration: 0.3,
+                ease: 'sine.inOut'
+            }, '<');
+
+            // REVERSE PHASE 2: Drop back onto clothesline (reverse of tug)
+            timeline.to(cardRef.current.position, {
+                y: originalPos.current.y,
+                x: originalPos.current.x,
+                z: originalPos.current.z,
+                duration: 0.2,
+                ease: 'power2.out'
+            });
+
+            timeline.to(cardRef.current.rotation, {
+                x: 0,
+                y: 0,
+                z: 0,
+                duration: 0.25,
+                ease: 'sine.out'
+            }, '<');
+
+            return;
+        }
+
+        // ===== FLY TO CAMERA (if not selected) =====
+        // Start scrolling phase (project still moves with clothesline)
+        setIsScrolling(true);
+
+        // First scroll to center this card, then start fly animation
+        scrollToIndex(index, () => {
+            // Now start the actual flip animation
+            setIsScrolling(false);
+            setIsAnimating(true);
+            startFlyAnimation();
         });
     };
 
@@ -252,7 +468,7 @@ const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, onSel
     useFrame((state) => {
         if (!cardRef.current) return;
 
-        // Skip position updates if card is animating or selected
+        // Skip position updates ONLY during flip animation, NOT during scroll
         if (isAnimating || isSelected) return;
 
         // INFINITY SCROLL: Wrap displayX within visible range
@@ -263,11 +479,17 @@ const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, onSel
         const halfWidth = totalWidth / 2;
         let displayX = ((rawX + halfWidth) % totalWidth + totalWidth) % totalWidth - halfWidth;
 
-        // Catenary curve: cards dip slightly in center, rise at edges
-        const yBase = 1.8 + 0.02 * (displayX * displayX);
-        const zBase = -2 - 0.01 * (displayX * displayX);
+        // Match the curve (Clothesline) exactly using the parameterized position 'u'
+        // Curve spans approx x=[-16, 16].
+        // Normalize displayX to u=[0, 1] based on curve width 32 (-16 to 16)
+        const u = (displayX + 16) / 32;
+        
+        // Clamp u to avoid errors (though wrap logic keeps it safe usually)
+        const safeU = THREE.MathUtils.clamp(u, 0, 1);
+        
+        const pointOnCurve = curve.getPointAt(safeU);
 
-        cardRef.current.position.set(displayX, yBase, zBase);
+        cardRef.current.position.set(pointOnCurve.x, pointOnCurve.y, pointOnCurve.z);
 
         // Wind / Sway Animation
         const time = state.clock.getElapsedTime();
@@ -279,7 +501,7 @@ const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, onSel
 
         // Visibility Check (fade out if too far)
         const dist = Math.abs(displayX);
-        const scale = THREE.MathUtils.clamp(1 - (dist / 10), 0, 1);
+        const scale = THREE.MathUtils.clamp(1 - (dist / 50), 0.7, 1);
         cardRef.current.scale.setScalar(scale);
     });
 
@@ -300,7 +522,6 @@ const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, onSel
             {/* Pivot is at top (0,0,0) so we offset mesh down */}
             <group
                 position={[0, -1.1, 0]}
-                scale={hovered ? 1.08 : 1}
             >
                 <mesh material={materials.card}>
                     <planeGeometry args={[1.5, 2]} />

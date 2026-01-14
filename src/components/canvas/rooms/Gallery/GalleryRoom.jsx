@@ -129,20 +129,49 @@ const GalleryRoom = ({ showRoom, onReady }) => {
 
     // --- GEOMETRY & MATERIALS ---
     // Load textures
-    const floorTexture = useTexture('/textures/entrance/floor_paper.webp');
+    // const floorTexture = useTexture('/textures/entrance/floor_paper.webp'); // OLD
+    const floorTexture = useTexture('/textures/gallery/floor.jpg');
+    const railingTexture = useTexture('/textures/gallery/railing.png');
+
+    useEffect(() => {
+        // === KONFIGURACJA PODŁOGI (FLOOR CONFIG) ===
+        if (floorTexture) {
+            // "jeden obrazek normalnie drugi... odbicie lustrzane" -> MirroredRepeatWrapping
+            floorTexture.wrapS = THREE.MirroredRepeatWrapping;
+            floorTexture.wrapT = THREE.MirroredRepeatWrapping;
+
+            // Dostosuj powtarzanie (Repeat)
+            // Używamy ułamków (0.1), bo shapeGeometry ma duże koordynaty UV
+            // Use fractions because shapeGeometry has large UV coords
+            floorTexture.repeat.set(0.5, 0.7);
+
+            floorTexture.needsUpdate = true;
+        }
+
+        // === KONFIGURACJA TEKSTURY BARIERKI (RAILING CONFIG) ===
+        if (railingTexture) {
+            railingTexture.wrapS = railingTexture.wrapT = THREE.RepeatWrapping;
+
+            // ZMIEN LICZBE '18' ABY ZAGĘŚCIĆ LUB ROZCIĄGNĄĆ BARIERKĘ
+            // CHANGE '18' TO ADJUST REPEAT
+            railingTexture.repeat.set(7, 1);
+
+            railingTexture.needsUpdate = true;
+        }
+    }, [railingTexture]);
     // const skyTexture = useTexture('/textures/paper-texture.webp'); // Uncomment when ready
 
     const materials = useMemo(() => {
         const floorMat = new THREE.MeshStandardMaterial({
             map: floorTexture,
-            color: '#aaaaaa', // Slightly darken to separate from paper
-            roughness: 0.9,
+            color: '#ffffff', // Reset color to white
+            roughness: 0.8,
             side: THREE.DoubleSide
         });
 
         return {
             floor: floorMat,
-            railing: new THREE.MeshStandardMaterial({ color: '#2a2a2a', roughness: 0.8 }), // Dark iron/wood
+            // railing material moved to mesh directly for texture support
             rope: new THREE.MeshStandardMaterial({ color: '#000000', roughness: 1 }), // Black rope
             // card material handled individually
         };
@@ -163,6 +192,8 @@ const GalleryRoom = ({ showRoom, onReady }) => {
     const ropeGeometry = useMemo(() => {
         return new THREE.TubeGeometry(curve, 64, 0.015, 8, false);
     }, [curve]);
+
+
 
     // Floor Shape (Trapezoid/Triangle) - Narrow at entrance, Wide at railing
     const floorShape = useMemo(() => {
@@ -191,6 +222,8 @@ const GalleryRoom = ({ showRoom, onReady }) => {
 
         return shape;
     }, []);
+
+
 
     return (
         <group ref={groupRef}>
@@ -221,22 +254,37 @@ const GalleryRoom = ({ showRoom, onReady }) => {
                     <primitive object={materials.floor} />
                 </mesh>
 
-                {/* Railing */}
-                <group position={[0, 0, -1.4]}>
-                    {/* Top Rail - Extended wider */}
-                    <mesh position={[0, RAILING_HEIGHT, -2.5]}>
-                        <boxGeometry args={[20, 0.1, 0.2]} />
-                        <primitive object={materials.railing} />
-                    </mesh>
+                {/* Floor Outline - Front Only (Railing side) */}
+                <line rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
+                    <bufferGeometry>
+                        <float32BufferAttribute
+                            attach="attributes-position"
+                            count={2}
+                            array={new Float32Array([
+                                7.5, 4, 0,   // Right Front
+                                -7.5, 4, 0   // Left Front
+                            ])}
+                            itemSize={3}
+                        />
+                    </bufferGeometry>
+                    <lineBasicMaterial color="#999999" />
+                </line>
 
-                    {/* Posts - more for wider railing */}
-                    {[-9, -6.5, -4, -1.5, 1.5, 4, 6.5, 9].map((x, i) => (
-                        <mesh key={i} position={[x, RAILING_HEIGHT / 2, -2.5]}>
-                            <boxGeometry args={[0.1, RAILING_HEIGHT, 0.1]} />
-                            <primitive object={materials.railing} />
-                        </mesh>
-                    ))}
-                </group>
+                {/* Railing */}
+                <mesh position={[0, RAILING_HEIGHT / 2, -3.9]}>
+                    {/* 
+                       === EDYCJA BARIERKI (RAILING EDIT) ===
+                       Width: 20 (szerokość)
+                       Height: RAILING_HEIGHT (wysokość)
+                    */}
+                    <planeGeometry args={[20, RAILING_HEIGHT]} />
+                    <meshStandardMaterial
+                        map={railingTexture}
+                        transparent={true}
+                        side={THREE.DoubleSide}
+                        alphaTest={0.1} // Odrzuca przezroczyste fragmenty
+                    />
+                </mesh>
 
                 {/* === CLOTHESLINE SYSTEM === */}
                 {/* 🎛️ LAUNDRY HEIGHT: Change Y below (currently 1.2) to raise/lower */}

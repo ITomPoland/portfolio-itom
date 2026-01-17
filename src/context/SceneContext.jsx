@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
 const SceneContext = createContext(null);
 
@@ -106,7 +106,7 @@ export const SceneProvider = ({ children }) => {
         setPendingDoorClick(null);
     }, []);
 
-    const value = {
+    const value = useMemo(() => ({
         currentRoom,
         hasEntered,
         exitRequested,
@@ -129,7 +129,29 @@ export const SceneProvider = ({ children }) => {
         openTeleportTransition,
         completeTeleport,
         cancelTeleport,
-    };
+    }), [
+        currentRoom,
+        hasEntered,
+        exitRequested,
+        overlayContent,
+        enterRoom,
+        exitRoom,
+        requestExit,
+        clearExitRequest,
+        markEntered,
+        openOverlay,
+        closeOverlay,
+        // Teleportation dependencies
+        teleportTarget,
+        isTeleporting,
+        teleportPhase,
+        pendingDoorClick,
+        teleportTo,
+        startTeleportTransition,
+        openTeleportTransition,
+        completeTeleport,
+        cancelTeleport
+    ]);
 
     return (
         <SceneContext.Provider value={value}>

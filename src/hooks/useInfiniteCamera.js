@@ -306,7 +306,8 @@ const useInfiniteCamera = ({
     });
 
     // Function to enable/disable camera override
-    const setCameraOverride = (active) => {
+    // Function to enable/disable camera override
+    const setCameraOverride = useCallback((active) => {
         cameraOverride.current = active;
         if (!active) {
             // When releasing override, sync our state with current camera position
@@ -323,7 +324,7 @@ const useInfiniteCamera = ({
             swipeGlance.current = 0;
             targetSwipeGlance.current = 0;
         }
-    };
+    }, [camera]);
 
     return {
         getCurrentSegment: () => currentSegment.current,

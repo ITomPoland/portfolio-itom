@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { Preload, useTexture, Text, PerformanceMonitor } from '@react-three/drei';
 
 import Preloader from './components/dom/Preloader';
+import PaperTransition from './components/dom/PaperTransition';
 import { AudioProvider, useAudio } from './context/AudioManager';
 import { PerformanceProvider, usePerformance } from './context/PerformanceContext';
 import { SceneProvider } from './context/SceneContext';
@@ -102,6 +103,7 @@ function AppContent() {
             <>
               <NavigationUI />
               <GlobalOverlay />
+              <PaperTransition />
             </>
           )}
 

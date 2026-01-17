@@ -48,6 +48,7 @@ const CorridorSegment = ({
         const doorDefs = [
             {
                 id: `gallery-${segmentIndex}`,
+                roomId: 'gallery',
                 relativeZ: -18,
                 side: 'left',
                 label: 'THE GALLERY',
@@ -56,6 +57,7 @@ const CorridorSegment = ({
             },
             {
                 id: `studio-${segmentIndex}`,
+                roomId: 'studio',
                 relativeZ: -32,
                 side: 'right',
                 label: 'THE STUDIO',
@@ -64,6 +66,7 @@ const CorridorSegment = ({
             },
             {
                 id: `about-${segmentIndex}`,
+                roomId: 'about',
                 relativeZ: -48,
                 side: 'left',
                 label: 'THE ABOUT',
@@ -72,6 +75,7 @@ const CorridorSegment = ({
             },
             {
                 id: `connect-${segmentIndex}`,
+                roomId: 'contact',
                 relativeZ: -62,
                 side: 'right',
                 label: "LET'S CONNECT",
@@ -156,9 +160,10 @@ const CorridorSegment = ({
                     ]}
                     side={door.side}
                     label={door.label}
+                    roomId={door.roomId}
                     icon={door.icon}
                     color={door.color}
-                    onEnter={() => onDoorEnter?.(door.id)}
+                    onEnter={() => onDoorEnter?.(door.roomId)}
                     setCameraOverride={setCameraOverride}
                 />
             ))}

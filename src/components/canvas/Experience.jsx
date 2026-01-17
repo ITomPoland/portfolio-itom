@@ -4,6 +4,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import InfiniteCorridorManager from './corridor/InfiniteCorridorManager';
 import EntranceDoors from './entrance/EntranceDoors';
 import EmptyCorridor from './entrance/EmptyCorridor';
+import TeleportRoom from './corridor/TeleportRoom';
 import useInfiniteCamera from '../../hooks/useInfiniteCamera';
 import SignSystem from './entrance/SignSystem';
 import { useScene } from '../../context/SceneContext';
@@ -25,7 +26,7 @@ const ENTRANCE_DOORS_Z = 22;
  */
 const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
     // Use SceneContext for room state
-    const { hasEntered, markEntered, enterRoom } = useScene();
+    const { hasEntered, markEntered, enterRoom, isTeleporting, isInRoom, pendingDoorClick } = useScene();
 
     const { camera } = useThree();
 
@@ -35,14 +36,25 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
     }, [onSceneReady]);
 
     // Camera control - both scroll and parallax only work after entering
+    // Disable during teleporting to prevent scroll interference
     const { setCameraOverride } = useInfiniteCamera({
         segmentLength: 80,
         scrollSpeed: 0.025,
         parallaxIntensity: 0.4,
         smoothing: 0.06,
-        scrollEnabled: hasEntered,
-        parallaxEnabled: hasEntered
+        scrollEnabled: hasEntered && !isTeleporting,
+        parallaxEnabled: hasEntered && !isTeleporting
     });
+
+    // Enable camera override during teleportation, when in a room, OR when a door click is pending
+    // This prevents the corridor camera hook from interfering during transitions
+    useEffect(() => {
+        if (isTeleporting || isInRoom || pendingDoorClick) {
+            setCameraOverride(true);
+        } else {
+            setCameraOverride(false);
+        }
+    }, [isTeleporting, isInRoom, pendingDoorClick, setCameraOverride]);
 
 
     // Handle entrance complete
@@ -97,6 +109,9 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
                 clipSegmentNeg1={!hasEntered} // Clip segment -1 visualization until entered
                 setCameraOverride={setCameraOverride}
             />
+
+            {/* === TELEPORT ROOM (renders room directly during teleportation) === */}
+            <TeleportRoom />
         </>
     );
 };

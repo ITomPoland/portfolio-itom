@@ -312,6 +312,16 @@ const useInfiniteCamera = ({
             // When releasing override, sync our state with current camera position
             targetZ.current = camera.position.z;
             currentZ.current = camera.position.z;
+
+            // Sync parallax - assuming X is mainly parallax driven
+            parallax.current = { x: camera.position.x, y: camera.position.y - 0.2 };
+            targetParallax.current = { x: camera.position.x, y: camera.position.y - 0.2 };
+
+            // Reset glances to prevent jumps
+            glanceOffset.current = 0;
+            targetGlance.current = 0;
+            swipeGlance.current = 0;
+            targetSwipeGlance.current = 0;
         }
     };
 

@@ -47,6 +47,7 @@ const DoorSection = ({
     position, // [x, y, z] - center of the wall segment
     side = 'left',
     label,
+    roomId, // ID for context updates (gallery, studio, etc)
     icon,
     onEnter,
     autoCloseDelay = 3000,
@@ -67,7 +68,40 @@ const DoorSection = ({
     const closeTimerRef = useRef(null);
 
     // Get exit request signal from context
-    const { exitRequested, clearExitRequest, exitRoom: contextExitRoom, enterRoom } = useScene();
+    const {
+        currentRoom, // We need to know if the global room changed (teleportation)
+        exitRequested,
+        clearExitRequest,
+        exitRoom: contextExitRoom,
+        enterRoom,
+        pendingDoorClick
+    } = useScene();
+
+
+
+    // Map label to ID for teleport matching
+    const doorId = useMemo(() => {
+        if (roomId) return roomId;
+
+        // Fallback for older code
+        if (label === 'THE GALLERY') return 'gallery';
+        if (label === 'THE STUDIO') return 'studio';
+        if (label === 'THE ABOUT') return 'about';
+        if (label === "LET'S CONNECT") return 'contact';
+        return null;
+    }, [label, roomId]);
+
+    // Listen for pending door click (auto-click after teleport)
+    useEffect(() => {
+        // Only trigger for segment 0 doors (closest to start) and matching ID
+        // We assume teleport always goes to segment 0
+        // We can check Z position to confirm segment 0 (approx > -80)
+        const isSegment0 = position[2] > -80;
+
+        if (pendingDoorClick && pendingDoorClick === doorId && isSegment0 && !isOpen && !isAnimating) {
+            handleClick({ stopPropagation: () => { } }); // Trigger click simulation
+        }
+    }, [pendingDoorClick, doorId, position, isOpen, isAnimating]);
 
     // Save camera state before entering room (for ESC exit)
     // Save camera state before entering room (for ESC exit)
@@ -393,14 +427,14 @@ const DoorSection = ({
 
                         // Defer context update to next frame to prevent stutter
                         requestAnimationFrame(() => {
-                            enterRoom(label);
+                            enterRoom(doorId); // Use ID ('gallery') not label ('THE GALLERY')
                             onEnter?.();
                         });
                     }
                 });
             }
         });
-    }, [side, onEnter, camera, enterRoom, label]);
+    }, [side, onEnter, camera, enterRoom, doorId]);
 
     // Handle room ready callback - open door when room is fully loaded
     // Use ref to prevent multiple calls (state might not update fast enough)

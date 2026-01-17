@@ -3,20 +3,25 @@ import { useScene } from '../../context/SceneContext';
 import { useAudio } from '../../context/AudioManager';
 import '../../styles/NavigationUI.scss';
 
-// Room data for the map
+// Room data for the map - positions are percentages on the map image
+// These positions correspond to the visual elements on the map
 const ROOMS = [
-    { id: 'entrance', label: 'Entrance', x: 50, y: 15 },
-    { id: 'about', label: 'About', x: 25, y: 45 },
-    { id: 'portfolio', label: 'Portfolio', x: 75, y: 45 },
-    { id: 'gallery', label: 'Gallery', x: 25, y: 75 },
-    { id: 'contact', label: 'Contact', x: 75, y: 75 },
+    { id: 'about', label: 'About', x: 43, y: 38 },      // Paper airplane (left side)
+    { id: 'gallery', label: 'Gallery', x: 43, y: 72 },  // City buildings (bottom left)
+    { id: 'contact', label: 'Contact', x: 57, y: 25 },  // Pier/dock (top right)
+    { id: 'studio', label: 'Studio', x: 57, y: 55 },    // Monitors stack (right side)
 ];
 
+// Pin starting position - the dashed circle at the bottom of the tower
+const PIN_START_POSITION = { x: 50.5, y: 97 };
+
 const NavigationUI = () => {
-    const { currentRoom, isInRoom, requestExit, hasEntered } = useScene();
+    const { currentRoom, isInRoom, requestExit, hasEntered, teleportTo, isTeleporting } = useScene();
     const { isMuted, toggleMute } = useAudio();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [showCorridorHint, setShowCorridorHint] = useState(false);
+    const [hoveredRoom, setHoveredRoom] = useState(null); // Track which pin slot is hovered
+    const [isExiting, setIsExiting] = useState(false); // Track when back button is clicked
 
     // Show corridor hint when entering, auto-hide after 4 seconds
     useEffect(() => {
@@ -27,20 +32,32 @@ const NavigationUI = () => {
         }
     }, [hasEntered]);
 
-    // Close menu when entering a room
+    // Close menu when entering a room or starting teleport
     useEffect(() => {
-        if (isInRoom) {
+        if (isInRoom || isTeleporting) {
             setIsMenuOpen(false);
+            setIsExiting(false);
+        }
+    }, [isInRoom, isTeleporting]);
+
+    // Reset exiting state when not in room anymore
+    useEffect(() => {
+        if (!isInRoom) {
+            setIsExiting(false);
         }
     }, [isInRoom]);
 
     const handleRoomClick = (roomId) => {
-        // TODO: Implement teleportation logic
-        console.log('Teleport to:', roomId);
+        // Don't teleport to the same room or if already teleporting
+        if (roomId === currentRoom || isTeleporting) return;
+
+        // Close map first, then start teleport
         setIsMenuOpen(false);
+        teleportTo(roomId);
     };
 
     const handleBackClick = () => {
+        setIsExiting(true); // Immediately start exit animation
         // Request exit - DoorSection will handle the animation
         requestExit();
     };
@@ -54,10 +71,10 @@ const NavigationUI = () => {
                 </div>
             )}
 
-            {/* Back Button - Only visible in rooms */}
+            {/* Back Button - Only visible in rooms, hides up when clicked */}
             {hasEntered && isInRoom && (
                 <button
-                    className="nav-btn back-btn"
+                    className={`nav-btn back-btn ${isExiting ? 'exiting' : ''}`}
                     onClick={handleBackClick}
                     aria-label="Back to corridor"
                 >
@@ -69,7 +86,7 @@ const NavigationUI = () => {
 
             {/* Right side controls - Only visible after entering */}
             {hasEntered && (
-                <div className="nav-controls">
+                <div className={`nav-controls ${isMenuOpen ? 'menu-open' : ''}`}>
                     {/* Hamburger Menu Button */}
                     <button
                         className={`nav-btn hamburger-btn ${isMenuOpen ? 'open' : ''}`}
@@ -107,37 +124,60 @@ const NavigationUI = () => {
                 </div>
             )}
 
-            {/* Map Panel - Only visible after entering */}
+            {/* Map Panel - Drops from top when open */}
             {hasEntered && (
                 <div className={`map-panel ${isMenuOpen ? 'open' : ''}`}>
                     <div className="map-header">
                         <h3>MAP</h3>
+                        <button
+                            className="close-btn"
+                            onClick={() => setIsMenuOpen(false)}
+                            aria-label="Close map"
+                        >
+                            <svg viewBox="0 0 24 24">
+                                <path d="M18 6L6 18M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
                     <div className="map-container">
-                        {/* Connection lines */}
-                        <svg className="map-connections" viewBox="0 0 100 100" preserveAspectRatio="none">
-                            <path d="M50 15 L50 45" />
-                            <path d="M25 45 L75 45" />
-                            <path d="M25 45 L25 75" />
-                            <path d="M75 45 L75 75" />
-                        </svg>
+                        {/* Map background image */}
+                        <img src="/images/map.png" alt="Portfolio Map" className="map-image" />
 
-                        {/* Room nodes */}
+                        {/* Pin slot markers - 4 locations */}
                         {ROOMS.map((room) => (
                             <button
                                 key={room.id}
-                                className={`map-room ${currentRoom === room.id ? 'current' : ''} ${room.id === 'entrance' && !isInRoom ? 'current' : ''}`}
+                                className={`pin-slot ${currentRoom === room.id ? 'active' : ''} ${hoveredRoom === room.id ? 'hovered' : ''}`}
                                 style={{ left: `${room.x}%`, top: `${room.y}%` }}
                                 onClick={() => handleRoomClick(room.id)}
+                                onMouseEnter={() => setHoveredRoom(room.id)}
+                                onMouseLeave={() => setHoveredRoom(null)}
+                                title={room.label}
                             >
-                                <span className="room-dot"></span>
-                                <span className="room-label">{room.label}</span>
+                                <img src="/images/pin-slot.png" alt="" className="slot-image" />
                             </button>
                         ))}
-                    </div>
-                    <div className="map-legend">
-                        <span className="legend-dot"></span>
-                        <span>You are here</span>
+
+                        {/* The pin marker - moves to hovered slot, or current room, or start position */}
+                        <div
+                            className="pin-marker"
+                            style={{
+                                left: `${hoveredRoom
+                                    ? ROOMS.find(r => r.id === hoveredRoom)?.x || PIN_START_POSITION.x
+                                    : currentRoom && isInRoom
+                                        ? ROOMS.find(r => r.id === currentRoom)?.x || PIN_START_POSITION.x
+                                        : PIN_START_POSITION.x
+                                    }%`,
+                                top: `${hoveredRoom
+                                    ? ROOMS.find(r => r.id === hoveredRoom)?.y || PIN_START_POSITION.y
+                                    : currentRoom && isInRoom
+                                        ? ROOMS.find(r => r.id === currentRoom)?.y || PIN_START_POSITION.y
+                                        : PIN_START_POSITION.y
+                                    }%`
+                            }}
+                        >
+                            <img src="/images/pin.png" alt="You are here" className="pin-image" />
+                        </div>
                     </div>
                 </div>
             )}

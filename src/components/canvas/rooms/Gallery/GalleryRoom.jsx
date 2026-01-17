@@ -6,17 +6,16 @@ import gsap from 'gsap';
 import { useScene } from '../../../../context/SceneContext';
 import PaperMaterial from './PaperMaterial';
 
-const PROJECT_COUNT = 10; // Placeholder count
-const GAP = 2.5; // Distance between cards
-
-// Placeholder project data
-const PROJECTS = [
-    { id: 0, title: 'Project Alpha', description: 'A cool web app built with React and Three.js', url: 'https://example.com' },
-    { id: 1, title: 'Project Beta', description: 'E-commerce platform with modern design', url: 'https://example.com' },
-    { id: 2, title: 'Project Gamma', description: 'Interactive portfolio website', url: 'https://example.com' },
-    { id: 3, title: 'Project Delta', description: 'Mobile-first dashboard application', url: 'https://example.com' },
-    { id: 4, title: 'Project Epsilon', description: 'Creative agency landing page', url: 'https://example.com' },
+// Define the unique projects and their textures
+const UNIQUE_PROJECTS = [
+    { id: 'bio', title: 'Bio', front: '/textures/gallery/bioprzod.jpg', back: '/textures/gallery/biotyl.png', url: 'https://example.com' },
+    { id: 'monetune', title: 'Monetune', front: '/textures/gallery/monetuneprzod.png', back: '/textures/gallery/monetunetyl.png', url: 'https://example.com' },
+    { id: 'timber', title: 'TimberKitty', front: '/textures/gallery/timberkittyprzod.png', back: '/textures/gallery/timberkittytyl.png', url: 'https://example.com' },
+    { id: 'young', title: 'YoungMulti', front: '/textures/gallery/youngmultiprzod.png', back: '/textures/gallery/youngmultityl.png', url: 'https://example.com' },
 ];
+
+const PROJECT_COUNT = 10; // Keep the count for the infinite scroll feel
+const GAP = 2.5;
 
 const GalleryRoom = ({ showRoom, onReady }) => {
     const { openOverlay } = useScene();
@@ -24,19 +23,16 @@ const GalleryRoom = ({ showRoom, onReady }) => {
     const [scrollOffset, setScrollOffset] = useState(0);
     const targetScroll = useRef(0);
     const currentScroll = useRef(0);
-    const [selectedCard, setSelectedCard] = useState(null); // Track which card is animating/selected
+    const [selectedCard, setSelectedCard] = useState(null);
 
     // Track if we've signaled ready
     const hasSignaledReady = useRef(false);
     const frameCount = useRef(0);
-    const FRAMES_TO_WAIT = 5; // Wait for 5 actual render frames
+    const FRAMES_TO_WAIT = 5;
 
-    // Real render-based ready detection - count actual rendered frames
     useFrame(() => {
         if (hasSignaledReady.current) return;
-
         frameCount.current++;
-
         if (frameCount.current >= FRAMES_TO_WAIT) {
             hasSignaledReady.current = true;
             onReady?.();
@@ -48,25 +44,62 @@ const GalleryRoom = ({ showRoom, onReady }) => {
     const BALCONY_DEPTH = 3;
     const RAILING_HEIGHT = 1.1;
 
-    // Function to scroll to a specific project index (center it)
+    // --- TEXTURES ---
+    // Load all project textures in a flat array [p1_front, p1_back, p2_front, p2_back, ...]
+    const textureUrls = UNIQUE_PROJECTS.flatMap(p => [p.front, p.back]);
+    const projectTextures = useTexture(textureUrls);
+
+    // Load the single overlay texture (button "open project")
+    const overlayTexture = useTexture('/textures/gallery/openliveproject.png');
+
+    // Construct the full list of projects (repeated) with textures attached
+    const projects = useMemo(() => {
+        return Array.from({ length: PROJECT_COUNT }).map((_, i) => {
+            const projectIndex = i % UNIQUE_PROJECTS.length;
+            const projectData = UNIQUE_PROJECTS[projectIndex];
+
+            // Extract textures from the loaded array
+            const frontTex = projectTextures[projectIndex * 2];
+            const backTex = projectTextures[projectIndex * 2 + 1];
+
+            // Configure textures
+            if (frontTex) {
+                frontTex.colorSpace = THREE.SRGBColorSpace;
+                // frontTex.encoding = THREE.sRGBEncoding; // handled by fiber/three automatically usually
+            }
+            if (backTex) {
+                backTex.colorSpace = THREE.SRGBColorSpace;
+                // backTex.offset.x = 1; // Flip X if back texture is mirrored? Try standard first.
+                // backTex.repeat.x = -1; 
+            }
+            // Ensure overlay texture is configured correctly if loaded
+            if (overlayTexture) {
+                overlayTexture.colorSpace = THREE.SRGBColorSpace;
+                overlayTexture.needsUpdate = true;
+            }
+
+            return {
+                ...projectData,
+                index: i,
+                frontTexture: frontTex,
+                backTexture: backTex
+            };
+        });
+    }, [projectTextures, overlayTexture]);
+
+    // Function to scroll to a specific project index
     const scrollToIndex = (index, onComplete) => {
-        // Calculate where this index currently appears (relative to current scroll)
         const totalWidth = PROJECT_COUNT * GAP;
         const targetScrollValue = index * GAP;
         const currentScrollValue = currentScroll.current;
 
-        // Find the shortest path (accounting for infinity scroll wrap)
         let diff = targetScrollValue - currentScrollValue;
-
-        // Normalize diff to be within [-halfWidth, halfWidth]
         const halfWidth = totalWidth / 2;
         while (diff > halfWidth) diff -= totalWidth;
         while (diff < -halfWidth) diff += totalWidth;
 
-        // Target is current + shortest diff
         const finalTarget = currentScrollValue + diff;
 
-        // Animate BOTH targetScroll and currentScroll so there's no lerp delay
         gsap.to(targetScroll, {
             current: finalTarget,
             duration: 0.5,
@@ -77,43 +110,34 @@ const GalleryRoom = ({ showRoom, onReady }) => {
             current: finalTarget,
             duration: 0.5,
             ease: 'power2.inOut',
-            onComplete: onComplete  // Callback fires when currentScroll actually reaches target
+            onComplete: onComplete
         });
     };
 
     // --- INTERACTION ---
-    // Desktop: mouse wheel
     useEffect(() => {
         const handleWheel = (e) => {
             if (!showRoom) return;
             e.preventDefault();
             targetScroll.current += e.deltaY * 0.005;
         };
-
         window.addEventListener('wheel', handleWheel, { passive: false });
         return () => window.removeEventListener('wheel', handleWheel);
     }, [showRoom]);
 
-    // Mobile: horizontal touch swipe
     const lastTouchX = useRef(0);
     useEffect(() => {
         if (!showRoom) return;
-
         const handleTouchStart = (e) => {
-            if (e.touches.length === 1) {
-                lastTouchX.current = e.touches[0].clientX;
-            }
+            if (e.touches.length === 1) lastTouchX.current = e.touches[0].clientX;
         };
-
         const handleTouchMove = (e) => {
             if (e.touches.length === 1) {
                 const deltaX = lastTouchX.current - e.touches[0].clientX;
                 lastTouchX.current = e.touches[0].clientX;
-                // Horizontal swipe = scroll
                 targetScroll.current += deltaX * 0.008;
             }
         };
-
         window.addEventListener('touchstart', handleTouchStart, { passive: true });
         window.addEventListener('touchmove', handleTouchMove, { passive: true });
         return () => {
@@ -123,129 +147,72 @@ const GalleryRoom = ({ showRoom, onReady }) => {
     }, [showRoom]);
 
     useFrame((state, delta) => {
-        // Smooth scroll damping
         currentScroll.current = THREE.MathUtils.lerp(currentScroll.current, targetScroll.current, delta * 5);
     });
 
     // --- GEOMETRY & MATERIALS ---
-    // Load textures
-    // const floorTexture = useTexture('/textures/entrance/floor_paper.webp'); // OLD
     const floorTexture = useTexture('/textures/gallery/floor.jpg');
     const railingTexture = useTexture('/textures/gallery/railing.png');
+    const housesTexture = useTexture('/textures/gallery/domki.png');
+    const cityTexture = useTexture('/textures/gallery/miastotlo.png');
+    const birdTexture = useTexture('/textures/gallery/bird.png');
+    const clothespinTexture = useTexture('/textures/gallery/klamerka.png');
 
     useEffect(() => {
-        // === KONFIGURACJA PODŁOGI (FLOOR CONFIG) ===
         if (floorTexture) {
-            // "jeden obrazek normalnie drugi... odbicie lustrzane" -> MirroredRepeatWrapping
             floorTexture.wrapS = THREE.MirroredRepeatWrapping;
             floorTexture.wrapT = THREE.MirroredRepeatWrapping;
-
-            // Dostosuj powtarzanie (Repeat)
-            // Używamy ułamków (0.1), bo shapeGeometry ma duże koordynaty UV
-            // Use fractions because shapeGeometry has large UV coords
             floorTexture.repeat.set(0.5, 0.7);
-
             floorTexture.needsUpdate = true;
         }
-
-        // === KONFIGURACJA TEKSTURY BARIERKI (RAILING CONFIG) ===
         if (railingTexture) {
             railingTexture.wrapS = railingTexture.wrapT = THREE.RepeatWrapping;
-
-            // ZMIEN LICZBE '18' ABY ZAGĘŚCIĆ LUB ROZCIĄGNĄĆ BARIERKĘ
-            // CHANGE '18' TO ADJUST REPEAT
             railingTexture.repeat.set(7, 1);
-
             railingTexture.needsUpdate = true;
         }
-    }, [railingTexture]);
-    // const skyTexture = useTexture('/textures/paper-texture.webp'); // Uncomment when ready
+    }, [floorTexture, railingTexture]);
 
     const materials = useMemo(() => {
         const floorMat = new THREE.MeshStandardMaterial({
             map: floorTexture,
-            color: '#ffffff', // Reset color to white
+            color: '#ffffff',
             roughness: 0.8,
             side: THREE.DoubleSide
         });
-
         return {
             floor: floorMat,
-            // railing material moved to mesh directly for texture support
-            rope: new THREE.MeshStandardMaterial({ color: '#000000', roughness: 1 }), // Black rope
-            // card material handled individually
+            rope: new THREE.MeshStandardMaterial({ color: '#666666', roughness: 1 }),
         };
     }, [floorTexture]);
 
-    // Clothesline Curve - Adjusted to be higher and more visible
     const curve = useMemo(() => {
         return new THREE.CatmullRomCurve3([
             new THREE.Vector3(-16, 3.5, -6),
             new THREE.Vector3(-8, 2.5, -4.5),
-            new THREE.Vector3(0, 1.8, -3),   // Closest point
+            new THREE.Vector3(0, 1.8, -3),
             new THREE.Vector3(8, 2.5, -4.5),
             new THREE.Vector3(16, 3.5, -6),
         ]);
     }, []);
 
-    // Generate points for the rope mesh
     const ropeGeometry = useMemo(() => {
         return new THREE.TubeGeometry(curve, 64, 0.015, 8, false);
     }, [curve]);
 
-
-
-    // Floor Shape (Trapezoid/Triangle) - Narrow at entrance, Wide at railing
     const floorShape = useMemo(() => {
         const shape = new THREE.Shape();
-
-        // --- INSTRUKCJA EDYCJI KSZTAŁTU (HOW TO EDIT) ---
-        // X = Pierwsza liczba (Szerokość). Np. 1.1 to połowa szerokości 2.2.
-        // Y = Druga liczba (Głębokość). 
-        //     -2.0 to TYŁ (przy wejściu). 
-        //     4.6 to PRZÓD (przy barierce).
-
-        // 1. Lewy Tył (Przy wejściu)
         shape.moveTo(-1.1, -2.0);
-
-        // 2. Prawy Tył (Przy wejściu)
         shape.lineTo(1.1, -2.0);
-
-        // 3. Prawy Przód (Szeroki balkon)
         shape.lineTo(7.5, 4);
-
-        // 4. Lewy Przód (Szeroki balkon)
         shape.lineTo(-7.5, 4);
-
-        // Zamknięcie kształtu (powrót do początku)
         shape.lineTo(-1.1, -2.0);
-
         return shape;
     }, []);
 
-
-
     return (
         <group ref={groupRef}>
-            {/* ============================================
-                🎛️ POSITIONING GUIDE - EDIT THESE VALUES:
-                
-                BALCONY GROUP:    position={[X, Y, Z]} on line below
-                                  Y = height, Z = forward/back
-                
-                FLOOR:           position={[X, Y, Z]} - center point
-                                  planeGeometry args={[width, depth]}
-                
-                RAILING:         position Z on mesh (line ~109, ~116)
-                                  RAILING_HEIGHT at top of file
-                
-                CLOTHESLINE:     position={[X, Y, Z]} group (line ~124)
-                                  Cards Y/Z in ProjectCard useFrame
-                ============================================ */}
-
-            {/* Shifted so camera stands on the edge */}
             <group position={[0, -0.7, -2]}>
-                {/* Floor - Trapezoid/Triangle Shape */}
+                {/* Floor */}
                 <mesh
                     rotation={[-Math.PI / 2, 0, 0]}
                     position={[0, 0, 0]}
@@ -254,16 +221,13 @@ const GalleryRoom = ({ showRoom, onReady }) => {
                     <primitive object={materials.floor} />
                 </mesh>
 
-                {/* Floor Outline - Front Only (Railing side) */}
+                {/* Floor Outline */}
                 <line rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
                     <bufferGeometry>
                         <float32BufferAttribute
                             attach="attributes-position"
                             count={2}
-                            array={new Float32Array([
-                                7.5, 4, 0,   // Right Front
-                                -7.5, 4, 0   // Left Front
-                            ])}
+                            array={new Float32Array([7.5, 4, 0, -7.5, 4, 0])}
                             itemSize={3}
                         />
                     </bufferGeometry>
@@ -272,31 +236,27 @@ const GalleryRoom = ({ showRoom, onReady }) => {
 
                 {/* Railing */}
                 <mesh position={[0, RAILING_HEIGHT / 2, -3.9]}>
-                    {/* 
-                       === EDYCJA BARIERKI (RAILING EDIT) ===
-                       Width: 20 (szerokość)
-                       Height: RAILING_HEIGHT (wysokość)
-                    */}
                     <planeGeometry args={[20, RAILING_HEIGHT]} />
                     <meshStandardMaterial
                         map={railingTexture}
                         transparent={true}
                         side={THREE.DoubleSide}
-                        alphaTest={0.1} // Odrzuca przezroczyste fragmenty
+                        alphaTest={0.1}
                     />
                 </mesh>
 
                 {/* === CLOTHESLINE SYSTEM === */}
-                {/* 🎛️ LAUNDRY HEIGHT: Change Y below (currently 1.2) to raise/lower */}
                 <group position={[0, 1.6, -4]}>
-                    {/* The Rope */}
                     <mesh geometry={ropeGeometry} material={materials.rope} />
 
                     {/* Proj Cards */}
-                    {Array.from({ length: PROJECT_COUNT }).map((_, i) => (
+                    {projects.map((project, i) => (
                         <ProjectCard
                             key={i}
                             index={i}
+                            project={project}
+                            overlayTexture={overlayTexture}
+                            clothespinTexture={clothespinTexture}
                             total={PROJECT_COUNT}
                             currentScroll={currentScroll}
                             materials={materials}
@@ -305,24 +265,79 @@ const GalleryRoom = ({ showRoom, onReady }) => {
                             scrollToIndex={scrollToIndex}
                             onSelect={(cardData) => {
                                 setSelectedCard(i);
-                                // After animation completes, open overlay
-                                // setTimeout(() => {
-                                //     openOverlay({
-                                //         title: PROJECTS[i].title,
-                                //         description: PROJECTS[i].description,
-                                //         url: PROJECTS[i].url,
-                                //         date: '2025',
-                                //         platformConfig: { label: 'Gallery Project' }
-                                //     });
-                                // }, 600); // Match GSAP animation duration
                             }}
                             onDeselect={() => setSelectedCard(null)}
                         />
                     ))}
                 </group>
 
-                {/* === ENVIRONMENT / SKYBOX === */}
-                {/* Placeholder Fog Sphere */}
+                {/* === SCENERY LAYERS === */}
+                {/* Houses - center */}
+                <mesh position={[0, -1, -9]} scale={[1, 1, 1]}>
+                    <planeGeometry args={[15, 6]} />
+                    <meshBasicMaterial
+                        map={housesTexture}
+                        transparent={true}
+                        alphaTest={0.1}
+                        side={THREE.DoubleSide}
+                    />
+                </mesh>
+                {/* Houses - left side (mirrored) */}
+                <mesh position={[-15, -1, -9]} scale={[-1, 1, 1]}>
+                    <planeGeometry args={[15, 6]} />
+                    <meshBasicMaterial
+                        map={housesTexture}
+                        transparent={true}
+                        alphaTest={0.1}
+                        side={THREE.DoubleSide}
+                    />
+                </mesh>
+                {/* Houses - right side (mirrored) */}
+                <mesh position={[15, -1, -9]} scale={[-1, 1, 1]}>
+                    <planeGeometry args={[15, 6]} />
+                    <meshBasicMaterial
+                        map={housesTexture}
+                        transparent={true}
+                        alphaTest={0.1}
+                        side={THREE.DoubleSide}
+                    />
+                </mesh>
+
+                {/* City skyline - center */}
+                <mesh position={[0, 3.4, -17]} scale={[1, 1, 1]}>
+                    <planeGeometry args={[30, 10]} />
+                    <meshBasicMaterial
+                        map={cityTexture}
+                        transparent={true}
+                        alphaTest={0.1}
+                        side={THREE.DoubleSide}
+                    />
+                </mesh>
+                {/* City skyline - left (mirrored) */}
+                <mesh position={[-30, 3.4, -17]} scale={[-1, 1, 1]}>
+                    <planeGeometry args={[30, 10]} />
+                    <meshBasicMaterial
+                        map={cityTexture}
+                        transparent={true}
+                        alphaTest={0.1}
+                        side={THREE.DoubleSide}
+                    />
+                </mesh>
+                {/* City skyline - right (mirrored) */}
+                <mesh position={[30, 3.4, -17]} scale={[-1, 1, 1]}>
+                    <planeGeometry args={[30, 10]} />
+                    <meshBasicMaterial
+                        map={cityTexture}
+                        transparent={true}
+                        alphaTest={0.1}
+                        side={THREE.DoubleSide}
+                    />
+                </mesh>
+
+                {/* Flying Bird */}
+                <FlyingBird texture={birdTexture} />
+
+                {/* Skybox/Environment */}
                 <mesh position={[0, 5, -20]}>
                     <sphereGeometry args={[40, 32, 32]} />
                     <meshBasicMaterial color="#f0f0f0" side={THREE.BackSide} transparent opacity={0.5} />
@@ -332,16 +347,51 @@ const GalleryRoom = ({ showRoom, onReady }) => {
     );
 };
 
+// Flying bird animation component
+const FlyingBird = ({ texture }) => {
+    const birdRef = useRef();
+    const startX = -20;
+    const endX = 20;
+    const speed = 0.8; // Units per second
+
+    useFrame((state) => {
+        if (!birdRef.current) return;
+
+        const time = state.clock.getElapsedTime();
+
+        // Move from left to right, loop back
+        const progress = ((time * speed) % (endX - startX + 10)) + startX;
+        birdRef.current.position.x = progress;
+
+        // Gentle bobbing motion
+        birdRef.current.position.y = 4.5 + Math.sin(time * 2) * 0.3;
+
+        // Slight banking when flying
+        birdRef.current.rotation.z = Math.sin(time * 1.5) * 0.1;
+    });
+
+    return (
+        <mesh ref={birdRef} position={[-20, 4.5, -10]} scale={[0.8, 0.8, 0.8]}>
+            <planeGeometry args={[1.5, 1.5]} />
+            <meshBasicMaterial
+                map={texture}
+                transparent={true}
+                alphaTest={0.1}
+                side={THREE.DoubleSide}
+            />
+        </mesh>
+    );
+};
+
 // Sub-component for individual project cards
-const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, scrollToIndex, onSelect, onDeselect }) => {
+// Sub-component for individual project cards
+const ProjectCard = ({ index, project, overlayTexture, clothespinTexture, currentScroll, materials, curve, isSelected, scrollToIndex, onSelect, onDeselect }) => {
     const cardRef = useRef();
-    const materialRef = useRef(); // Ref for the PaperMaterial
+    const paperRef = useRef(); // Ref for the moving part (Paper)
+    const materialRef = useRef();
     const [hovered, setHovered] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);  // True ONLY during flip animation
     const [isScrolling, setIsScrolling] = useState(false);  // True during scroll phase
-
-    // Store original position for return animation
-    const originalPos = useRef({ x: 0, y: 0, z: 0 });
 
     // Random sway properties
     const swaySpeed = useRef(Math.random() * 0.2 + 0.3); // Slower sway speed
@@ -349,22 +399,23 @@ const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, scrol
 
     // The actual fly animation (called after scroll centers the card)
     const startFlyAnimation = () => {
-        // Store current position before animating
-        if (cardRef.current) {
-            originalPos.current = {
-                x: cardRef.current.position.x,
-                y: cardRef.current.position.y,
-                z: cardRef.current.position.z
-            };
-        }
+        // We no longer move cardRef (which holds the pin). We only move paperRef.
+        // But we need to calculate where paperRef should go to reach the 'Camera Target'.
 
-        // Target position: in front of camera (after the flip)
-        // 🎛️ ADJUST FINAL POSITION HERE:
-        // Mobile gets card further from camera for better visibility
+        // Target World Position (approximate, based on previous logic)
         const isMobile = window.innerWidth < 768;
-        const targetX = 0;
-        const targetY = isMobile ? -0.8 : -1; // Slightly higher on mobile
-        const targetZ = isMobile ? 0.5 : 1.5;  // Further on mobile (smaller Z = further)
+        const targetX_World = 0;
+        const targetY_World = isMobile ? -0.4 : -0.2; // Raised significantly (was -0.8/-1.0)
+        const targetZ_World = isMobile ? 0.5 : 1.5;
+
+        // Current Pin Position (Parent)
+        const parentPos = cardRef.current.position;
+
+        // Calculate Target relative to Parent
+        // note: rotation of parent is ignored/assumed negligible for this vector math
+        const targetX = targetX_World - parentPos.x;
+        const targetY = targetY_World - parentPos.y;
+        const targetZ = targetZ_World - parentPos.z;
 
         const timeline = gsap.timeline({
             onComplete: () => {
@@ -373,18 +424,28 @@ const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, scrol
             }
         });
 
+        // STRAIGHTEN PIN: Animate parent rotation to zero so math works and it lands straight
+        timeline.to(cardRef.current.rotation, {
+            x: 0, y: 0, z: 0,
+            duration: 0.3,
+            ease: 'power2.out'
+        }, 0);
+
         // Initialize bend
         if (materialRef.current) materialRef.current.bend = 0;
 
+        // Base local position
+        const localBaseY = -1.1;
+
         // ===== PHASE 1: Quick tug DOWN + Drag Bend =====
-        // Card is pulled down, so paper bends UP (positive bend)
-        timeline.to(cardRef.current.position, {
-            y: originalPos.current.y - 0.5,
+        // Pull paper down relative to pin
+        timeline.to(paperRef.current.position, {
+            y: localBaseY - 0.5,
             duration: 0.15,
             ease: 'power2.out'
         });
 
-        timeline.to(cardRef.current.rotation, {
+        timeline.to(paperRef.current.rotation, {
             x: 0.5, // Lean forward slightly
             z: -0.05,
             duration: 0.15,
@@ -402,15 +463,15 @@ const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, scrol
 
         // ===== PHASE 2: Flip Up + Release Bend =====
         // Flying up and over
-        timeline.to(cardRef.current.position, {
-            y: originalPos.current.y + 0.6, // Lower arc (was 1.2)
-            x: originalPos.current.x * 0.2, // Centering
-            z: originalPos.current.z + 1.5, // Move forward
+        timeline.to(paperRef.current.position, {
+            y: localBaseY + 0.6, // Arc up
+            x: targetX * 0.2, // Start moving towards target X
+            z: targetZ * 0.2, // Start moving towards target Z
             duration: 0.4,
-            ease: 'power1.out' // Momentum carries it out
+            ease: 'power1.out'
         });
 
-        timeline.to(cardRef.current.rotation, {
+        timeline.to(paperRef.current.rotation, {
             x: Math.PI * 0.8, // Almost flipped
             z: 0.05,
             y: -0.02,
@@ -428,15 +489,15 @@ const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, scrol
         }
 
         // ===== PHASE 3: Float Down to Target =====
-        timeline.to(cardRef.current.position, {
+        timeline.to(paperRef.current.position, {
             y: targetY,
             x: targetX,
             z: targetZ,
             duration: 0.4,
-            ease: 'power3.out' // Smooth landing, no overshoot
+            ease: 'power3.out'
         });
 
-        timeline.to(cardRef.current.rotation, {
+        timeline.to(paperRef.current.rotation, {
             x: Math.PI, // Flat facing cam
             y: 0,
             z: 0,
@@ -454,7 +515,7 @@ const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, scrol
         }
 
         // Gentle scale
-        timeline.to(cardRef.current.scale, {
+        timeline.to(paperRef.current.scale, {
             x: 1.1,
             y: 1.1,
             z: 1.1,
@@ -479,16 +540,19 @@ const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, scrol
                 }
             });
 
+            // Initial local Base
+            const localBaseY = -1.1;
+
             // REVERSE PHASE: Lift and Bend
-            timeline.to(cardRef.current.position, {
-                y: originalPos.current.y + 0.6, // Lower arc (was 1.0)
-                x: originalPos.current.x * 0.5,
-                z: originalPos.current.z + 1,
+            timeline.to(paperRef.current.position, {
+                y: localBaseY + 0.6,
+                x: 0, // Centered locally
+                z: 1, // Slightly forward locally
                 duration: 0.35,
                 ease: 'power2.in'
             });
 
-            timeline.to(cardRef.current.rotation, {
+            timeline.to(paperRef.current.rotation, {
                 x: 0.5,
                 z: -0.05,
                 y: 0,
@@ -506,21 +570,21 @@ const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, scrol
             }
 
             // RESET Scale
-            timeline.to(cardRef.current.scale, {
+            timeline.to(paperRef.current.scale, {
                 x: 1, y: 1, z: 1,
                 duration: 0.3, ease: 'sine.inOut'
             }, '<');
 
-            // SNAP BACK
-            timeline.to(cardRef.current.position, {
-                y: originalPos.current.y,
-                x: originalPos.current.x,
-                z: originalPos.current.z,
+            // SNAP BACK TO HANGING POSITION
+            timeline.to(paperRef.current.position, {
+                y: localBaseY,
+                x: 0,
+                z: 0,
                 duration: 0.25,
                 ease: 'power3.out'
             });
 
-            timeline.to(cardRef.current.rotation, {
+            timeline.to(paperRef.current.rotation, {
                 x: 0, y: 0, z: 0,
                 duration: 0.25,
                 ease: 'power3.out'
@@ -563,12 +627,11 @@ const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, scrol
         // Skip position updates ONLY during flip animation, NOT during scroll
         if (isAnimating || isSelected) return;
 
-        // INFINITY SCROLL: Wrap displayX within visible range
-        const totalWidth = PROJECT_COUNT * GAP;
-        // ... (scroll logic unchecked) ...
+        const totalWidth = PROJECT_COUNT * GAP; // GAP is available in scope because we are in the file where GAP is defined
         let rawX = (index * GAP) - currentScroll.current;
         const halfWidth = totalWidth / 2;
         let displayX = ((rawX + halfWidth) % totalWidth + totalWidth) % totalWidth - halfWidth;
+
         const u = (displayX + 16) / 32;
         const safeU = THREE.MathUtils.clamp(u, 0, 1);
         const pointOnCurve = curve.getPointAt(safeU);
@@ -577,9 +640,8 @@ const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, scrol
 
         // Wind / Sway Animation
         const time = state.clock.getElapsedTime();
-        const wind = Math.sin(time * swaySpeed.current + swayOffset.current) * 0.05; // Reduced sway amplitude
+        const wind = Math.sin(time * swaySpeed.current + swayOffset.current) * 0.05;
 
-        // Rotate slightly based on movement + wind
         cardRef.current.rotation.z = wind;
         cardRef.current.rotation.x = 0;
 
@@ -596,16 +658,20 @@ const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, scrol
             onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
             onPointerOut={() => setHovered(false)}
         >
-            {/* Clothespin (Top Center) */}
-            <mesh position={[0, 0, 0]}>
-                <boxGeometry args={[0.05, 0.1, 0.05]} />
-                <meshStandardMaterial color="#8b4513" />
+            {/* Clothespin (Top Center) - Does NOT move with paperRef */}
+            <mesh position={[0, -0.08, 0.15]} rotation={[0, 0, Math.PI]}>
+                <planeGeometry args={[0.3, 0.2]} />
+                <meshBasicMaterial
+                    map={clothespinTexture}
+                    transparent={true}
+                    alphaTest={0.1}
+                    side={THREE.DoubleSide}
+                />
             </mesh>
 
-            {/* The Paper / Card hanging down */}
-            {/* Pivot is at top (0,0,0) so we offset mesh down */}
-
+            {/* The Paper / Card hanging down - This moves independently now */}
             <group
+                ref={paperRef}
                 position={[0, -1.1, 0]}
             >
                 <mesh>
@@ -613,19 +679,13 @@ const ProjectCard = ({ index, currentScroll, materials, curve, isSelected, scrol
                     <PaperMaterial
                         ref={materialRef}
                         color="#ffffff"
+                        map={project.frontTexture}
+                        mapBack={project.backTexture}
+                        mapOverlay={overlayTexture}
                         side={THREE.DoubleSide}
                         roughness={0.6}
                     />
                 </mesh>
-                <Text
-                    position={[0, 0, 0.01]}
-                    fontSize={0.2}
-                    color="#333"
-                    anchorX="center"
-                    anchorY="middle"
-                >
-                    PROJECT {index + 1}
-                </Text>
             </group>
         </group>
     );

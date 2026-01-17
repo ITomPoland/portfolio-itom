@@ -1,9 +1,10 @@
 import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame, useThree, useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { CONTENT_DATA, PLATFORM_CONFIG, getLatestContent } from './contentData';
 import { useScene } from '../../../../context/SceneContext';
+import { TextureLoader } from 'three';
 
 // ============================================
 // CONFIG - Adjust these values as needed
@@ -132,7 +133,7 @@ const StudioRoom = ({ showRoom, onReady }) => {
                         width = 1.6; height = 1.2; depth = 1.0;
                         break;
                     case 'monitor':
-                        width = 1.4; height = 1.0; depth = 0.3;
+                        width = 1.6; height = 1.0; depth = 0.15;
                         break;
                     case 'phone':
                         width = 0.6; height = 1.1; depth = 0.1;
@@ -482,6 +483,75 @@ const StudioRoom = ({ showRoom, onReady }) => {
 const MonitorBlock = ({ item, meshRef, isHovered, isSelected, onHover, onClick, disabled }) => {
     // Position.y is updated directly by parent's useFrame via meshRef
 
+    // Load all 6 textures for blog/FB monitors
+    const frontTexture = useLoader(TextureLoader, '/textures/studio/monitor_front.png');
+    const backTexture = useLoader(TextureLoader, '/textures/studio/monitor_back.png');
+    const topTexture = useLoader(TextureLoader, '/textures/studio/monitor_top.png');
+    const bottomTexture = useLoader(TextureLoader, '/textures/studio/monitor_bottom.png');
+    const leftTexture = useLoader(TextureLoader, '/textures/studio/monitor_left.png');
+    const rightTexture = useLoader(TextureLoader, '/textures/studio/monitor_right.png');
+
+    // Check if this is a blog/FB monitor
+    const isBlogMonitor = item.platform === 'blog';
+
+    // Create materials array for box faces: [+X right, -X left, +Y top, -Y bottom, +Z front, -Z back]
+    const materials = useMemo(() => {
+        if (isBlogMonitor) {
+            // Right side (+X) - has buttons
+            const rightMaterial = new THREE.MeshStandardMaterial({
+                map: rightTexture,
+                roughness: 0.5,
+                metalness: 0.0,
+            });
+
+            // Left side (-X) - plain bezel
+            const leftMaterial = new THREE.MeshStandardMaterial({
+                map: leftTexture,
+                roughness: 0.5,
+                metalness: 0.0,
+            });
+
+            // Top (+Y) - ventilation grill
+            const topMaterial = new THREE.MeshStandardMaterial({
+                map: topTexture,
+                roughness: 0.5,
+                metalness: 0.0,
+            });
+
+            // Bottom (-Y) - speakers/vents
+            const bottomMaterial = new THREE.MeshStandardMaterial({
+                map: bottomTexture,
+                roughness: 0.5,
+                metalness: 0.0,
+            });
+
+            // Front material with frame texture (+Z)
+            const frontMaterial = new THREE.MeshStandardMaterial({
+                map: frontTexture,
+                roughness: 0.5,
+                metalness: 0.0,
+            });
+
+            // Back material with ports texture (-Z)
+            const backMaterial = new THREE.MeshStandardMaterial({
+                map: backTexture,
+                roughness: 0.5,
+                metalness: 0.0,
+            });
+
+            // Order: +X, -X, +Y, -Y, +Z (front), -Z (back)
+            return [
+                rightMaterial,  // +X right side (buttons)
+                leftMaterial,   // -X left side (plain)
+                topMaterial,    // +Y top (vents)
+                bottomMaterial, // -Y bottom (speakers)
+                frontMaterial,  // +Z front (screen)
+                backMaterial,   // -Z back (ports)
+            ];
+        }
+        return null;
+    }, [isBlogMonitor, frontTexture, backTexture, topTexture, bottomTexture, leftTexture, rightTexture]);
+
     return (
         <group
             ref={meshRef}
@@ -503,11 +573,20 @@ const MonitorBlock = ({ item, meshRef, isHovered, isSelected, onHover, onClick, 
                 onClick();
             }}
         >
-            {/* Simple device box - will be replaced with textured mesh later */}
-            <mesh>
-                <boxGeometry args={[item.width, item.height, item.depth]} />
-                <meshStandardMaterial color={item.platformConfig.color} roughness={0.4} metalness={0.1} />
-            </mesh>
+            {/* Textured mesh for blog/FB, simple colored box for others */}
+            {isBlogMonitor ? (
+                <mesh>
+                    <boxGeometry args={[item.width, item.height, item.depth]} />
+                    {materials.map((mat, i) => (
+                        <primitive key={i} attach={`material-${i}`} object={mat} />
+                    ))}
+                </mesh>
+            ) : (
+                <mesh>
+                    <boxGeometry args={[item.width, item.height, item.depth]} />
+                    <meshStandardMaterial color={item.platformConfig.color} roughness={0.4} metalness={0.1} />
+                </mesh>
+            )}
         </group>
     );
 };

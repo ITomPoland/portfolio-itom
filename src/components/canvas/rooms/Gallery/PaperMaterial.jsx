@@ -19,6 +19,8 @@ const PaperMaterial = forwardRef(({ color = '#ffffff', roughness = 0.6, map, sid
         shader.uniforms.uBend = { value: 0 };
         shader.uniforms.uTime = { value: 0 };
         shader.uniforms.uWindStrength = { value: 0 }; // Extra flutter intensity
+        shader.uniforms.mapBack = { value: null }; // Back texture
+        shader.uniforms.mapOverlay = { value: null }; // Overlay texture
 
         // Prepend uniforms to vertex shader
         shader.vertexShader = `
@@ -46,9 +48,51 @@ const PaperMaterial = forwardRef(({ color = '#ffffff', roughness = 0.6, map, sid
             `
         );
 
+        // Inject Fragment Shader logic for double-sided texturing
+        shader.fragmentShader = `
+            uniform sampler2D mapBack;
+            uniform sampler2D mapOverlay;
+        ` + shader.fragmentShader;
+
+        shader.fragmentShader = shader.fragmentShader.replace(
+            '#include <map_fragment>',
+            `
+            #ifdef USE_MAP
+                vec4 texColor = texture2D( map, vMapUv );
+                
+                // Flip Y UV to turn it upside down as requested
+                // And keep X standard (vMapUv.x) to create a mirror effect (since back view naturally mirrors)
+                vec2 backUv = vec2(vMapUv.x, 1.0 - vMapUv.y);
+                vec4 backColor = texture2D( mapBack, backUv );
+                
+                // Sample overlay (also using the back UVs so it aligns)
+                vec4 overlayColor = texture2D( mapOverlay, backUv );
+                
+                // Composite: Draw overlay on top of back texture based on alpha
+                // Assuming overlay has transparency. If not, this might overwrite completely.
+                vec4 finalBackColor = mix(backColor, overlayColor, overlayColor.a);
+                
+                vec4 sampledDiffuseColor = gl_FrontFacing ? texColor : finalBackColor;
+                
+                diffuseColor *= sampledDiffuseColor;
+                
+                // Slight brightness boost for readability
+                diffuseColor.rgb *= 1.4;
+            #endif
+            `
+        );
+
         // Store reference to shader to update uniforms later
         materialRef.current.userData.shader = shader;
-    }, []);
+
+        // Initial update if props provided
+        if (props.mapBack && shader.uniforms.mapBack) {
+            shader.uniforms.mapBack.value = props.mapBack;
+        }
+        if (props.mapOverlay && shader.uniforms.mapOverlay) {
+            shader.uniforms.mapOverlay.value = props.mapOverlay;
+        }
+    }, [props.mapBack, props.mapOverlay]);
 
     useImperativeHandle(ref, () => ({
         // Getter/Setter for bend

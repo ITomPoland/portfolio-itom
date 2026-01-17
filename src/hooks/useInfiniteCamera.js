@@ -49,6 +49,11 @@ const useInfiniteCamera = ({
 
     // Camera override - when true, external code (like DoorSection) controls camera
     const cameraOverride = useRef(false);
+    // Skip first frame after re-enabling to prevent camera jump
+    const skipFrameAfterEnable = useRef(false);
+    // Smooth blend-in counter (frames remaining to blend from saved rotation)
+    const blendInFrames = useRef(0);
+    const savedRotation = useRef({ x: 0, y: 0, z: 0 });
 
     // Limits for swipe glance (in radians, ~15 degrees each way)
     const MAX_SWIPE_GLANCE = 0.26;
@@ -71,28 +76,35 @@ const useInfiniteCamera = ({
 
             justEnabled.current = true;
 
-            // FORCE RESET Camera X to 0 to prevent "looking left/right"
-            // The entrance animation might end slightly off-center
-            camera.position.x = 0;
-            camera.rotation.set(0, 0, 0); // Reset rotation to be safe
+            // SAVE current camera rotation for smooth blend-in
+            // This prevents the instant lookAt() from snapping the camera
+            savedRotation.current = {
+                x: camera.rotation.x,
+                y: camera.rotation.y,
+                z: camera.rotation.z
+            };
+
+            // Start blend-in phase (30 frames ≈ 0.5 sec at 60fps)
+            blendInFrames.current = 30;
 
             targetZ.current = camera.position.z;
             currentZ.current = camera.position.z;
 
-            // FIX: Set target to CURRENT camera position so it stays stable
-            // We do NOT want to pan to the mouse immediately, as the mouse might be
-            // far off-center (e.g. clicking a door handle).
-            // We force 0 because we just forced camera.position.x to 0 above
-            parallax.current = { x: 0, y: camera.position.y - 0.2 };
-            targetParallax.current = { x: 0, y: camera.position.y - 0.2 };
+            // Sync parallax with CURRENT camera position
+            parallax.current = { x: camera.position.x, y: camera.position.y - 0.2 };
+            targetParallax.current = { x: camera.position.x, y: camera.position.y - 0.2 };
 
-            // FORCE RESET GLANCE & SWIPE: Prevent any residual inputs from entrance phase
+            // Initialize glanceOffset with the CORRECT value for current position
+            // This makes camera immediately look at the door (if near one) instead of looking forward first
+            const initialGlance = calculateGlance(currentZ.current, Math.floor((10 - currentZ.current) / segmentLength));
+            glanceOffset.current = initialGlance;
+            targetGlance.current = initialGlance;
+
+            // Reset swipe glance (mobile)
             swipeGlance.current = 0;
             targetSwipeGlance.current = 0;
-            glanceOffset.current = 0;
-            targetGlance.current = 0;
 
-            // Recalculate segment immediately to ensure glance calc is correct from frame 0
+            // Recalculate segment
             currentSegment.current = Math.floor((10 - currentZ.current) / segmentLength);
         }
     }, [scrollEnabled, parallaxEnabled, camera, parallaxIntensity]);
@@ -219,6 +231,13 @@ const useInfiniteCamera = ({
             return;
         }
 
+        // Skip first frame after re-enabling to prevent camera jump
+        // This allows the camera to stay exactly where exit animation left it
+        if (skipFrameAfterEnable.current) {
+            skipFrameAfterEnable.current = false;
+            return;
+        }
+
         const scrollActive = scrollEnabledRef.current;
         const parallaxActive = parallaxEnabledRef.current;
 
@@ -262,9 +281,32 @@ const useInfiniteCamera = ({
             camera.position.x = parallax.current.x;
             camera.position.y = 0.2 + parallax.current.y;
 
-            // Look direction with glance + swipe glance - reduced multiplier for subtle effect
+            // Look direction with glance + swipe glance
             const lookX = parallax.current.x * 0.3 + glanceOffset.current * 3 + swipeGlance.current * 4;
-            camera.lookAt(lookX, 0.13 + parallax.current.y, currentZ.current - 10);
+
+            // BLEND-IN PHASE: Smoothly transition from saved rotation to lookAt
+            if (blendInFrames.current > 0) {
+                // Calculate what lookAt WOULD set the rotation to
+                camera.lookAt(lookX, 0.13 + parallax.current.y, currentZ.current - 10);
+                const targetRotation = {
+                    x: camera.rotation.x,
+                    y: camera.rotation.y,
+                    z: camera.rotation.z
+                };
+
+                // Calculate blend factor (0 = saved, 1 = target)
+                const blendFactor = 1 - (blendInFrames.current / 30);
+
+                // Lerp from saved rotation to target
+                camera.rotation.x = THREE.MathUtils.lerp(savedRotation.current.x, targetRotation.x, blendFactor);
+                camera.rotation.y = THREE.MathUtils.lerp(savedRotation.current.y, targetRotation.y, blendFactor);
+                camera.rotation.z = THREE.MathUtils.lerp(savedRotation.current.z, targetRotation.z, blendFactor);
+
+                blendInFrames.current--;
+            } else {
+                // Normal mode - apply lookAt directly
+                camera.lookAt(lookX, 0.13 + parallax.current.y, currentZ.current - 10);
+            }
 
             // Update segment tracking
             const segment = Math.floor((10 - currentZ.current) / segmentLength);
@@ -373,6 +415,10 @@ const useInfiniteCamera = ({
                 glanceOffset.current = initialGlance;
                 targetGlance.current = initialGlance;
             }
+
+            // Skip the first frame to prevent camera jump
+            // This ensures useFrame doesn't immediately override exit animation position
+            skipFrameAfterEnable.current = true;
 
             // Reset swipe glance
             swipeGlance.current = 0;

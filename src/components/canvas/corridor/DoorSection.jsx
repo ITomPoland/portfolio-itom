@@ -334,13 +334,17 @@ const DoorSection = ({
         // If this is a TELEPORT entry, overwrite the saved state with a "Safe Corridor Position"
         // This prevents the camera from jumping back to the OLD room position on exit.
         if (e && e.isTeleport) {
-            // Safe position: Standing in corridor, looking straight down Z axis
+            // Use a NATURAL corridor glance angle (~8.5 degrees), NOT the intense door-aligned angle (60°)
+            // This creates a visible head turn: from looking at door (60°) → subtle corridor glance (8.5°)
+            // The angle is smaller because we end up 4m back from the door, not right next to it
+            const corridorGlanceY = side === 'left' ? 0.15 : -0.15;
+
             savedCameraState.current = {
                 x: 0,
                 y: 0.2, // Correct height matching useInfiniteCamera
                 z: position[2] + 4, // 4 meters back from the door Z
                 rotationX: 0,
-                rotationY: 0, // Look straight down corridor
+                rotationY: corridorGlanceY, // Natural corridor glance, not intense door stare
                 rotationZ: 0
             };
         }

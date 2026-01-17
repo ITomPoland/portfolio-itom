@@ -46,15 +46,10 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
         parallaxEnabled: hasEntered && !isTeleporting && !isInRoom
     });
 
-    // Enable camera override during teleportation, when in a room, OR when a door click is pending
-    // This prevents the corridor camera hook from interfering during transitions
-    useEffect(() => {
-        if (isTeleporting || isInRoom || pendingDoorClick) {
-            setCameraOverride(true);
-        } else {
-            setCameraOverride(false);
-        }
-    }, [isTeleporting, isInRoom, pendingDoorClick, setCameraOverride]);
+    // NOTE: Camera override is now managed directly by DoorSection.jsx
+    // We removed the useEffect that was calling setCameraOverride here because
+    // it conflicted with DoorSection's direct control and caused camera jumps.
+    // The scrollEnabled/parallaxEnabled props already handle disabling scroll when in room.
 
 
     // Handle entrance complete

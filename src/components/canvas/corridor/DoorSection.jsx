@@ -74,7 +74,9 @@ const DoorSection = ({
         clearExitRequest,
         exitRoom: contextExitRoom,
         enterRoom,
-        pendingDoorClick
+        pendingDoorClick,
+        isTeleporting,
+        teleportPhase // We need this to delay reset until curtain is closed
     } = useScene();
 
 
@@ -102,6 +104,39 @@ const DoorSection = ({
             handleClick({ stopPropagation: () => { } }); // Trigger click simulation
         }
     }, [pendingDoorClick, doorId, position, isOpen, isAnimating]);
+
+    // --- SILENT RESET FOR TELEPORTATION ---
+    // If a teleport starts (users clicks map), and we are inside THIS room,
+    // we must silently reset our state so we are "outside" and "closed"
+    // BUT only after the curtain is closed (phase === 'teleporting').
+    useEffect(() => {
+        // FIX: Added (currentRoom === doorId) check to ensure we only reset the OLD room
+        // FIX: Added (teleportPhase === 'teleporting') to wait for curtain to close
+        if (isTeleporting && teleportPhase === 'teleporting' && isInsideRoom && currentRoom === doorId) {
+            console.log(`[DoorSection ${label}] Silent Reset triggered by teleport (Old Room)`);
+
+            // 1. Reset Internal State immediately
+            setIsOpen(false);
+            setIsInsideRoom(false);
+            setIsAnimating(false);
+            setShouldRenderRoom(false); // Unmount room content
+            setIsTiltLocked(false);
+            setRoomReady(false);
+            roomReadyRef.current = false;
+
+            // 2. Reset Door/Handle Rotation (Visuals)
+            // We can do this instantly or very quickly since screen is covered
+            if (doorRef.current) doorRef.current.rotation.y = 0;
+            if (handleRef.current) handleRef.current.rotation.z = 0;
+
+            // 3. Reset Camera Override 
+            // Important: Release control so TeleportRoom/Corridor can take over
+            setCameraOverride?.(false);
+
+            // 4. Reset Timers
+            if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+        }
+    }, [isTeleporting, teleportPhase, isInsideRoom, currentRoom, doorId, label, setCameraOverride]);
 
     // Save camera state before entering room (for ESC exit)
     // Save camera state before entering room (for ESC exit)

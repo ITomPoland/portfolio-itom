@@ -8,10 +8,10 @@ import PaperMaterial from './PaperMaterial';
 
 // Define the unique projects and their textures
 const UNIQUE_PROJECTS = [
-    { id: 'bio', title: 'Bio', front: '/textures/gallery/bioprzod.jpg', back: '/textures/gallery/biotyl.png', url: 'https://example.com' },
-    { id: 'monetune', title: 'Monetune', front: '/textures/gallery/monetuneprzod.png', back: '/textures/gallery/monetunetyl.png', url: 'https://example.com' },
-    { id: 'timber', title: 'TimberKitty', front: '/textures/gallery/timberkittyprzod.png', back: '/textures/gallery/timberkittytyl.png', url: 'https://example.com' },
-    { id: 'young', title: 'YoungMulti', front: '/textures/gallery/youngmultiprzod.png', back: '/textures/gallery/youngmultityl.png', url: 'https://example.com' },
+    { id: 'bio', title: 'Bio', front: '/textures/gallery/bioprzod.jpg', back: '/textures/gallery/biotyl.webp', url: 'https://example.com' },
+    { id: 'monetune', title: 'Monetune', front: '/textures/gallery/monetuneprzod.webp', back: '/textures/gallery/monetunetyl.webp', url: 'https://example.com' },
+    { id: 'timber', title: 'TimberKitty', front: '/textures/gallery/timberkittyprzod.webp', back: '/textures/gallery/timberkittytyl.webp', url: 'https://example.com' },
+    { id: 'young', title: 'YoungMulti', front: '/textures/gallery/youngmultiprzod.webp', back: '/textures/gallery/youngmultityl.webp', url: 'https://example.com' },
 ];
 
 const PROJECT_COUNT = 10; // Keep the count for the infinite scroll feel
@@ -50,7 +50,7 @@ const GalleryRoom = ({ showRoom, onReady }) => {
     const projectTextures = useTexture(textureUrls);
 
     // Load the single overlay texture (button "open project")
-    const overlayTexture = useTexture('/textures/gallery/openliveproject.png');
+    const overlayTexture = useTexture('/textures/gallery/openliveproject.webp');
 
     // Construct the full list of projects (repeated) with textures attached
     const projects = useMemo(() => {
@@ -152,11 +152,11 @@ const GalleryRoom = ({ showRoom, onReady }) => {
 
     // --- GEOMETRY & MATERIALS ---
     const floorTexture = useTexture('/textures/gallery/floor.jpg');
-    const railingTexture = useTexture('/textures/gallery/railing.png');
-    const housesTexture = useTexture('/textures/gallery/domki.png');
-    const cityTexture = useTexture('/textures/gallery/miastotlo.png');
-    const birdTexture = useTexture('/textures/gallery/bird.png');
-    const clothespinTexture = useTexture('/textures/gallery/klamerka.png');
+    const railingTexture = useTexture('/textures/gallery/railing.webp');
+    const housesTexture = useTexture('/textures/gallery/domki.webp');
+    const cityTexture = useTexture('/textures/gallery/miastotlo.webp');
+    const birdTexture = useTexture('/textures/gallery/bird.webp');
+    const clothespinTexture = useTexture('/textures/gallery/klamerka.webp');
 
     useEffect(() => {
         if (floorTexture) {

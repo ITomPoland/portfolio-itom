@@ -141,7 +141,7 @@ const NavigationUI = () => {
                     </div>
                     <div className="map-container">
                         {/* Map background image */}
-                        <img src="/images/map.png" alt="Portfolio Map" className="map-image" />
+                        <img src="/images/map.webp" alt="Portfolio Map" className="map-image" />
 
                         {/* Pin slot markers - 4 locations */}
                         {ROOMS.map((room) => (
@@ -154,7 +154,7 @@ const NavigationUI = () => {
                                 onMouseLeave={() => setHoveredRoom(null)}
                                 title={room.label}
                             >
-                                <img src="/images/pin-slot.png" alt="" className="slot-image" />
+                                <img src="/images/pin-slot.webp" alt="" className="slot-image" />
                             </button>
                         ))}
 
@@ -176,7 +176,7 @@ const NavigationUI = () => {
                                     }%`
                             }}
                         >
-                            <img src="/images/pin.png" alt="You are here" className="pin-image" />
+                            <img src="/images/pin.webp" alt="You are here" className="pin-image" />
                         </div>
                     </div>
                 </div>

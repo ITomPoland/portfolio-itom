@@ -1,4 +1,4 @@
-import { useMemo, memo, lazy, Suspense } from 'react';
+import { useMemo, memo, lazy, Suspense, useEffect } from 'react';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -57,6 +57,15 @@ const RoomInterior = memo(({ label, showRoom, onReady, isExiting }) => {
     }), []);
 
     const isGallery = label === 'THE GALLERY';
+
+    // Trigger onReady for generic rooms (which don't have their own component to do it)
+    // The keys matching the specific rooms are: 'THE GALLERY', 'THE STUDIO', 'THE ABOUT', "LET'S CONNECT"
+    useEffect(() => {
+        if (showRoom && !['THE GALLERY', 'THE STUDIO', 'THE ABOUT', "LET'S CONNECT"].includes(label)) {
+            // It's a generic room, so it's "ready" immediately
+            onReady?.();
+        }
+    }, [showRoom, label, onReady]);
 
     return (
         <group position={[0, -0.149, 0]}>

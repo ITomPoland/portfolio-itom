@@ -66,6 +66,7 @@ const DoorSection = ({
     const [roomReady, setRoomReady] = useState(false); // Room signaled it's ready
     const { camera } = useThree();
     const closeTimerRef = useRef(null);
+    const loadTimeoutRef = useRef(null); // Ref for the room loading fallback timeout
 
     // Get exit request signal from context
     const {
@@ -296,6 +297,7 @@ const DoorSection = ({
     useEffect(() => {
         return () => {
             if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+            if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
         };
     }, []);
 
@@ -417,15 +419,16 @@ const DoorSection = ({
                 //    OR after fallback timeout for rooms without onReady support
                 setShouldRenderRoom(true);
 
-                // Fallback: If room doesn't call onReady within 500ms, open door anyway
+                // Fallback: If room doesn't call onReady within 8000ms, open door anyway
                 // This ensures all rooms work even if they don't implement onReady
-                setTimeout(() => {
+                loadTimeoutRef.current = setTimeout(() => {
                     if (!roomReadyRef.current) {
+                        console.warn(`[DoorSection ${label}] Room load timeout - forcing open`);
                         roomReadyRef.current = true;
                         setRoomReady(true);
                         openDoor();
                     }
-                }, 500);
+                }, 8000); // Increased from 500ms to 8000ms to prevent premature opening
             }
         });
     }, [camera, side, isOpen, isAnimating, setCameraOverride]);
@@ -499,6 +502,10 @@ const DoorSection = ({
     const handleRoomReady = useCallback(() => {
         // Guard: only call openDoor once
         if (roomReadyRef.current) return;
+
+        // Clear the fallback timeout since we are ready
+        if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
+
         roomReadyRef.current = true;
         setRoomReady(true);
         openDoor();
@@ -635,6 +642,7 @@ const DoorSection = ({
     const closeDoor = useCallback((onDoorClosed) => {
         if (!doorRef.current || !isOpen) return;
         if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+        if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
 
         setIsAnimating(true);
 

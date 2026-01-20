@@ -484,12 +484,12 @@ const MonitorBlock = ({ item, meshRef, isHovered, isSelected, onHover, onClick, 
     // Position.y is updated directly by parent's useFrame via meshRef
 
     // Load all 6 textures for blog/FB monitors
-    const frontTexture = useLoader(TextureLoader, '/textures/studio/monitor_front.png');
-    const backTexture = useLoader(TextureLoader, '/textures/studio/monitor_back.png');
-    const topTexture = useLoader(TextureLoader, '/textures/studio/monitor_top.png');
-    const bottomTexture = useLoader(TextureLoader, '/textures/studio/monitor_bottom.png');
-    const leftTexture = useLoader(TextureLoader, '/textures/studio/monitor_left.png');
-    const rightTexture = useLoader(TextureLoader, '/textures/studio/monitor_right.png');
+    const frontTexture = useLoader(TextureLoader, '/textures/studio/monitor_front.webp');
+    const backTexture = useLoader(TextureLoader, '/textures/studio/monitor_back.webp');
+    const topTexture = useLoader(TextureLoader, '/textures/studio/monitor_top.webp');
+    const bottomTexture = useLoader(TextureLoader, '/textures/studio/monitor_bottom.webp');
+    const leftTexture = useLoader(TextureLoader, '/textures/studio/monitor_left.webp');
+    const rightTexture = useLoader(TextureLoader, '/textures/studio/monitor_right.webp');
 
     // Check if this is a blog/FB monitor
     const isBlogMonitor = item.platform === 'blog';

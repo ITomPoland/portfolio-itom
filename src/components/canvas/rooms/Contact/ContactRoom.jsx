@@ -1,8 +1,9 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useCursor, Text } from '@react-three/drei';
+import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import gsap from 'gsap';
+import MessagePaper from './MessagePaper';
 
 // ============================================
 // 🌊 CONTACT ROOM v2 - MESSAGE IN A BOTTLE
@@ -233,28 +234,17 @@ const ContactRoom = ({ showRoom, onReady, isExiting }) => {
             </mesh>
 
             {/* ============================================
-                📜 PAPER - Lying on dock (for writing)
-                Visible during WRITING phase
+                📜 INTERACTIVE MESSAGE PAPER
+                Visible during ENTERING, LOOKING_DOWN and WRITING phases
             ============================================ */}
-            {(currentPhase === PHASE.WRITING || currentPhase === PHASE.LOOKING_DOWN) && (
-                <group ref={paperRef} position={[0, 0.05, 2]}>
-                    <mesh rotation={[-Math.PI / 2, 0, 0]}>
-                        <planeGeometry args={[1.2, 1.6]} />
-                        <meshBasicMaterial color="#f5f5f0" side={THREE.DoubleSide} />
-                    </mesh>
-                    <Text
-                        position={[0, 0.01, 0]}
-                        rotation={[-Math.PI / 2, 0, 0]}
-                        fontSize={0.08}
-                        color="#333333"
-                        anchorX="center"
-                        anchorY="middle"
-                    >
-                        {currentPhase === PHASE.WRITING
-                            ? "[ click to write message ]"
-                            : ""}
-                    </Text>
-                </group>
+            {(currentPhase === PHASE.ENTERING || currentPhase === PHASE.WRITING || currentPhase === PHASE.LOOKING_DOWN) && (
+                <MessagePaper
+                    position={[0, 0.05, 2]}
+                    onSend={(data) => {
+                        console.log('📬 Contact form submitted:', data);
+                        // Future: Connect to email service
+                    }}
+                />
             )}
 
             {/* ============================================

@@ -127,56 +127,84 @@ const NavigationUI = () => {
             {/* Map Panel - Drops from top when open */}
             {hasEntered && (
                 <div className={`map-panel ${isMenuOpen ? 'open' : ''}`}>
-                    <div className="map-header">
-                        <h3>MAP</h3>
-                        <button
-                            className="close-btn"
-                            onClick={() => setIsMenuOpen(false)}
-                            aria-label="Close map"
-                        >
-                            <svg viewBox="0 0 24 24">
-                                <path d="M18 6L6 18M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-                    <div className="map-container">
-                        {/* Map background image */}
-                        <img src="/images/map.webp" alt="Portfolio Map" className="map-image" />
+                    {/* SVG Border Overlay */}
+                    <svg
+                        className="map-border-overlay"
+                        viewBox="0 0 100 100"
+                        preserveAspectRatio="none"
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            pointerEvents: 'none',
+                            zIndex: 10
+                        }}
+                    >
+                        <path
+                            d="M 0 0 L 100 0 L 100 0 L 99 3 L 100 6 L 98 10 L 100 14 L 99 18 L 100 22 L 98 26 L 100 30 L 99 35 L 100 40 L 98 45 L 100 50 L 99 55 L 100 60 L 98 65 L 100 70 L 99 75 L 100 80 L 98 85 L 100 90 L 99 95 L 100 100 L 96 99 L 92 100 L 88 98 L 84 100 L 80 99 L 76 100 L 72 98 L 68 100 L 64 99 L 60 100 L 56 98 L 52 100 L 48 99 L 44 100 L 40 98 L 36 100 L 32 99 L 28 100 L 24 98 L 20 100 L 16 99 L 12 100 L 8 98 L 4 100 L 0 99 L 0.5 99.5 L 1 95 L 0 90 L 2 85 L 0 80 L 1 75 L 0 70 L 2 65 L 0 60 L 1 55 L 0 50 L 2 45 L 0 40 L 1 35 L 0 30 L 2 26 L 0 22 L 1 18 L 0 14 L 2 10 L 0 6 L 1 3 L 0 0 Z"
+                            fill="none"
+                            stroke="#1a1a1a"
+                            strokeWidth="0.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            vectorEffect="non-scaling-stroke"
+                        />
+                    </svg>
 
-                        {/* Pin slot markers - 4 locations */}
-                        {ROOMS.map((room) => (
+                    <div className="map-content-clipped">
+                        <div className="map-header">
+                            <h3>MAP</h3>
                             <button
-                                key={room.id}
-                                className={`pin-slot ${currentRoom === room.id ? 'active' : ''} ${hoveredRoom === room.id ? 'hovered' : ''}`}
-                                style={{ left: `${room.x}%`, top: `${room.y}%` }}
-                                onClick={() => handleRoomClick(room.id)}
-                                onMouseEnter={() => setHoveredRoom(room.id)}
-                                onMouseLeave={() => setHoveredRoom(null)}
-                                title={room.label}
+                                className="close-btn"
+                                onClick={() => setIsMenuOpen(false)}
+                                aria-label="Close map"
                             >
-                                <img src="/images/pin-slot.webp" alt="" className="slot-image" />
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M18 6L6 18M6 6l12 12" />
+                                </svg>
                             </button>
-                        ))}
+                        </div>
+                        <div className="map-container">
+                            {/* Map background image */}
+                            <img src="/images/map.webp" alt="Portfolio Map" className="map-image" />
 
-                        {/* The pin marker - moves to hovered slot, or current room, or start position */}
-                        <div
-                            className="pin-marker"
-                            style={{
-                                left: `${hoveredRoom
-                                    ? ROOMS.find(r => r.id === hoveredRoom)?.x || PIN_START_POSITION.x
-                                    : currentRoom && isInRoom
-                                        ? ROOMS.find(r => r.id === currentRoom)?.x || PIN_START_POSITION.x
-                                        : PIN_START_POSITION.x
-                                    }%`,
-                                top: `${hoveredRoom
-                                    ? ROOMS.find(r => r.id === hoveredRoom)?.y || PIN_START_POSITION.y
-                                    : currentRoom && isInRoom
-                                        ? ROOMS.find(r => r.id === currentRoom)?.y || PIN_START_POSITION.y
-                                        : PIN_START_POSITION.y
-                                    }%`
-                            }}
-                        >
-                            <img src="/images/pin.webp" alt="You are here" className="pin-image" />
+                            {/* Pin slot markers - 4 locations */}
+                            {ROOMS.map((room) => (
+                                <button
+                                    key={room.id}
+                                    className={`pin-slot ${currentRoom === room.id ? 'active' : ''} ${hoveredRoom === room.id ? 'hovered' : ''}`}
+                                    style={{ left: `${room.x}%`, top: `${room.y}%` }}
+                                    onClick={() => handleRoomClick(room.id)}
+                                    onMouseEnter={() => setHoveredRoom(room.id)}
+                                    onMouseLeave={() => setHoveredRoom(null)}
+                                    title={room.label}
+                                >
+                                    <img src="/images/pin-slot.webp" alt="" className="slot-image" />
+                                </button>
+                            ))}
+
+                            {/* The pin marker - moves to hovered slot, or current room, or start position */}
+                            <div
+                                className="pin-marker"
+                                style={{
+                                    left: `${hoveredRoom
+                                        ? ROOMS.find(r => r.id === hoveredRoom)?.x || PIN_START_POSITION.x
+                                        : currentRoom && isInRoom
+                                            ? ROOMS.find(r => r.id === currentRoom)?.x || PIN_START_POSITION.x
+                                            : PIN_START_POSITION.x
+                                        }%`,
+                                    top: `${hoveredRoom
+                                        ? ROOMS.find(r => r.id === hoveredRoom)?.y || PIN_START_POSITION.y
+                                        : currentRoom && isInRoom
+                                            ? ROOMS.find(r => r.id === currentRoom)?.y || PIN_START_POSITION.y
+                                            : PIN_START_POSITION.y
+                                        }%`
+                                }}
+                            >
+                                <img src="/images/pin.webp" alt="You are here" className="pin-image" />
+                            </div>
                         </div>
                     </div>
                 </div>

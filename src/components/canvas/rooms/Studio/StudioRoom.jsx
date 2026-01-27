@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { CONTENT_DATA, PLATFORM_CONFIG, getLatestContent } from './contentData';
 import { useScene } from '../../../../context/SceneContext';
 import { TextureLoader } from 'three';
+import FloatingCodeParticles from './FloatingCodeParticles';
 
 // ============================================
 // CONFIG - Adjust these values as needed
@@ -78,6 +79,10 @@ const StudioRoom = ({ showRoom, onReady }) => {
     const monitorOffsets = useRef([]);
     // Refs to monitor meshes for direct position updates (avoids 28 useFrame hooks)
     const monitorRefs = useRef([]);
+
+    // Track tower state for floating particles parallax (REFS not state!)
+    const particleTowerRotation = useRef(0);
+    const particleFallOffset = useRef(0);
 
     // Track if we've signaled ready
     const hasSignaledReady = useRef(false);
@@ -439,6 +444,10 @@ const StudioRoom = ({ showRoom, onReady }) => {
                     ref.position.y = monitor.baseY + monitorOffsets.current[index];
                 }
             });
+
+            // Update particle refs directly (no setState = no re-render = smooth!)
+            particleTowerRotation.current = towerRef.current.rotation.y;
+            particleFallOffset.current = fallSpeed.current; // Pass velocity, not offset!
         }
     });
 
@@ -472,7 +481,11 @@ const StudioRoom = ({ showRoom, onReady }) => {
                 ))}
             </group>
 
-            {/* TODO: Add instruction as texture or HTML overlay later */}
+            {/* Floating code symbols parallax background */}
+            <FloatingCodeParticles
+                towerRotationRef={particleTowerRotation}
+                fallOffsetRef={particleFallOffset}
+            />
         </group>
     );
 };

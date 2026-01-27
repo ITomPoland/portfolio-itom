@@ -22,7 +22,7 @@ const useInfiniteCamera = ({
     segmentLength = 80,
     scrollSpeed = 0.02,
     parallaxIntensity = 0.3,
-    smoothing = 0.06,
+    smoothing = 0.035, // Lower = longer deceleration, smoother feel
     glanceIntensity = 0.15,
     scrollEnabled = true,
     parallaxEnabled = true

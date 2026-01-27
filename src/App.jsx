@@ -1,6 +1,7 @@
 import { useState, Suspense, useEffect, useCallback, useLayoutEffect, lazy } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { Preload, useTexture, Text, PerformanceMonitor } from '@react-three/drei';
+import * as THREE from 'three';
 
 import Preloader from './components/dom/Preloader';
 import PaperTransition from './components/dom/PaperTransition';
@@ -37,6 +38,23 @@ const GlobalAudioEnabler = () => {
       window.removeEventListener('keydown', handleInteraction);
     };
   }, [enableAudio]);
+  return null;
+};
+
+// Scene background using corridor wall texture (static, no animation)
+const PaperSceneBackground = () => {
+  const { scene } = useThree();
+  const texture = useTexture('/textures/paper-texture.webp');
+
+  useEffect(() => {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    scene.background = texture;
+
+    return () => {
+      scene.background = null;
+    };
+  }, [scene, texture]);
+
   return null;
 };
 

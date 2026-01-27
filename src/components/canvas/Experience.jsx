@@ -73,7 +73,7 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
             <directionalLight
                 position={[5, 10, 5]}
                 intensity={0.8}
-                color="#ffffff"
+                color="#acacacff"
                 castShadow={!isLowTier}
                 shadow-mapSize={[1024, 1024]}
             />

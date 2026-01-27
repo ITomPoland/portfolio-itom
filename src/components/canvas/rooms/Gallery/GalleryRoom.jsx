@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 import { useScene } from '../../../../context/SceneContext';
 import PaperMaterial from './PaperMaterial';
+import GalleryClouds from './GalleryClouds';
 
 // Define the unique projects and their textures
 const UNIQUE_PROJECTS = [
@@ -336,6 +337,9 @@ const GalleryRoom = ({ showRoom, onReady }) => {
 
                 {/* Flying Bird */}
                 <FlyingBird texture={birdTexture} />
+
+                {/* Clouds scattered above */}
+                <GalleryClouds count={25} seed={123} />
 
                 {/* Skybox/Environment */}
                 <mesh position={[0, 5, -20]}>

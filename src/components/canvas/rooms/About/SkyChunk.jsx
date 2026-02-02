@@ -46,6 +46,11 @@ const SkyChunk = ({ chunkIndex = 0, seed = 0 }) => {
                 scale: 0.8 + random() * 1.5,
                 baseOpacity: 0.5 + random() * 0.4,
                 textureIndex: Math.floor(random() * CLOUD_TEXTURES.length),
+                // Animation properties - unique per cloud
+                driftSpeed: 0.3 + random() * 0.4,  // How fast it sways
+                driftAmount: 0.5 + random() * 1.0, // How far it sways (X)
+                bobAmount: 0.1 + random() * 0.2,   // Vertical bob amount
+                timeOffset: random() * Math.PI * 2, // Phase offset so clouds don't sync
             });
         }
 
@@ -61,17 +66,33 @@ const SkyChunk = ({ chunkIndex = 0, seed = 0 }) => {
                     scale={cloud.scale}
                     baseOpacity={cloud.baseOpacity}
                     textureIndex={cloud.textureIndex}
+                    driftSpeed={cloud.driftSpeed}
+                    driftAmount={cloud.driftAmount}
+                    bobAmount={cloud.bobAmount}
+                    timeOffset={cloud.timeOffset}
                 />
             ))}
         </group>
     );
 };
 
-// Cloud with SMOOTH dynamic fade using actual texture
-const Cloud = ({ position, scale, baseOpacity, textureIndex }) => {
+// Cloud with SMOOTH dynamic fade and drift animation
+const Cloud = ({
+    position,
+    scale,
+    baseOpacity,
+    textureIndex,
+    driftSpeed = 0.5,
+    driftAmount = 0.8,
+    bobAmount = 0.15,
+    timeOffset = 0
+}) => {
     const meshRef = useRef();
     const materialRef = useRef();
     const { camera } = useThree();
+
+    // Store base position for animation
+    const basePosition = useRef(position);
 
     // Load the specific cloud texture
     const texture = useLoader(THREE.TextureLoader, CLOUD_TEXTURES[textureIndex]);
@@ -87,6 +108,19 @@ const Cloud = ({ position, scale, baseOpacity, textureIndex }) => {
 
     useFrame((state, delta) => {
         if (!meshRef.current) return;
+
+        const time = state.clock.elapsedTime;
+
+        // === DRIFT ANIMATION ===
+        // Horizontal sway (left-right)
+        const driftX = Math.sin(time * driftSpeed + timeOffset) * driftAmount;
+        // Vertical bob (gentle up-down)
+        const driftY = Math.sin(time * driftSpeed * 0.7 + timeOffset + 1.5) * bobAmount;
+
+        // Apply drift to position
+        meshRef.current.position.x = basePosition.current[0] + driftX;
+        meshRef.current.position.y = basePosition.current[1] + driftY;
+        meshRef.current.position.z = basePosition.current[2];
 
         // Update world position (reuse object to avoid GC)
         meshRef.current.getWorldPosition(worldPos.current);

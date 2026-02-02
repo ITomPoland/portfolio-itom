@@ -4,10 +4,19 @@ import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import PaperAirplane from './PaperAirplane';
 import InfiniteSkyManager from './InfiniteSkyManager';
-// useScene removed as exit logic is now prop-driven
+import StoryMilestone from './StoryMilestone';
 
 // Chunk length for looping flight effect (matches SkyChunk)
 const CHUNK_LENGTH = 40;
+
+// Story sections - positions define where each milestone appears
+// Using CHUNK_LENGTH to create looping story (every ~40 units restarts)
+const STORY_MILESTONES = [
+    { id: 'intro', position: [0, 0, -15], type: 'intro', title: 'ITOM', subtitle: '< creative developer />' },
+    { id: 'awards', position: [0, 0, -55], type: 'awards', title: 'AWARDS', subtitle: '1x SOTD Winner • 1x CSS Winner' },
+    { id: 'journey', position: [0, 0, -95], type: 'journey', title: 'JOURNEY', subtitle: 'Computer Science @ University of Opole' },
+    { id: 'skills', position: [0, 0, -135], type: 'skills', title: 'SKILLS', subtitle: 'React • Three.js • GSAP • Creative Code' },
+];
 
 const AboutRoom = ({ showRoom, onReady, isExiting }) => {
     const { camera } = useThree();
@@ -139,7 +148,7 @@ const AboutRoom = ({ showRoom, onReady, isExiting }) => {
                 color="#faf8f5"
             />
 
-            {/* === INFINITE SKY WITH CLOUDS === */}
+            {/* === INFINITE SKY WITH CLOUDS + STORY MILESTONES === */}
             <InfiniteSkyManager scrollProgress={displayProgress} />
 
             {/* === SKY BACKDROP === */}
@@ -147,11 +156,6 @@ const AboutRoom = ({ showRoom, onReady, isExiting }) => {
                 <planeGeometry args={[300, 150]} />
                 <meshBasicMaterial color="#87CEEB" side={THREE.DoubleSide} />
             </mesh>
-
-            {/* Debug text */}
-            <Text position={[0, 1.5, -3]} color="#333" fontSize={0.2} anchorX="center">
-                {`Scroll: ${displayProgress.toFixed(1)} | Chunk: ${(displayProgress % CHUNK_LENGTH).toFixed(1)}`}
-            </Text>
         </group>
     );
 };

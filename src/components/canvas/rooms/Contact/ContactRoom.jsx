@@ -6,9 +6,11 @@ import gsap from 'gsap';
 import MessagePaper from './MessagePaper';
 
 // ============================================
+// ============================================
 // 🌊 CONTACT ROOM v2 - MESSAGE IN A BOTTLE
 // Immersive experience: write message, roll into bottle, throw
 // ============================================
+import { useTexture } from '@react-three/drei';
 
 const WAVE_LAYERS = 4;
 
@@ -46,6 +48,47 @@ const PHASE = {
 const ContactRoom = ({ showRoom, onReady, isExiting }) => {
     const { camera } = useThree();
 
+    // Load Sea Texture
+    const seaTexture = useTexture("/textures/contact/faletopdown.png");
+    // Load Molo Texture
+    const moloTexture = useTexture("/textures/contact/molo.png");
+
+    // Load Bottle Textures
+    const bottleBody = useTexture("/textures/contact/czescglownabutelki.png");
+    const bottleCap = useTexture("/textures/contact/zakretkabutelki.png");
+    const bottlePaper = useTexture("/textures/contact/papiernabutelke.png");
+
+    // Configure texture repeating (1:1 scale)
+    useEffect(() => {
+        if (seaTexture) {
+            seaTexture.wrapS = seaTexture.wrapT = THREE.RepeatWrapping;
+            // Geometry is 80x30.
+            // Previous 40x15 was too dense (looked gray).
+            // 1x1 was visible but stretched.
+            // Setting to a balanced repeat to show detail but tile correctly.
+            seaTexture.repeat.set(6, 4);
+            seaTexture.needsUpdate = true;
+        }
+
+        if (moloTexture) {
+            moloTexture.wrapS = moloTexture.wrapT = THREE.RepeatWrapping;
+
+            // User feedback: Texture is "horizontal" but should be "vertical".
+            // Rotating 90 degrees to align planks along the length of the pier.
+            moloTexture.center.set(0.5, 0.5);
+            moloTexture.rotation = Math.PI / 2;
+
+            // After rotation, U axis of texture runs along V axis of geometry (Length).
+            // Dock Dimensions: 3 (width) x 7 (length).
+            // We want planks along the length? Or just rotated?
+            // If rotating, we swap the aspect ratio consideration.
+            // Let's try to fit the texture well.
+            moloTexture.repeat.set(1, 1);
+
+            moloTexture.needsUpdate = true;
+        }
+    }, [seaTexture, moloTexture]);
+
     useEffect(() => {
         // Set rotation order to YXZ to prevent Gimbal lock and mixing of axes
         // Y = Body turn (Yaw), X = Head tilt (Pitch), Z = Roll
@@ -70,7 +113,12 @@ const ContactRoom = ({ showRoom, onReady, isExiting }) => {
     // Refs for animations
     const waveRefs = useRef([]);
     const bottleRef = useRef();
+    const bottleCapRef = useRef(); // Separate ref for cap animation
     const paperRef = useRef();
+
+    // Bottle cap animation state
+    const [isCapAnimating, setIsCapAnimating] = useState(false);
+    const capProgress = useRef(0); // 0 = closed, 1 = fully open
 
     // ============================================
     // 📷 CAMERA ANIMATION - Look down at dock
@@ -183,15 +231,28 @@ const ContactRoom = ({ showRoom, onReady, isExiting }) => {
             }
         });
 
-        // 3. Bottle Floating
-        if (bottleRef.current && currentPhase !== PHASE.HOLDING) {
-            // Adjust position based on phase
-            // During WRITING, bottle is on the dock (stable)
-            // Floating only if in water (not yet implemented fully, keeping float for now)
-            bottleRef.current.position.y = Math.sin(time * 0.9 + 1) * 0.1 + (currentPhase === PHASE.WRITING ? 0.1 : 0);
-            bottleRef.current.rotation.z = Math.sin(time * 0.7) * 0.08;
+        // 3. Bottle Cap Animation (lift up)
+        if (isCapAnimating && bottleCapRef.current) {
+            // Increase progress
+            if (capProgress.current < 1) {
+                capProgress.current = Math.min(1, capProgress.current + delta * 0.6);
+            }
+
+            // Easing for smooth motion
+            const t = capProgress.current;
+            const eased = 1 - Math.pow(1 - t, 3); // ease out cubic
+
+            // Just lift cap up gently (Y in local space since bottle is rotated)
+            bottleCapRef.current.position.y = eased * 0.5; // Lift up
         }
     });
+
+    // Handler for when paper fold completes
+    const handleFoldComplete = useCallback(() => {
+        console.log('📜 Paper fold complete - starting cap animation');
+        setIsCapAnimating(true);
+        capProgress.current = 0;
+    }, []);
 
     return (
         <group position={[0, -0.7, -5]}>
@@ -211,15 +272,17 @@ const ContactRoom = ({ showRoom, onReady, isExiting }) => {
                     <mesh
                         key={i}
                         ref={el => waveRefs.current[i] = el}
-                        position={[0, -i * 0.1, -i * 8]}
+                        position={[0, -i * 0.1, -i * 8]} // Spread out vertically
                         rotation={[-Math.PI / 2.5, 0, 0]}
                     >
                         <planeGeometry args={[80, 30]} />
                         <meshBasicMaterial
-                            color={`hsl(0, 0%, ${35 + i * 15}%)`}
-                            transparent
+                            map={seaTexture}
+                            color="#ffffff"
+                            transparent={true}
                             opacity={1 - i * 0.1}
                             side={THREE.DoubleSide}
+                            toneMapped={false}
                         />
                     </mesh>
                 ))}
@@ -227,47 +290,78 @@ const ContactRoom = ({ showRoom, onReady, isExiting }) => {
 
             {/* ============================================
                 🏖️ DOCK / MOLO
+                Now a flat plane to remove the "block" underneath
             ============================================ */}
-            <mesh position={[0, -0.1, 1.5]}>
-                <boxGeometry args={[3, 0.2, 7]} />
-                <meshStandardMaterial color="#888888" />
+            <mesh
+                position={[0, 0.05, 1.8]} // Slightly above water
+                rotation={[-Math.PI / 2, 0, 0]} // Rotate to be flat
+            >
+                <planeGeometry args={[2.5, 7]} />
+                <meshStandardMaterial
+                    map={moloTexture}
+                    color="#ffffff"
+                    roughness={0.8}
+                    side={THREE.DoubleSide} // Ensure visible from below if needed (e.g. reflection)
+                    transparent
+                />
             </mesh>
 
             {/* ============================================
                 📜 INTERACTIVE MESSAGE PAPER
-                Visible during ENTERING, LOOKING_DOWN and WRITING phases
+                Always visible (form UI hides during fold animation)
             ============================================ */}
-            {(currentPhase === PHASE.ENTERING || currentPhase === PHASE.WRITING || currentPhase === PHASE.LOOKING_DOWN) && (
-                <MessagePaper
-                    position={[0, 0.05, 2]}
-                    onSend={(data) => {
-                        console.log('📬 Contact form submitted:', data);
-                        // Future: Connect to email service
-                    }}
-                />
-            )}
+            <MessagePaper
+                position={[0, 0.07, 2]} // Raised slightly to avoid flickering with the dock (z-fighting)
+                onSend={(data) => {
+                    console.log('📬 Contact form submitted:', data);
+                    // Future: Connect to email service
+                }}
+                onFoldComplete={handleFoldComplete}
+            />
 
             {/* ============================================
-                🍾 BOTTLE - Next to paper
-                Will be picked up later
+                🍾 BOTTLE - Assembled from layers
+                Layers: Paper (inside) -> Body (glass) -> Cap (top)
             ============================================ */}
             <group
                 ref={bottleRef}
-                position={[0.8, 0.1, 2.5]}
-                rotation={[0, 0, Math.PI / 6]} // Lying on side
+                position={[0.8, 0.12, 2.5]} // Raised to 0.12 to be above paper (at 0.07)
+                rotation={[-Math.PI / 2, 0, -Math.PI / 2]} // Lying on side, rotated -90 deg to flip vertical orientation 
             >
-                <mesh>
-                    <planeGeometry args={[0.4, 0.8]} />
-                    <meshBasicMaterial color="#666666" side={THREE.DoubleSide} />
+                {/* 1. PAPER IN BOTTLE (Bottom layer) */}
+                <mesh position={[0, 0, 0.01]}>
+                    <planeGeometry args={[1.5, 1.0]} />
+                    <meshStandardMaterial
+                        map={bottlePaper}
+                        transparent
+                        side={THREE.DoubleSide}
+                        roughness={0.8} // Paper is rough
+                    />
                 </mesh>
-                <Text
-                    position={[0, 0, 0.01]}
-                    fontSize={0.08}
-                    color="#ffffff"
-                    anchorX="center"
-                >
-                    BOTTLE
-                </Text>
+
+                {/* 2. BOTTLE BODY (Middle layer) */}
+                <mesh position={[0, 0, 0]}>
+                    <planeGeometry args={[1.5, 1.0]} />
+                    <meshStandardMaterial
+                        map={bottleBody}
+                        transparent
+                        opacity={0.8} // Semi-transparent glass
+                        side={THREE.DoubleSide}
+                        roughness={0.2} // Glass is smooth/shiny
+                        metalness={0.1}
+                    />
+                </mesh>
+
+                {/* 3. BOTTLE CAP (Top layer) */}
+                <mesh ref={bottleCapRef} position={[0, 0, 0.01]}>
+                    <planeGeometry args={[1.5, 1.0]} />
+                    <meshStandardMaterial
+                        map={bottleCap}
+                        transparent
+                        side={THREE.DoubleSide}
+                        roughness={0.4} // Plastic/Metal cap
+                    />
+                </mesh>
             </group>
 
             {/* ============================================

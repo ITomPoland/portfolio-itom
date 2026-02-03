@@ -95,17 +95,14 @@ const InfiniteSkyManager = ({ scrollProgress = 0 }) => {
                     />
 
                     {/* === JOURNEY MILESTONE === */}
-                    <MilestoneSection
+                    <JourneyMilestone
                         z={-(cycleIndex * STORY_CYCLE_LENGTH + 95)}
-                        title="JOURNEY"
-                        subtitle="Computer Science @ University of Opole"
                     />
 
                     {/* === SKILLS MILESTONE === */}
-                    <MilestoneSection
+
+                    <SkillsMilestone
                         z={-(cycleIndex * STORY_CYCLE_LENGTH + 135)}
-                        title="SKILLS"
-                        subtitle="React • Three.js • GSAP • Creative Code"
                     />
                 </group>
             ))}
@@ -265,6 +262,7 @@ const IntroMilestone = ({ z }) => {
  */
 const AwardsMilestone = ({ z }) => {
     const groupRef = useRef();
+    const sotyRef = useRef();
     const sotdRef = useRef();
     const sotmRef = useRef();
     const honorableRef = useRef();
@@ -276,7 +274,7 @@ const AwardsMilestone = ({ z }) => {
         groupRef.current.getWorldPosition(worldPos);
         const distanceZ = worldPos.z;
 
-        // Card reveal timing
+        // 1. Standard reveal (SOTD, SOTM, Honorable)
         const revealStart = -80;
         const revealEnd = -40;
         let revealFactor = 0;
@@ -289,7 +287,20 @@ const AwardsMilestone = ({ z }) => {
             revealFactor = 1;
         }
 
-        // Cards spread outward
+        // 2. SOTY reveal (starts LATER, moves UP)
+        const sotyStart = -60;
+        const sotyEnd = -0;
+        let sotyFactor = 0;
+
+        if (distanceZ > sotyStart && distanceZ < sotyEnd) {
+            sotyFactor = (distanceZ - sotyStart) / (sotyEnd - sotyStart);
+            sotyFactor = Math.min(1, Math.max(0, sotyFactor));
+            sotyFactor = 1 - Math.pow(1 - sotyFactor, 2); // ease out
+        } else if (distanceZ >= sotyEnd) {
+            sotyFactor = 1;
+        }
+
+        // Apply standard spread
         const spreadX = 5;
 
         if (sotdRef.current) {
@@ -301,10 +312,16 @@ const AwardsMilestone = ({ z }) => {
         if (honorableRef.current) {
             honorableRef.current.position.y = 0.5 - revealFactor * 4;
         }
+
+        // Apply SOTY movement (Upwards)
+        if (sotyRef.current) {
+            // Start at 0.5, move up by 2.5 units
+            sotyRef.current.position.y = 0.5 + sotyFactor * 2.5;
+        }
     });
 
     return (
-        <group ref={groupRef} position={[0, 0, z]}>
+        <group ref={groupRef} position={[0, 2, z]}>
             {/* Title */}
             <Text
                 position={[0, 4, 0]}
@@ -366,7 +383,7 @@ const AwardsMilestone = ({ z }) => {
             </group>
 
             {/* === SOTY (front, center, rendered LAST = always on top) === */}
-            <group position={[0, 0.5, 0]}>
+            <group ref={sotyRef} position={[0, 0.5, 0]}>
                 <mesh>
                     <planeGeometry args={[3, 2.5]} />
                     <meshBasicMaterial color="#f5f5f5" />
@@ -386,36 +403,246 @@ const AwardsMilestone = ({ z }) => {
 };
 
 /**
- * Generic Milestone Section (for Journey, Skills)
+ * JOURNEY Milestone - Floating Islands
+ * UO Island (left) and Freelance Island (right) floating in clouds
  */
-const MilestoneSection = ({ z, title, subtitle }) => {
+const JourneyMilestone = ({ z }) => {
+    const groupRef = useRef();
+    const uoRef = useRef();
+    const freelanceRef = useRef();
+
+    // Load textures
+    const uoTexture = useLoader(THREE.TextureLoader, '/textures/about/uowyspa.png');
+    const freelanceTexture = useLoader(THREE.TextureLoader, '/textures/about/freelancewyspa.png');
+
+    // Texture settings
+    uoTexture.colorSpace = THREE.SRGBColorSpace;
+    freelanceTexture.colorSpace = THREE.SRGBColorSpace;
+
+    // Calculate aspect ratios to keep images 1:1 (not stretched)
+    // Default to 1 if image not fully loaded yet
+    const uoAspect = uoTexture.image ? uoTexture.image.width / uoTexture.image.height : 1;
+    const freelanceAspect = freelanceTexture.image ? freelanceTexture.image.width / freelanceTexture.image.height : 1;
+
+    // Base height for islands - width will adjust automatically
+    const islandHeight = 4.5;
+
+    useFrame((state) => {
+        if (!groupRef.current) return;
+
+        const time = state.clock.elapsedTime;
+        const worldPos = new THREE.Vector3();
+        groupRef.current.getWorldPosition(worldPos);
+        const distanceZ = worldPos.z;
+
+        // Reveal effect (islands float up from below clouds)
+        const revealStart = -60;
+        const revealEnd = -20;
+        let revealFactor = 0;
+
+        if (distanceZ > revealStart && distanceZ < revealEnd) {
+            revealFactor = (distanceZ - revealStart) / (revealEnd - revealStart);
+            revealFactor = Math.min(1, Math.max(0, revealFactor));
+            revealFactor = 1 - Math.pow(1 - revealFactor, 2);
+        } else if (distanceZ >= revealEnd) {
+            revealFactor = 1;
+        }
+
+        // Floating animation (bobbing)
+        // UO Island (Left)
+        if (uoRef.current) {
+            // === EDYTUJ POZYCJE TUTAJ (UO) ===
+            // Startowe Y (schowane): -6
+            // Końcowe Y (widoczne): -1.5
+            const startY = 0;
+            const endY = 4;
+
+            const currentBaseY = startY + revealFactor * (endY - startY);
+            uoRef.current.position.y = currentBaseY + Math.sin(time * 0.5) * 0.2;
+            uoRef.current.rotation.z = Math.sin(time * 0.3) * 0.05;
+        }
+
+        // Freelance Island (Right)
+        if (freelanceRef.current) {
+            // === EDYTUJ POZYCJE TUTAJ (Freelance) ===
+            const startY = 1;
+            const endY = 3;
+
+            const currentBaseY = startY + revealFactor * (endY - startY);
+            freelanceRef.current.position.y = currentBaseY + Math.sin(time * 0.4 + 2) * 0.25;
+            freelanceRef.current.rotation.z = Math.sin(time * 0.2 + 1) * -0.05;
+        }
+    });
+
     return (
-        <group position={[0, 0, z]}>
+        <group ref={groupRef} position={[0, 0, z]}>
             {/* Title */}
             <Text
-                position={[0, 0.5, 0]}
-                fontSize={1.5}
+                position={[0, 5, 0.3]}
+                fontSize={1.2}
                 color="#1a1a1a"
                 anchorX="center"
                 anchorY="middle"
                 font="/fonts/CabinSketch-Bold.ttf"
             >
-                {title}
+                ✦ JOURNEY ✦
             </Text>
 
             {/* Subtitle */}
             <Text
-                position={[0, -0.3, 0]}
+                position={[0, 4.2, 0.3]}
                 fontSize={0.35}
-                color="#4a4a4a"
+                color="#555555"
                 anchorX="center"
                 anchorY="middle"
                 font="/fonts/CabinSketch-Regular.ttf"
             >
-                {subtitle}
+                My path so far...
             </Text>
+
+            {/* === UO ISLAND (Left) === */}
+            <group ref={uoRef} position={[-3.5, -1, 0]}>
+                <mesh>
+                    <planeGeometry args={[islandHeight * uoAspect, islandHeight]} />
+                    <meshBasicMaterial
+                        map={uoTexture}
+                        transparent
+                        side={THREE.DoubleSide}
+                    />
+                </mesh>
+                {/* NAPIS NA WYSPIE (UO) - EDYTUJ TUTAJ */}
+                <Text
+                    position={[0.1, -0.85, 0.1]} // POZYCJA (X, Y, Z)
+                    fontSize={0.4}           // WIELKOŚĆ
+                    color="#1a1a1a"
+                    anchorX="center"
+                    anchorY="middle"
+                    font="/fonts/CabinSketch-Bold.ttf"
+                >
+                    2025-NOW
+                </Text>
+            </group>
+
+            {/* === FREELANCE ISLAND (Right) === */}
+            <group ref={freelanceRef} position={[3.5, -2, 0.5]}>
+                <mesh>
+                    <planeGeometry args={[islandHeight * freelanceAspect, islandHeight]} />
+                    <meshBasicMaterial
+                        map={freelanceTexture}
+                        transparent
+                        side={THREE.DoubleSide}
+                    />
+                </mesh>
+                {/* NAPIS NA WYSPIE (Freelance) - EDYTUJ TUTAJ */}
+                <Text
+                    position={[0, -0.65, 0.1]} // POZYCJA (X, Y, Z)
+                    fontSize={0.5}           // WIELKOŚĆ
+                    color="#1a1a1a"
+                    anchorX="center"
+                    anchorY="middle"
+                    font="/fonts/CabinSketch-Bold.ttf"
+                >
+                    2023-NOW
+                </Text>
+            </group>
         </group>
     );
 };
+
+/**
+ * SKILLS Milestone - The Skill Tree
+ * A large tree growing on a cloud, representing growth and knowledge
+ */
+const SkillsMilestone = ({ z }) => {
+    const groupRef = useRef();
+    const treeRef = useRef();
+
+    // Load texture
+    const treeTexture = useLoader(THREE.TextureLoader, '/textures/about/skilltree.png');
+    treeTexture.colorSpace = THREE.SRGBColorSpace;
+
+    // Calculate aspect ratio
+    const treeAspect = treeTexture.image ? treeTexture.image.width / treeTexture.image.height : 1;
+    const treeHeight = 7; // It's a big tree!
+
+    useFrame((state) => {
+        if (!groupRef.current) return;
+
+        const time = state.clock.elapsedTime;
+        const worldPos = new THREE.Vector3();
+        groupRef.current.getWorldPosition(worldPos);
+        const distanceZ = worldPos.z;
+
+        // Reveal effect (tree grows up)
+        const revealStart = -60;
+        const revealEnd = -20;
+        let revealFactor = 0;
+
+        if (distanceZ > revealStart && distanceZ < revealEnd) {
+            revealFactor = (distanceZ - revealStart) / (revealEnd - revealStart);
+            revealFactor = Math.min(1, Math.max(0, revealFactor));
+            revealFactor = 1 - Math.pow(1 - revealFactor, 2); // ease out
+        } else if (distanceZ >= revealEnd) {
+            revealFactor = 1;
+        }
+
+        // Animation
+        if (treeRef.current) {
+            // Grow up from bottom
+            const startY = 0;
+            const endY = 3;
+            const currentY = startY + revealFactor * (endY - startY);
+
+            treeRef.current.position.y = currentY;
+
+            // Gentle sway (wind)
+            treeRef.current.rotation.z = Math.sin(time * 0.8) * 0.03;
+        }
+    });
+
+    return (
+        <group ref={groupRef} position={[0, 0, z]}>
+            {/* Title */}
+            <Text
+                position={[0, 5.5, 0]}
+                fontSize={1.2}
+                color="#1a1a1a"
+                anchorX="center"
+                anchorY="middle"
+                font="/fonts/CabinSketch-Bold.ttf"
+            >
+                ✦ SKILLS ✦
+            </Text>
+
+            {/* Subtitle */}
+            <Text
+                position={[0, 4.8, 0]}
+                fontSize={0.35}
+                color="#555555"
+                anchorX="center"
+                anchorY="middle"
+                font="/fonts/CabinSketch-Regular.ttf"
+            >
+                Ever-growing knowledge
+            </Text>
+
+            {/* === SKILL TREE === */}
+            <group ref={treeRef} position={[0, 2, 0]}>
+                <mesh>
+                    <planeGeometry args={[treeHeight * treeAspect, treeHeight]} />
+                    <meshBasicMaterial
+                        map={treeTexture}
+                        transparent
+                        side={THREE.DoubleSide}
+                    />
+                </mesh>
+            </group>
+        </group>
+    );
+};
+
+// =========================================
+// NOTE: Use this component inside the loop!
+// =========================================
 
 export default InfiniteSkyManager;

@@ -149,7 +149,7 @@ const SmoothButton = ({ texture, onClick, position, size, text, fontPath }) => {
 // Web3Forms API Key
 const WEB3FORMS_KEY = '2ceaee50-a31e-4936-98fc-ca9648b21cdd';
 
-const MessagePaper = ({ position = [0, 0.05, 2], onSend, onFoldComplete }) => {
+const MessagePaper = ({ position = [0, 0.05, 2], onSend, onFoldComplete, onInsertComplete }) => {
     const groupRef = useRef();
     const paperRef = useRef();
     const backPaperRef = useRef(); // Back side of paper (white)
@@ -187,6 +187,12 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend, onFoldComplete }) => {
     // Paper movement to bottle animation
     const [isMovingToBottle, setIsMovingToBottle] = useState(false);
     const moveProgress = useRef(0);
+
+    // Paper inserting into bottle animation (after reaching above bottle)
+    const [isInsertingIntoBottle, setIsInsertingIntoBottle] = useState(false);
+    const insertProgress = useRef(0);
+    const insertStartPosition = useRef({ x: 0, y: 0, z: 0 }); // Store position when insert starts
+    const insertCompleteTriggered = useRef(false); // Track if insert complete callback was triggered
 
     // Email validation helper
     const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -260,6 +266,9 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend, onFoldComplete }) => {
             setIsSubmitting(false);
             setSubmitStatus('success');
             console.log('🧪 TEST MODE: Simulating success (API disabled)');
+
+            // Call onSend with form data (for writing animation)
+            onSend?.({ message, email, subject });
 
             // Start fold animation after success
             setTimeout(() => {
@@ -420,7 +429,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend, onFoldComplete }) => {
                     // Z calculation:
                     // - During fold: arc upward (sin gives nice curve)
                     // - After fold: stay ABOVE bottom part (add constant lift based on progress)
-                    const arcLift = Math.sin(angle) * 0.4; // Arc during animation
+                    const arcLift = Math.sin(angle) * 0.02; // Arc during animation (reduced to stay below bottle)
                     const finalLift = foldProgress.current * 0.02; // Stays above when done
                     const newZ = origZ + arcLift + finalLift;
 
@@ -446,6 +455,13 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend, onFoldComplete }) => {
 
                 backPos.needsUpdate = true;
                 backGeom.computeVertexNormals();
+            }
+
+            // Smoothly start shrinking during first fold (so no jump when accordion starts)
+            if (groupRef.current) {
+                // First fold: shrink slightly (from 1.0 to 0.9)
+                const firstFoldShrink = 1 - foldProgress.current * 0.1;
+                groupRef.current.scale.set(firstFoldShrink, firstFoldShrink, firstFoldShrink);
             }
 
             // Transition to roll after fold is complete
@@ -552,6 +568,15 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend, onFoldComplete }) => {
             positions.needsUpdate = true;
             geometry.computeVertexNormals();
 
+            // Smoothly shrink the paper as it folds into accordion
+            // Starts from 0.9 (where first fold ended) and continues shrinking
+            if (groupRef.current) {
+                // First fold took it to 0.9, now continue from there
+                const startScale = 0.9;
+                const shrinkAmount = startScale - eased * 0.05; // Continue shrinking from 0.9
+                groupRef.current.scale.set(shrinkAmount, shrinkAmount, shrinkAmount);
+            }
+
             // Trigger callback when accordion fold is complete
             if (rollProgress.current >= 1 && !foldCompleteTriggered.current) {
                 foldCompleteTriggered.current = true;
@@ -581,7 +606,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend, onFoldComplete }) => {
             // Move toward bottle position
             // Paper starts at [0, 0.07, 2], bottle is at [0.8, 0.12, 2.5]
             // First move forward (Z), then sideways (X) to bottle
-            const targetX = 1.1;
+            const targetX = 1.05;
             const targetZ = 1.2;
             const liftY = 0.3; // Lift up while moving
 
@@ -589,6 +614,54 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend, onFoldComplete }) => {
             groupRef.current.position.x = eased * targetX;
             groupRef.current.position.z = position[2] + eased * (targetZ - position[2]);
             groupRef.current.position.y = position[1] + Math.sin(eased * Math.PI) * liftY;
+
+            // When movement is complete, start inserting into bottle
+            if (moveProgress.current >= 1 && !isInsertingIntoBottle) {
+                // Save current position before starting insert animation
+                insertStartPosition.current = {
+                    x: groupRef.current.position.x,
+                    y: groupRef.current.position.y,
+                    z: groupRef.current.position.z
+                };
+                setTimeout(() => {
+                    setIsInsertingIntoBottle(true);
+                    insertProgress.current = 0;
+                }, 200); // Small delay before inserting
+            }
+        }
+
+        // Paper inserting into bottle animation (pushing paper BACKWARDS into bottle)
+        if (isInsertingIntoBottle && groupRef.current) {
+            // Increase progress
+            if (insertProgress.current < 1) {
+                insertProgress.current = Math.min(1, insertProgress.current + delta * 0.6);
+            }
+
+            // Smooth easing
+            const t = insertProgress.current;
+            const eased = 1 - Math.pow(1 - t, 3); // ease out cubic
+
+            // Use saved position from when movement ended (no jumping!)
+            const startX = insertStartPosition.current.x;
+            const startY = insertStartPosition.current.y;
+            const startZ = insertStartPosition.current.z;
+
+            // Move BACKWARDS on Z axis (into the bottle which is lying on its side)
+            const insertDepth = 1; // How deep the paper goes into bottle (on Z axis)
+
+            // Keep X and Y constant, move Z backwards (increase Z to go into bottle)
+            groupRef.current.position.x = startX;
+            groupRef.current.position.y = startY;
+            groupRef.current.position.z = startZ + eased * insertDepth; // Move backwards from actual position
+
+            // Scale stays the same (already shrunk from accordion fold)
+
+            // Trigger callback when insert is complete
+            if (insertProgress.current >= 1 && !insertCompleteTriggered.current) {
+                insertCompleteTriggered.current = true;
+                console.log('📜 Paper inserted into bottle - closing cap');
+                onInsertComplete?.();
+            }
         }
     });
 

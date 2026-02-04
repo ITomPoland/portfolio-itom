@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from 'react';
-import { useFrame, useLoader } from '@react-three/fiber';
+import { useFrame, useLoader, useThree } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import SkyChunk, { CHUNK_LENGTH } from './SkyChunk';
@@ -550,61 +550,158 @@ const JourneyMilestone = ({ z }) => {
 };
 
 /**
- * SKILLS Milestone - The Skill Tree
- * A large tree growing on a cloud, representing growth and knowledge
+ * SKILLS Milestone - Floating Balloons
+ * Colorful balloons floating upward, each representing a skill
  */
+
+// Balloon configuration: size category, texture path, position offset
+// === EDYTUJ WYSOKOŚĆ TUTAJ (zmień wartość 'y' dla każdego balona) ===
+const BALLOON_CONFIG = [
+    // Large balloons (main skills) - front and center
+    { texture: '/textures/about/reactduzybalon.png', size: 'large', x: -2.5, y: 2, z: 0.3, phase: 0 },
+    { texture: '/textures/about/threejsduzybalon.png', size: 'large', x: 2.5, y: 2.5, z: 0.2, phase: 1.5 },
+    { texture: '/textures/about/GSAPduzybalon.png', size: 'large', x: 0, y: 3, z: 0.5, phase: 3 },
+
+    // Medium balloons - scattered around
+    { texture: '/textures/about/JSSREDNIBALON.png', size: 'medium', x: -4, y: 1, z: -0.3, phase: 0.8 },
+    { texture: '/textures/about/csssrednibalon.png', size: 'medium', x: 4, y: 1.5, z: -0.2, phase: 2.2 },
+    { texture: '/textures/about/nextjssrednibalon.png', size: 'medium', x: 0, y: 0.5, z: -0.4, phase: 4 },
+
+    // Small balloons - background accents
+    { texture: '/textures/about/htmlmalybalon.png', size: 'small', x: -5.5, y: 2.5, z: -0.8, phase: 1.2 },
+    { texture: '/textures/about/gitmalybalon.png', size: 'small', x: 5.5, y: 3, z: -0.7, phase: 2.8 },
+    { texture: '/textures/about/figmamalybalon.png', size: 'small', x: -3, y: 4.5, z: -0.5, phase: 3.5 },
+    { texture: '/textures/about/firebasemalybalon.png', size: 'small', x: 3.5, y: 4, z: -0.6, phase: 4.5 },
+];
+
+// Size multipliers for balloon categories
+const SIZE_MULTIPLIERS = {
+    large: 3.0,
+    medium: 2.2,
+    small: 1.6,
+};
+
+// Individual balloon component
+const SkillBalloon = ({ config, revealFactor, spreadFactor, time }) => {
+    const { viewport } = useThree();
+    const texture = useLoader(THREE.TextureLoader, config.texture);
+    texture.colorSpace = THREE.SRGBColorSpace;
+
+    const aspect = texture.image ? texture.image.width / texture.image.height : 1;
+    const baseHeight = SIZE_MULTIPLIERS[config.size];
+
+    // === RESPONSYWNOŚĆ ===
+    // Na mobile (wąski viewport) balony są bliżej środka
+    const isMobile = viewport.width < 8;
+    const positionScale = isMobile ? 0.5 : 1; // Jak bardzo ściskamy pozycje na mobile
+    const spreadScale = isMobile ? 0.4 : 1;   // Jak bardzo zmniejszamy spread na mobile
+    const sizeScale = isMobile ? 0.85 : 1;    // Trochę mniejsze balony na mobile
+
+    // Floating animation with unique phase
+    const floatY = Math.sin(time * 0.6 + config.phase) * 0.3;
+    const floatX = Math.sin(time * 0.4 + config.phase * 0.7) * 0.15;
+    const rotation = Math.sin(time * 0.3 + config.phase) * 0.08;
+
+    // Reveal: balloons float up from below
+    const startY = config.y - 8;
+    const endY = config.y;
+    const currentY = startY + revealFactor * (endY - startY) + floatY;
+
+    // Scale up as they reveal
+    const scale = revealFactor * sizeScale;
+
+    // === SPREAD EFFECT (ROZSUWANIE) ===
+    // Wszystkie balony rozsuwają się na boki
+    const maxSpread = 15 * spreadScale; // Mniejszy spread na mobile
+
+    let spreadX = 0;
+
+    if (config.x < -0.5) {
+        // Lewa strona → idzie w lewo
+        spreadX = -spreadFactor * maxSpread * (0.5 + Math.abs(config.x) / 6);
+    } else if (config.x > 0.5) {
+        // Prawa strona → idzie w prawo
+        spreadX = spreadFactor * maxSpread * (0.5 + Math.abs(config.x) / 6);
+    } else {
+        // Środkowe balony (x blisko 0) → rozsuń na podstawie phase
+        spreadX = config.phase > 3.5
+            ? spreadFactor * maxSpread * 0.8  // w prawo (Next.js)
+            : -spreadFactor * maxSpread * 0.8; // w lewo (GSAP)
+    }
+
+    // Bazowa pozycja X (skalowana na mobile)
+    const baseX = config.x * positionScale;
+
+    return (
+        <mesh
+            position={[baseX + floatX + spreadX, currentY, config.z]}
+            rotation={[0, 0, rotation]}
+            scale={scale}
+        >
+            <planeGeometry args={[baseHeight * aspect, baseHeight]} />
+            <meshBasicMaterial
+                map={texture}
+                transparent
+                side={THREE.DoubleSide}
+                depthWrite={false}
+            />
+        </mesh>
+    );
+};
+
 const SkillsMilestone = ({ z }) => {
     const groupRef = useRef();
-    const treeRef = useRef();
-
-    // Load texture
-    const treeTexture = useLoader(THREE.TextureLoader, '/textures/about/skilltree.png');
-    treeTexture.colorSpace = THREE.SRGBColorSpace;
-
-    // Calculate aspect ratio
-    const treeAspect = treeTexture.image ? treeTexture.image.width / treeTexture.image.height : 1;
-    const treeHeight = 7; // It's a big tree!
+    const [revealFactor, setRevealFactor] = useState(0);
+    const [spreadFactor, setSpreadFactor] = useState(0);
+    const [time, setTime] = useState(0);
 
     useFrame((state) => {
         if (!groupRef.current) return;
 
-        const time = state.clock.elapsedTime;
+        setTime(state.clock.elapsedTime);
+
         const worldPos = new THREE.Vector3();
         groupRef.current.getWorldPosition(worldPos);
         const distanceZ = worldPos.z;
 
-        // Reveal effect (tree grows up)
-        const revealStart = -60;
-        const revealEnd = -20;
-        let revealFactor = 0;
+        // Reveal effect (balloons float up)
+        const revealStart = -70;
+        const revealEnd = -25;
+        let newRevealFactor = 0;
 
         if (distanceZ > revealStart && distanceZ < revealEnd) {
-            revealFactor = (distanceZ - revealStart) / (revealEnd - revealStart);
-            revealFactor = Math.min(1, Math.max(0, revealFactor));
-            revealFactor = 1 - Math.pow(1 - revealFactor, 2); // ease out
+            newRevealFactor = (distanceZ - revealStart) / (revealEnd - revealStart);
+            newRevealFactor = Math.min(1, Math.max(0, newRevealFactor));
+            newRevealFactor = 1 - Math.pow(1 - newRevealFactor, 3); // ease out cubic
         } else if (distanceZ >= revealEnd) {
-            revealFactor = 1;
+            newRevealFactor = 1;
         }
 
-        // Animation
-        if (treeRef.current) {
-            // Grow up from bottom
-            const startY = 0;
-            const endY = 3;
-            const currentY = startY + revealFactor * (endY - startY);
+        setRevealFactor(newRevealFactor);
 
-            treeRef.current.position.y = currentY;
+        // === SPREAD EFFECT (EDYTUJ TUTAJ) ===
+        // Im bliżej kamery, tym bardziej balony się rozsuwają
+        // Większy zakres = dłuższa, bardziej widoczna animacja
+        const spreadStart = -50; // Kiedy animacja SIĘ ZACZYNA
+        const spreadEnd = -15;    // Kiedy animacja jest PEŁNA
+        let newSpreadFactor = 0;
 
-            // Gentle sway (wind)
-            treeRef.current.rotation.z = Math.sin(time * 0.8) * 0.03;
+        if (distanceZ > spreadStart && distanceZ < spreadEnd) {
+            newSpreadFactor = (distanceZ - spreadStart) / (spreadEnd - spreadStart);
+            newSpreadFactor = Math.min(1, Math.max(0, newSpreadFactor));
+            newSpreadFactor = newSpreadFactor * newSpreadFactor; // ease in
+        } else if (distanceZ >= spreadEnd) {
+            newSpreadFactor = 1;
         }
+
+        setSpreadFactor(newSpreadFactor);
     });
 
     return (
         <group ref={groupRef} position={[0, 0, z]}>
             {/* Title */}
             <Text
-                position={[0, 5.5, 0]}
+                position={[0, 6, 0.5]}
                 fontSize={1.2}
                 color="#1a1a1a"
                 anchorX="center"
@@ -616,27 +713,26 @@ const SkillsMilestone = ({ z }) => {
 
             {/* Subtitle */}
             <Text
-                position={[0, 4.8, 0]}
+                position={[0, 5.2, 0.5]}
                 fontSize={0.35}
                 color="#555555"
                 anchorX="center"
                 anchorY="middle"
                 font="/fonts/CabinSketch-Regular.ttf"
             >
-                Ever-growing knowledge
+                Technologies I love working with
             </Text>
 
-            {/* === SKILL TREE === */}
-            <group ref={treeRef} position={[0, 2, 0]}>
-                <mesh>
-                    <planeGeometry args={[treeHeight * treeAspect, treeHeight]} />
-                    <meshBasicMaterial
-                        map={treeTexture}
-                        transparent
-                        side={THREE.DoubleSide}
-                    />
-                </mesh>
-            </group>
+            {/* === FLOATING BALLOONS === */}
+            {BALLOON_CONFIG.map((config, index) => (
+                <SkillBalloon
+                    key={index}
+                    config={config}
+                    revealFactor={revealFactor}
+                    spreadFactor={spreadFactor}
+                    time={time}
+                />
+            ))}
         </group>
     );
 };

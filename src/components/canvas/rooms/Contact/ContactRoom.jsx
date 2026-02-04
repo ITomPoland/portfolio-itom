@@ -120,6 +120,16 @@ const ContactRoom = ({ showRoom, onReady, isExiting }) => {
     const [isCapAnimating, setIsCapAnimating] = useState(false);
     const capProgress = useRef(0); // 0 = closed, 1 = fully open
 
+    // Bottle cap closing animation state (after paper is inserted)
+    const [isCapClosing, setIsCapClosing] = useState(false);
+    const capCloseProgress = useRef(0); // 0 = open, 1 = fully closed
+
+    // Writing animation state (after cap is closed)
+    const [isWriting, setIsWriting] = useState(false);
+    const [displayedText, setDisplayedText] = useState('');
+    const [emailUsername, setEmailUsername] = useState(''); // Part before @
+    const writingProgress = useRef(0);
+
     // ============================================
     // 📷 CAMERA ANIMATION - Look down at dock
     // Triggered after room is ready
@@ -245,6 +255,40 @@ const ContactRoom = ({ showRoom, onReady, isExiting }) => {
             // Just lift cap up gently (Y in local space since bottle is rotated)
             bottleCapRef.current.position.y = eased * 0.5; // Lift up
         }
+
+        // 4. Bottle Cap Closing Animation (after paper is inserted)
+        if (isCapClosing && bottleCapRef.current) {
+            // Increase progress
+            if (capCloseProgress.current < 1) {
+                capCloseProgress.current = Math.min(1, capCloseProgress.current + delta * 0.8);
+            }
+
+            // Easing for smooth motion
+            const t = capCloseProgress.current;
+            const eased = 1 - Math.pow(1 - t, 3); // ease out cubic
+
+            // Move cap back down from 0.5 to 0 (reverse of opening)
+            bottleCapRef.current.position.y = 0.5 * (1 - eased); // Close cap
+
+            // Start writing animation when cap is fully closed
+            if (capCloseProgress.current >= 1 && !isWriting && emailUsername) {
+                setIsWriting(true);
+                writingProgress.current = 0;
+            }
+        }
+
+        // 5. Writing Animation (typewriter effect on bottle paper)
+        if (isWriting && emailUsername) {
+            writingProgress.current += delta * 3; // Speed of writing
+
+            // Calculate how many characters to show
+            const charsToShow = Math.min(
+                Math.floor(writingProgress.current),
+                emailUsername.length
+            );
+
+            setDisplayedText(emailUsername.slice(0, charsToShow));
+        }
     });
 
     // Handler for when paper fold completes
@@ -252,6 +296,13 @@ const ContactRoom = ({ showRoom, onReady, isExiting }) => {
         console.log('📜 Paper fold complete - starting cap animation');
         setIsCapAnimating(true);
         capProgress.current = 0;
+    }, []);
+
+    // Handler for when paper is inserted into bottle
+    const handleInsertComplete = useCallback(() => {
+        console.log('🍾 Paper inserted - closing cap');
+        setIsCapClosing(true);
+        capCloseProgress.current = 0;
     }, []);
 
     return (
@@ -314,9 +365,15 @@ const ContactRoom = ({ showRoom, onReady, isExiting }) => {
                 position={[0, 0.07, 2]} // Raised slightly to avoid flickering with the dock (z-fighting)
                 onSend={(data) => {
                     console.log('📬 Contact form submitted:', data);
-                    // Future: Connect to email service
+                    // Extract username from email (part before @)
+                    if (data.email) {
+                        const username = data.email.split('@')[0];
+                        setEmailUsername(username);
+                        console.log('📧 Email username for writing:', username);
+                    }
                 }}
                 onFoldComplete={handleFoldComplete}
+                onInsertComplete={handleInsertComplete}
             />
 
             {/* ============================================
@@ -325,11 +382,11 @@ const ContactRoom = ({ showRoom, onReady, isExiting }) => {
             ============================================ */}
             <group
                 ref={bottleRef}
-                position={[0.8, 0.12, 2.5]} // Raised to 0.12 to be above paper (at 0.07)
+                position={[0.8, 0.15, 2.5]} // Raised to 0.12 to be above paper (at 0.07)
                 rotation={[-Math.PI / 2, 0, -Math.PI / 2]} // Lying on side, rotated -90 deg to flip vertical orientation 
             >
-                {/* 1. PAPER IN BOTTLE (Bottom layer) */}
-                <mesh position={[0, 0, 0.01]}>
+                {/* 1. PAPER IN BOTTLE (Bottom layer - behind glass) */}
+                <mesh position={[0, -0.01, 0.02]}>
                     <planeGeometry args={[1.5, 1.0]} />
                     <meshStandardMaterial
                         map={bottlePaper}
@@ -339,7 +396,7 @@ const ContactRoom = ({ showRoom, onReady, isExiting }) => {
                     />
                 </mesh>
 
-                {/* 2. BOTTLE BODY (Middle layer) */}
+                {/* 2. BOTTLE BODY (Middle layer - glass) */}
                 <mesh position={[0, 0, 0]}>
                     <planeGeometry args={[1.5, 1.0]} />
                     <meshStandardMaterial
@@ -352,8 +409,8 @@ const ContactRoom = ({ showRoom, onReady, isExiting }) => {
                     />
                 </mesh>
 
-                {/* 3. BOTTLE CAP (Top layer) */}
-                <mesh ref={bottleCapRef} position={[0, 0, 0.01]}>
+                {/* 3. BOTTLE CAP (Top layer - in front) */}
+                <mesh ref={bottleCapRef} position={[0, 0, 0.001]}>
                     <planeGeometry args={[1.5, 1.0]} />
                     <meshStandardMaterial
                         map={bottleCap}
@@ -362,6 +419,21 @@ const ContactRoom = ({ showRoom, onReady, isExiting }) => {
                         roughness={0.4} // Plastic/Metal cap
                     />
                 </mesh>
+
+                {/* 4. ANIMATED TEXT on paper in bottle (handwriting effect) */}
+                {displayedText && (
+                    <Text
+                        position={[0, 0.15, 0.025]} // Positioned on the paper inside bottle
+                        fontSize={0.08}
+                        color="#1a1a1a"
+                        font="/fonts/CabinSketch-Regular.ttf" // Handwriting-style font
+                        anchorX="center"
+                        anchorY="middle"
+                        maxWidth={0.8}
+                    >
+                        {displayedText}
+                    </Text>
+                )}
             </group>
 
             {/* ============================================

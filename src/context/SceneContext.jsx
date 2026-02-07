@@ -21,6 +21,7 @@ export const SceneProvider = ({ children }) => {
     const [isTeleporting, setIsTeleporting] = useState(false);  // Currently in teleport transition
     const [teleportPhase, setTeleportPhase] = useState(null);   // 'closing' | 'teleporting' | 'opening' | null
     const [pendingDoorClick, setPendingDoorClick] = useState(null); // Label of door to click after teleport
+    const [isFastTeleport, setIsFastTeleport] = useState(false); // Fast teleport in progress (skip animations)
 
     const enterRoom = useCallback((roomId) => {
         setCurrentRoom(roomId);
@@ -28,9 +29,11 @@ export const SceneProvider = ({ children }) => {
         setOverlayContent(null); // Clear overlay on room change
 
         // Teleportation cleanup - if we just teleported in
+        // Note: isFastTeleport is cleared by signalRoomReady, not here
+        // Don't clear teleportPhase if it's 'opening' - let the paper animation complete
         setIsTeleporting(false);
         setPendingDoorClick(null);
-        setTeleportPhase(null);
+        // teleportPhase is cleared by finishPaperOpen after animation
     }, []);
 
     const exitRoom = useCallback(() => {
@@ -70,6 +73,7 @@ export const SceneProvider = ({ children }) => {
 
         setTeleportTarget(roomId);
         setIsTeleporting(true);
+        setIsFastTeleport(true); // Enable fast teleport mode
         setTeleportPhase('closing'); // Paper starts closing
         setOverlayContent(null);
     }, [isTeleporting, currentRoom]);
@@ -81,20 +85,38 @@ export const SceneProvider = ({ children }) => {
     }, []);
 
     // Called when teleport is ready (room loaded) - start paper open animation
+    // During fast teleport, this is called AFTER camera is inside room
     const openTeleportTransition = useCallback(() => {
         setTeleportPhase('opening');
     }, []);
 
     // Called when paper open animation completes - cleanup
     const completeTeleport = useCallback(() => {
-        // Trigger door click for the target room
+        // During FAST teleport: paper stays closed, trigger door click immediately
+        // The paper will open when signalRoomReady() is called by DoorSection
         setPendingDoorClick(teleportTarget);
 
         // Don't clear isTeleporting yet! Wait for enterRoom() logic to finish
-        // We only clear target and phase here
+        // We only clear target here (phase cleared later)
         setTeleportTarget(null);
-        setTeleportPhase(null);
+        // Note: teleportPhase stays at 'teleporting' during fast teleport so paper remains closed
     }, [teleportTarget]);
+
+    // Called by DoorSection when camera has finished entering the room during fast teleport
+    // This opens the paper and completes the teleport sequence
+    const signalRoomReady = useCallback(() => {
+        if (isFastTeleport) {
+            // Now open the paper
+            setTeleportPhase('opening');
+            setIsFastTeleport(false);
+        }
+    }, [isFastTeleport]);
+
+    // Called by PaperTransition when paper open animation finishes
+    // This just clears the phase - teleport logic is already done
+    const finishPaperOpen = useCallback(() => {
+        setTeleportPhase(null);
+    }, []);
 
     // REMOVED clearPendingDoorClick - it's now handled in enterRoom
 
@@ -104,6 +126,7 @@ export const SceneProvider = ({ children }) => {
         setIsTeleporting(false);
         setTeleportPhase(null);
         setPendingDoorClick(null);
+        setIsFastTeleport(false);
     }, []);
 
     const value = useMemo(() => ({
@@ -124,10 +147,13 @@ export const SceneProvider = ({ children }) => {
         isTeleporting,
         teleportPhase,
         pendingDoorClick,
+        isFastTeleport,
         teleportTo,
         startTeleportTransition,
         openTeleportTransition,
         completeTeleport,
+        signalRoomReady,
+        finishPaperOpen,
         cancelTeleport,
     }), [
         currentRoom,
@@ -146,10 +172,13 @@ export const SceneProvider = ({ children }) => {
         isTeleporting,
         teleportPhase,
         pendingDoorClick,
+        isFastTeleport,
         teleportTo,
         startTeleportTransition,
         openTeleportTransition,
         completeTeleport,
+        signalRoomReady,
+        finishPaperOpen,
         cancelTeleport
     ]);
 

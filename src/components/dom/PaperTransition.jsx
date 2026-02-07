@@ -36,8 +36,7 @@ const PaperTransition = () => {
     const {
         teleportPhase,
         startTeleportTransition,
-        openTeleportTransition,
-        completeTeleport,
+        finishPaperOpen,
         teleportTarget
     } = useScene();
     const { play } = useAudio();
@@ -135,7 +134,7 @@ const PaperTransition = () => {
             // Tear the paper apart
             timelineRef.current = gsap.timeline({
                 onComplete: () => {
-                    completeTeleport(); // Finish teleportation
+                    finishPaperOpen(); // Just clear the phase - teleport logic already done
                 }
             });
 
@@ -170,7 +169,7 @@ const PaperTransition = () => {
                 timelineRef.current.kill();
             }
         };
-    }, [teleportPhase, startTeleportTransition, openTeleportTransition, completeTeleport, play]);
+    }, [teleportPhase, startTeleportTransition, finishPaperOpen, play]);
 
     // Don't render if not teleporting
     if (!teleportPhase) return null;

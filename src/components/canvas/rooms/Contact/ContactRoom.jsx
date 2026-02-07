@@ -4,6 +4,7 @@ import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import MessagePaper from './MessagePaper';
+import { useScene } from '../../../../context/SceneContext';
 
 // ============================================
 // ============================================
@@ -47,6 +48,7 @@ const PHASE = {
 
 const ContactRoom = ({ showRoom, onReady, isExiting }) => {
     const { camera } = useThree();
+    const { isTeleporting } = useScene();
 
     // Load Sea Texture
     const seaTexture = useTexture("/textures/contact/faletopdown.png");
@@ -143,6 +145,19 @@ const ContactRoom = ({ showRoom, onReady, isExiting }) => {
     const targetRotX = useRef(0);
     const targetRotY = useRef(0);
     const targetRotZ = useRef(0);
+
+    // Reset camera rotation when teleporting starts
+    useEffect(() => {
+        if (isTeleporting) {
+            // Reset camera control to prevent tilted camera after teleport
+            hasAnimatedDown.current = false;
+            hasExitTriggered.current = false;
+            targetRotX.current = 0;
+            targetRotY.current = 0;
+            targetRotZ.current = 0;
+            setCurrentPhase(PHASE.ENTERING);
+        }
+    }, [isTeleporting]);
 
     useEffect(() => {
         if (hasSignaledReady.current && !hasAnimatedDown.current && showRoom) {

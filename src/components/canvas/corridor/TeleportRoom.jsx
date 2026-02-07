@@ -17,14 +17,17 @@ const DOOR_POSITIONS_Z = {
  * Handles moving the camera to the correct corridor position during teleport.
  * Instead of rendering the room, it:
  * 1. Moves camera to ~8 units before the door
- * 2. Signals PaperTransition to open
- * 3. SceneContext then triggers 'pendingDoorClick' which DoorSection picks up
+ * 2. During FAST teleport: triggers completeTeleport immediately (paper stays closed)
+ * 3. During normal teleport: signals PaperTransition to open
+ * 4. SceneContext then triggers 'pendingDoorClick' which DoorSection picks up
  */
 const TeleportRoom = memo(() => {
     const {
         teleportTarget,
         teleportPhase,
         openTeleportTransition,
+        completeTeleport,
+        isFastTeleport,
         isTeleporting
     } = useScene();
     const { camera } = useThree();
@@ -50,10 +53,16 @@ const TeleportRoom = memo(() => {
 
                 hasPositioned.current = true;
 
-                // Signal ready immediately (no loading needed since we're just in corridor)
                 // Small delay to ensure frame update
                 setTimeout(() => {
-                    openTeleportTransition();
+                    if (isFastTeleport) {
+                        // FAST TELEPORT: Skip paper open, go straight to door click
+                        // Paper stays closed, DoorSection will call signalRoomReady when done
+                        completeTeleport();
+                    } else {
+                        // NORMAL TELEPORT: Open paper first (not currently used, but kept for flexibility)
+                        openTeleportTransition();
+                    }
                 }, 50);
             }
         }
@@ -62,7 +71,7 @@ const TeleportRoom = memo(() => {
         if (!isTeleporting) {
             hasPositioned.current = false;
         }
-    }, [teleportPhase, teleportTarget, isTeleporting, camera, openTeleportTransition]);
+    }, [teleportPhase, teleportTarget, isTeleporting, isFastTeleport, camera, openTeleportTransition, completeTeleport]);
 
     // Don't render anything - we just manipulate camera
     return null;

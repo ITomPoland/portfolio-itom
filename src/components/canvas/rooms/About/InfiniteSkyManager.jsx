@@ -16,6 +16,10 @@ import SkyChunk, { CHUNK_LENGTH } from './SkyChunk';
 // Each milestone appears once per "story cycle" (4 chunks = 160 units)
 const STORY_CYCLE_LENGTH = 160;
 
+// === EDYTUJ TUTAJ: GRANICA KORYTARZA DLA MILESTONES ===
+// Wartość bazowa - milestones przed tym progiem są ukryte
+const MILESTONE_CORRIDOR_CLIP_Z = -1;
+
 const InfiniteSkyManager = ({ scrollProgress = 0 }) => {
     const [activeChunks, setActiveChunks] = useState([0, 1, 2, 3]);
     const [activeStoryCycles, setActiveStoryCycles] = useState([0, 1]);
@@ -87,22 +91,26 @@ const InfiniteSkyManager = ({ scrollProgress = 0 }) => {
                     {/* === INTRO MILESTONE === */}
                     <IntroMilestone
                         z={-(cycleIndex * STORY_CYCLE_LENGTH + 15)}
+                        scrollProgress={scrollProgress}
                     />
 
                     {/* === AWARDS MILESTONE === */}
                     <AwardsMilestone
                         z={-(cycleIndex * STORY_CYCLE_LENGTH + 55)}
+                        scrollProgress={scrollProgress}
                     />
 
                     {/* === JOURNEY MILESTONE === */}
                     <JourneyMilestone
                         z={-(cycleIndex * STORY_CYCLE_LENGTH + 95)}
+                        scrollProgress={scrollProgress}
                     />
 
                     {/* === SKILLS MILESTONE === */}
 
                     <SkillsMilestone
                         z={-(cycleIndex * STORY_CYCLE_LENGTH + 135)}
+                        scrollProgress={scrollProgress}
                     />
                 </group>
             ))}
@@ -114,9 +122,10 @@ const InfiniteSkyManager = ({ scrollProgress = 0 }) => {
  * INTRO Milestone - Special detailed layout
  * Elements spread apart as they approach camera
  */
-const IntroMilestone = ({ z }) => {
+const IntroMilestone = ({ z, scrollProgress }) => {
     // Load avatar texture
     const avatarTexture = useLoader(THREE.TextureLoader, '/textures/about/awatarnachmurce.png');
+    const { camera } = useThree();
 
     // Refs for all animated elements
     const groupRef = useRef();
@@ -140,18 +149,30 @@ const IntroMilestone = ({ z }) => {
 
         const time = state.clock.elapsedTime;
 
-        // Get world Z position of the group
-        const worldPos = new THREE.Vector3();
-        groupRef.current.getWorldPosition(worldPos);
+        // === CORRIDOR CLIPPING (FIXED ENTRANCE) ===
+        // Używamy pozycji PARENTA (worldRef) jako stałego punktu wejścia
+        // Ta pozycja nie zmienia się z kamerą - jest stała dla pokoju
+        const parentZ = groupRef.current.parent?.getWorldPosition(new THREE.Vector3()).z ?? 0;
+        const entranceZ = parentZ + MILESTONE_CORRIDOR_CLIP_Z; // Próg wejścia
+        const objectZ = groupRef.current.getWorldPosition(new THREE.Vector3()).z;
 
-        // Calculate how close we are to camera (camera is at z ~ 0)
-        // worldPos.z goes from negative (far) to positive (passed)
-        const distanceZ = worldPos.z;
+        // Ukryj jeśli obiekt jest "przed" progiem wejścia (w stronę korytarza)
+        groupRef.current.visible = objectZ < entranceZ;
+
+        // Skip rest if not visible
+        if (!groupRef.current.visible) return;
+
+        // FIX: Use consistent distance based on scrollProgress + offset
+        // This ensures animations work IDENTICALLY regardless of chunk/camera position
+        // Base Start Z (-15) + Scroll (0) - Offset (55) = -70 (Matches "Working" Chunk 0 feel)
+        const distanceZ = z + scrollProgress - 55;
 
         // Spread effect: starts at z = -25, full spread at z = -5
         // This makes elements spread BEFORE they reach the camera
-        const spreadStart = -50;
-        const spreadEnd = -40;
+        // === EDYTUJ TUTAJ (INTRO) ===
+        // Zwiększ różnicę między Start a End, żeby animacja była wolniejsza
+        const spreadStart = -70; // Startuje wcześniej
+        const spreadEnd = -50;   // Kończy później
         let spreadFactor = 0;
 
         if (distanceZ > spreadStart && distanceZ < spreadEnd) {
@@ -260,7 +281,8 @@ const IntroMilestone = ({ z }) => {
  * AWARDS Milestone - Cards reveal from behind main card
  * Rendering order matters: last rendered = on top
  */
-const AwardsMilestone = ({ z }) => {
+const AwardsMilestone = ({ z, scrollProgress }) => {
+    const { camera } = useThree();
     const groupRef = useRef();
     const sotyRef = useRef();
     const sotdRef = useRef();
@@ -270,13 +292,21 @@ const AwardsMilestone = ({ z }) => {
     useFrame((state) => {
         if (!groupRef.current) return;
 
-        const worldPos = new THREE.Vector3();
-        groupRef.current.getWorldPosition(worldPos);
-        const distanceZ = worldPos.z;
+        // === CORRIDOR CLIPPING (FIXED ENTRANCE) ===
+        const parentZ = groupRef.current.parent?.getWorldPosition(new THREE.Vector3()).z ?? 0;
+        const entranceZ = parentZ + MILESTONE_CORRIDOR_CLIP_Z;
+        const objectZ = groupRef.current.getWorldPosition(new THREE.Vector3()).z;
+
+        groupRef.current.visible = objectZ < entranceZ;
+        if (!groupRef.current.visible) return;
+
+        // FIX: Use consistent distance based on scrollProgress + offset
+        const distanceZ = z + scrollProgress - 55;
 
         // 1. Standard reveal (SOTD, SOTM, Honorable)
-        const revealStart = -80;
-        const revealEnd = -40;
+        // === EDYTUJ TUTAJ (AWARDS 1) ===
+        const revealStart = -120;
+        const revealEnd = -50; // Wolniejsze wyłanianie
         let revealFactor = 0;
 
         if (distanceZ > revealStart && distanceZ < revealEnd) {
@@ -288,8 +318,9 @@ const AwardsMilestone = ({ z }) => {
         }
 
         // 2. SOTY reveal (starts LATER, moves UP)
-        const sotyStart = -60;
-        const sotyEnd = -0;
+        // === EDYTUJ TUTAJ (AWARDS 2 - SOTY) ===
+        const sotyStart = -80;
+        const sotyEnd = -20;
         let sotyFactor = 0;
 
         if (distanceZ > sotyStart && distanceZ < sotyEnd) {
@@ -406,7 +437,8 @@ const AwardsMilestone = ({ z }) => {
  * JOURNEY Milestone - Floating Islands
  * UO Island (left) and Freelance Island (right) floating in clouds
  */
-const JourneyMilestone = ({ z }) => {
+const JourneyMilestone = ({ z, scrollProgress }) => {
+    const { camera } = useThree();
     const groupRef = useRef();
     const uoRef = useRef();
     const freelanceRef = useRef();
@@ -430,13 +462,24 @@ const JourneyMilestone = ({ z }) => {
     useFrame((state) => {
         if (!groupRef.current) return;
 
+        // === CORRIDOR CLIPPING (ANGLE-AWARE) ===
+        const worldZ = groupRef.current.getWorldPosition(new THREE.Vector3()).z;
+        const cameraX = Math.abs(camera.position.x);
+        const angleBonus = Math.max(0, (1.5 - cameraX) * 3);
+        const dynamicClipZ = MILESTONE_CORRIDOR_CLIP_Z - angleBonus;
+        const clipThreshold = camera.position.z + dynamicClipZ;
+
+        groupRef.current.visible = worldZ <= clipThreshold;
+        if (!groupRef.current.visible) return;
+
         const time = state.clock.elapsedTime;
-        const worldPos = new THREE.Vector3();
-        groupRef.current.getWorldPosition(worldPos);
-        const distanceZ = worldPos.z;
+
+        // FIX: Use consistent distance based on scrollProgress + offset
+        const distanceZ = z + scrollProgress - 55;
 
         // Reveal effect (islands float up from below clouds)
-        const revealStart = -60;
+        // === EDYTUJ TUTAJ (JOURNEY) ===
+        const revealStart = -100; // Wcześniejszy start
         const revealEnd = -20;
         let revealFactor = 0;
 
@@ -649,7 +692,8 @@ const SkillBalloon = ({ config, revealFactor, spreadFactor, time }) => {
     );
 };
 
-const SkillsMilestone = ({ z }) => {
+const SkillsMilestone = ({ z, scrollProgress }) => {
+    const { camera } = useThree();
     const groupRef = useRef();
     const [revealFactor, setRevealFactor] = useState(0);
     const [spreadFactor, setSpreadFactor] = useState(0);
@@ -658,14 +702,24 @@ const SkillsMilestone = ({ z }) => {
     useFrame((state) => {
         if (!groupRef.current) return;
 
+        // === CORRIDOR CLIPPING (ANGLE-AWARE) ===
+        const worldZ = groupRef.current.getWorldPosition(new THREE.Vector3()).z;
+        const cameraX = Math.abs(camera.position.x);
+        const angleBonus = Math.max(0, (1.5 - cameraX) * 3);
+        const dynamicClipZ = MILESTONE_CORRIDOR_CLIP_Z - angleBonus;
+        const clipThreshold = camera.position.z + dynamicClipZ;
+
+        groupRef.current.visible = worldZ <= clipThreshold;
+        if (!groupRef.current.visible) return;
+
         setTime(state.clock.elapsedTime);
 
-        const worldPos = new THREE.Vector3();
-        groupRef.current.getWorldPosition(worldPos);
-        const distanceZ = worldPos.z;
+        // FIX: Use consistent distance based on scrollProgress + offset
+        const distanceZ = z + scrollProgress - 55;
 
         // Reveal effect (balloons float up)
-        const revealStart = -70;
+        // === EDYTUJ TUTAJ (SKILLS REVEAL) ===
+        const revealStart = -100;
         const revealEnd = -25;
         let newRevealFactor = 0;
 
@@ -679,11 +733,11 @@ const SkillsMilestone = ({ z }) => {
 
         setRevealFactor(newRevealFactor);
 
-        // === SPREAD EFFECT (EDYTUJ TUTAJ) ===
+        // === SPREAD EFFECT (EDYTUJ TUTAJ SKILLS SPREAD) ===
         // Im bliżej kamery, tym bardziej balony się rozsuwają
         // Większy zakres = dłuższa, bardziej widoczna animacja
-        const spreadStart = -50; // Kiedy animacja SIĘ ZACZYNA
-        const spreadEnd = -15;    // Kiedy animacja jest PEŁNA
+        const spreadStart = -70; // Kiedy animacja SIĘ ZACZYNA (Wcześniej)
+        const spreadEnd = -40;    // Kiedy animacja jest PEŁNA (Później)
         let newSpreadFactor = 0;
 
         if (distanceZ > spreadStart && distanceZ < spreadEnd) {

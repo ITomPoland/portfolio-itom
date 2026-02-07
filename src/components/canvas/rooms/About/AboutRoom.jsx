@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import PaperAirplane from './PaperAirplane';
 import InfiniteSkyManager from './InfiniteSkyManager';
 import StoryMilestone from './StoryMilestone';
+import { useScene } from '../../../../context/SceneContext';
 
 // Chunk length for looping flight effect (matches SkyChunk)
 const CHUNK_LENGTH = 40;
@@ -20,6 +21,7 @@ const STORY_MILESTONES = [
 
 const AboutRoom = ({ showRoom, onReady, isExiting }) => {
     const { camera } = useThree();
+    const { isTeleporting } = useScene();
 
     // Track if we've signaled ready
     const hasSignaledReady = useRef(false);
@@ -39,6 +41,19 @@ const AboutRoom = ({ showRoom, onReady, isExiting }) => {
     const currentBank = useRef(0);
     const currentPitch = useRef(0);
 
+    // Reset camera rotation when teleporting starts
+    useEffect(() => {
+        if (isTeleporting) {
+            // Reset flight effect to prevent tilted camera after teleport
+            currentBank.current = 0;
+            currentPitch.current = 0;
+            isFlightActive.current = false;
+            baseCameraRotation.current = { x: 0, y: 0, z: 0 };
+            scrollPosition.current = 0;
+            scrollVelocity.current = 0;
+        }
+    }, [isTeleporting]);
+
     // Ready detection + flight animation
     useFrame((state, delta) => {
         if (!hasSignaledReady.current) {
@@ -47,6 +62,12 @@ const AboutRoom = ({ showRoom, onReady, isExiting }) => {
                 hasSignaledReady.current = true;
                 onReady?.();
             }
+        }
+
+        // === TELEPORTING: Stop all camera control ===
+        // TeleportRoom handles camera position/rotation during teleport
+        if (isTeleporting) {
+            return;
         }
 
         // Apply velocity to position (momentum)

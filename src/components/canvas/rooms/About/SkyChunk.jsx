@@ -12,8 +12,18 @@ const CHUNK_LENGTH = 40;
 const CHUNK_WIDTH = 20;
 const CHUNK_HEIGHT = 12;
 
-const FADE_START_Z = -10;
-const FADE_END_Z = -4;
+// === EDYTUJ TUTAJ: PARAMETRY ZNIKANIA CHMUR ===
+// FADE_START_Z: Chmura zaczyna blednąć gdy jest bliżej niż ta odległość od kamery
+// FADE_END_Z: Chmura jest całkowicie niewidoczna gdy jest bliżej niż ta odległość
+const FADE_START_Z = -10;  // Zmniejsz (np. -15) żeby blednięcie zaczynało się wcześniej
+const FADE_END_Z = -4;     // Zmniejsz (np. -6) żeby chmury znikały wcześniej
+
+// === EDYTUJ TUTAJ: GRANICA KORYTARZA ===
+// Chmury przed tą pozycją Z (w przestrzeni świata pokoju) są całkowicie ukryte
+// Zapobiega "wyciekaniu" chmur na korytarz podczas wchodzenia/wychodzenia
+// Większa wartość (np. -3) = chmury znikają wcześniej (bezpieczniej)
+// Mniejsza wartość (np. -8) = chmury widoczne bliżej wejścia
+const CORRIDOR_CLIP_Z = -8;
 
 // Available cloud textures
 const CLOUD_TEXTURES = [
@@ -125,12 +135,27 @@ const Cloud = ({
         // Update world position (reuse object to avoid GC)
         meshRef.current.getWorldPosition(worldPos.current);
 
-        // Calculate relative Z
+        // Calculate relative Z (distance from camera)
         const relativeZ = worldPos.current.z - camera.position.z;
 
-        // Target opacity based on distance
+        // === CORRIDOR CLIPPING (FIXED ENTRANCE) ===
+        // Używamy pozycji grandparenta (worldRef) jako stałego punktu wejścia
+        // Struktura: worldRef -> SkyChunk group -> Cloud mesh
+        // Potrzebujemy wejść 2 poziomy w górę żeby dostać się do worldRef
+        const grandparentZ = meshRef.current.parent?.parent?.getWorldPosition(new THREE.Vector3()).z ?? 0;
+        const entranceZ = grandparentZ + CORRIDOR_CLIP_Z;
+        const cloudZ = worldPos.current.z;
+
+        // Ukryj jeśli chmura jest "przed" progiem wejścia (w stronę korytarza)
+        const isInCorridor = cloudZ > entranceZ;
+
+        // Target opacity based on distance AND corridor clipping
         let targetOpacity = baseOpacity;
-        if (relativeZ > FADE_END_Z) {
+
+        if (isInCorridor) {
+            // Chmura jest w strefie korytarza - całkowicie ukryta
+            targetOpacity = 0;
+        } else if (relativeZ > FADE_END_Z) {
             targetOpacity = 0;
         } else if (relativeZ > FADE_START_Z) {
             const t = (FADE_START_Z - relativeZ) / (FADE_START_Z - FADE_END_Z);

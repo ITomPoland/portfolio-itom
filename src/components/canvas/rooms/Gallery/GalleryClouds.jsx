@@ -19,23 +19,35 @@ const CLOUD_TEXTURES = [
  * Static clouds scattered randomly above the gallery room
  */
 const GalleryClouds = ({ count = 12, seed = 42 }) => {
+    // Movement boundaries - must match StaticCloud
+    const startX = 40;
+    const endX = -40;
+    const totalDistance = startX - endX;
+
     const clouds = useMemo(() => {
         const items = [];
         const random = seededRandom(seed);
 
         for (let i = 0; i < count; i++) {
-            const x = (random() - 0.5) * 60; // Wide spread
             const y = 6 + random() * 8; // High above
             const z = -5 - random() * 30; // Depth variation
+            const driftSpeed = 0.1 + random() * 0.15;
+
+            // Równomierny offset dla każdej chmury - rozłożone po całej szerokości
+            // Każda chmura startuje w innym miejscu na osi X
+            const initialOffset = (i / count) * totalDistance + random() * 10;
+
+            // Oblicz początkową pozycję X jakby chmura już była w ruchu
+            const initialX = startX - (initialOffset % (totalDistance + 10)) + 5;
 
             items.push({
                 id: i,
-                position: [x, y, z],
+                position: [initialX, y, z],  // Pozycja już przeliczona!
                 scale: 0.5 + random() * 1.2,
                 opacity: 0.4 + random() * 0.3,
                 textureIndex: Math.floor(random() * CLOUD_TEXTURES.length),
-                driftSpeed: 0.1 + random() * 0.15, // Random drift speed
-                driftOffset: random() * Math.PI * 2, // Random phase offset
+                driftSpeed: driftSpeed,
+                initialOffset: initialOffset,  // Zapamiętaj offset do animacji
             });
         }
 
@@ -52,7 +64,7 @@ const GalleryClouds = ({ count = 12, seed = 42 }) => {
                     opacity={cloud.opacity}
                     textureIndex={cloud.textureIndex}
                     driftSpeed={cloud.driftSpeed}
-                    driftOffset={cloud.driftOffset}
+                    initialOffset={cloud.initialOffset}
                 />
             ))}
         </group>
@@ -60,7 +72,7 @@ const GalleryClouds = ({ count = 12, seed = 42 }) => {
 };
 
 // Static cloud component (billboard with continuous drift)
-const StaticCloud = ({ position, scale, opacity, textureIndex, driftSpeed, driftOffset }) => {
+const StaticCloud = ({ position, scale, opacity, textureIndex, driftSpeed, initialOffset }) => {
     const meshRef = useRef();
     const basePosition = useRef(position);
 
@@ -81,8 +93,9 @@ const StaticCloud = ({ position, scale, opacity, textureIndex, driftSpeed, drift
         if (!meshRef.current) return;
 
         // Continuous linear movement from right to left with looping
+        // initialOffset zapewnia że każda chmura startuje w innym miejscu
         const time = clock.getElapsedTime();
-        const progress = ((time * driftSpeed + driftOffset) % (totalDistance + 10)) - 5;
+        const progress = ((time * driftSpeed + initialOffset) % (totalDistance + 10)) - 5;
         const currentX = startX - progress;
 
         meshRef.current.position.x = currentX;

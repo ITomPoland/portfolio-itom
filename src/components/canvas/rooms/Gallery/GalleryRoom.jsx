@@ -18,6 +18,12 @@ const UNIQUE_PROJECTS = [
 const PROJECT_COUNT = 10; // Keep the count for the infinite scroll feel
 const GAP = 2.5;
 
+// === CONFIGURATION ===
+// Adjust this value (0.0 to 1.0) to crop the right side of the "Houses" graphic.
+// 0.0 = No crop
+// 0.2 = 20% crop from the right (corridor side)
+const RIGHT_CROP_AMOUNT = 0.2;
+
 const GalleryRoom = ({ showRoom, onReady }) => {
     const { openOverlay } = useScene();
     const groupRef = useRef();
@@ -293,16 +299,13 @@ const GalleryRoom = ({ showRoom, onReady }) => {
                         side={THREE.DoubleSide}
                     />
                 </mesh>
-                {/* Houses - right side (mirrored) */}
-                <mesh position={[15, -1, -9]} scale={[-1, 1, 1]}>
-                    <planeGeometry args={[15, 6]} />
-                    <meshBasicMaterial
-                        map={housesTexture}
-                        transparent={true}
-                        alphaTest={0.1}
-                        side={THREE.DoubleSide}
-                    />
-                </mesh>
+                {/* Houses - right side (mirrored) - CROPPED */}
+                <RightSideHouses
+                    texture={housesTexture}
+                    baseWidth={15}
+                    baseHeight={6}
+                    cropAmount={RIGHT_CROP_AMOUNT}
+                />
 
                 {/* City skyline - center */}
                 <mesh position={[0, 3.4, -17]} scale={[1, 1, 1]}>
@@ -692,6 +695,46 @@ const ProjectCard = ({ index, project, overlayTexture, clothespinTexture, curren
                 </mesh>
             </group>
         </group>
+    );
+};
+
+
+// Component to handle the cropped right-side houses
+const RightSideHouses = ({ texture, baseWidth, baseHeight, cropAmount }) => {
+    // Clone texture to allow independent UV manipulation
+    const croppedTexture = useMemo(() => {
+        const t = texture.clone();
+        // Because scale.x is -1 (mirrored), the "Right" side in world space
+        // corresponds to the "Left" side of the texture (U=0).
+        // To crop the world-right side, we need to crop the texture-left side.
+        // So we increase offset.x.
+        t.offset.x = cropAmount;
+        t.repeat.x = 1 - cropAmount;
+        t.needsUpdate = true;
+        return t;
+    }, [texture, cropAmount]);
+
+    // Calculate new width and position
+    const newWidth = baseWidth * (1 - cropAmount);
+
+    // Original Inner Edge (World Left of this mesh) was at CenterX - Width/2
+    // For the Right Side Mesh: 
+    // Original Pos = 15. Width = 15.
+    // Inner Edge = 15 - 7.5 = 7.5.
+    // We want to keep Inner Edge at 7.5.
+    // New Center = Inner Edge + NewWidth / 2
+    const newX = 7.5 + (newWidth / 2);
+
+    return (
+        <mesh position={[newX, -1, -9]} scale={[-1, 1, 1]}>
+            <planeGeometry args={[newWidth, baseHeight]} />
+            <meshBasicMaterial
+                map={croppedTexture}
+                transparent={true}
+                alphaTest={0.1}
+                side={THREE.DoubleSide}
+            />
+        </mesh>
     );
 };
 

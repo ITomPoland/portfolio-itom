@@ -30,7 +30,7 @@ const BoutiqueLighting = ({ roomWidth = 12, roomHeight = 4.5, roomDepth = 12, ta
     return (
         <group>
             {/* Global fill — replaces the ambient occlusion the flat-shaded look implicitly had */}
-            <hemisphereLight args={['#ffffff', '#4a4038', 0.8]} />
+            <hemisphereLight args={['#ffffff', '#4a4038', 0.55]} />
 
             {/* Key light — soft skylight motif from directly overhead. Kept centred on X/Z
                 (not offset toward one wall) because the camera's entry orientation isn't
@@ -38,7 +38,7 @@ const BoutiqueLighting = ({ roomWidth = 12, roomHeight = 4.5, roomDepth = 12, ta
                 while leaving the other in shadow depending on which way the camera faced. */}
             <directionalLight
                 position={[0, roomHeight * 1.8, roomDepth * 0.1]}
-                intensity={0.9}
+                intensity={0.55}
                 color="#fff4e0"
                 castShadow={shadowsEnabled}
                 shadow-mapSize={shadowsEnabled ? [1024, 1024] : [256, 256]}
@@ -55,22 +55,22 @@ const BoutiqueLighting = ({ roomWidth = 12, roomHeight = 4.5, roomDepth = 12, ta
                 <>
                     <spotLight
                         ref={spotLeftRef}
-                        position={[-2, roomHeight - 0.5, 1.5]}
+                        position={[-2, roomHeight - 0.5, 0]}
                         angle={0.5}
-                        penumbra={0.6}
-                        intensity={2.2}
+                        penumbra={0.7}
+                        intensity={1.0}
                         color="#fff0d0"
-                        distance={roomHeight * 2.5}
+                        distance={roomHeight * 1.6}
                         castShadow={false}
                     />
                     <spotLight
                         ref={spotRightRef}
-                        position={[2, roomHeight - 0.5, 1.5]}
+                        position={[2, roomHeight - 0.5, 0]}
                         angle={0.5}
-                        penumbra={0.6}
-                        intensity={2.2}
+                        penumbra={0.7}
+                        intensity={1.0}
                         color="#fff0d0"
-                        distance={roomHeight * 2.5}
+                        distance={roomHeight * 1.6}
                         castShadow={false}
                     />
                 </>

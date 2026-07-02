@@ -41,13 +41,10 @@ const CAMERA_PAN_RIGHT = 1; // How far camera moves right after zoom (for conten
 // position = look around — same "scroll to move, mouse to look" language as the
 // corridor's useInfiniteCamera, but in 2D and bounded to the room's floor instead of
 // a single fixed dolly line, so the furniture around the edges is actually reachable.
-const ROOM_MARGIN = 0.7;
-const ROOM_BOUNDS = {
-    minX: -ROOM_WIDTH / 2 + ROOM_MARGIN,
-    maxX: ROOM_WIDTH / 2 - ROOM_MARGIN,
-    minZ: SHELL_Z_OFFSET - ROOM_DEPTH / 2 + ROOM_MARGIN,
-    maxZ: SHELL_Z_OFFSET + ROOM_DEPTH / 2 - ROOM_MARGIN,
-};
+// Roam limit is a WORLD-space bubble around the camera's entry point (captured on entry),
+// NOT local room bounds — the room is nested/offset under several groups, so local bounds
+// don't map to world camera coordinates; clamping to them teleported the camera outside.
+const ROOM_ROAM_RADIUS = 4.0; // max metres the camera may wander from where it entered
 const MOVE_SENSITIVITY = 0.0035;
 const TOUCH_MOVE_SENSITIVITY = 0.012;
 const MOVE_DECAY = 0.9;
@@ -96,6 +93,8 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
     // an offset instead of snapping, plus movement velocity/look-offset targets.
     const roomEntryYaw = useRef(null);
     const roomEntryPitch = useRef(null);
+    const roomEntryPos = useRef(null); // world-space camera position at entry (roam anchor)
+    const keysRef = useRef({}); // currently-pressed movement keys (FPS-style controls)
     const targetYawOffset = useRef(0);
     const currentYawOffset = useRef(0);
     const targetPitchOffset = useRef(0);
@@ -227,6 +226,7 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
             camera.rotation.order = 'YXZ';
             roomEntryYaw.current = camera.rotation.y;
             roomEntryPitch.current = camera.rotation.x;
+            roomEntryPos.current = camera.position.clone();
         }
     }, [isInRoom, camera]);
 
@@ -243,6 +243,23 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
         window.addEventListener('mousemove', handleMouseMove);
         return () => window.removeEventListener('mousemove', handleMouseMove);
     }, [isAnimating, selectedProduct]);
+
+    // Keyboard: arrow keys / WASD / ZQSD to walk and turn like a first-person character.
+    // Arrows are keyboard-layout-independent (safe on AZERTY); letters added as a bonus.
+    useEffect(() => {
+        const onKeyDown = (e) => {
+            const k = e.key.toLowerCase();
+            if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) e.preventDefault();
+            keysRef.current[k] = true;
+        };
+        const onKeyUp = (e) => { keysRef.current[e.key.toLowerCase()] = false; };
+        window.addEventListener('keydown', onKeyDown);
+        window.addEventListener('keyup', onKeyUp);
+        return () => {
+            window.removeEventListener('keydown', onKeyDown);
+            window.removeEventListener('keyup', onKeyUp);
+        };
+    }, []);
 
     // Desktop scroll wheel = walk forward/back in the direction the camera is
     // currently looking (scroll down = advance, matching the corridor's convention).
@@ -400,6 +417,14 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
 
         // Free-roam look + walk — paused while a click-to-focus animation owns the camera.
         if (roomEntryYaw.current !== null && !isAnimating && !selectedProduct) {
+            // Keyboard FPS controls: turn accumulates into the base yaw (full 360°), walk feeds moveVelocity.
+            const keys = keysRef.current;
+            const TURN_SPEED = 1.6; // rad/s
+            if (keys['arrowleft'] || keys['a'] || keys['q']) roomEntryYaw.current += TURN_SPEED * delta;
+            if (keys['arrowright'] || keys['d']) roomEntryYaw.current -= TURN_SPEED * delta;
+            if (keys['arrowup'] || keys['w'] || keys['z']) moveVelocity.current += 0.004;
+            if (keys['arrowdown'] || keys['s']) moveVelocity.current -= 0.004;
+
             currentYawOffset.current = THREE.MathUtils.lerp(currentYawOffset.current, targetYawOffset.current, LOOK_SMOOTHING);
             currentPitchOffset.current = THREE.MathUtils.lerp(currentPitchOffset.current, targetPitchOffset.current, LOOK_SMOOTHING);
             camera.rotation.y = roomEntryYaw.current + currentYawOffset.current;
@@ -412,8 +437,16 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
             forward.normalize();
             camera.position.x += forward.x * moveVelocity.current;
             camera.position.z += forward.z * moveVelocity.current;
-            camera.position.x = THREE.MathUtils.clamp(camera.position.x, ROOM_BOUNDS.minX, ROOM_BOUNDS.maxX);
-            camera.position.z = THREE.MathUtils.clamp(camera.position.z, ROOM_BOUNDS.minZ, ROOM_BOUNDS.maxZ);
+            // Keep the camera within a world-space bubble around the entry point.
+            if (roomEntryPos.current) {
+                const dx = camera.position.x - roomEntryPos.current.x;
+                const dz = camera.position.z - roomEntryPos.current.z;
+                const d = Math.hypot(dx, dz);
+                if (d > ROOM_ROAM_RADIUS) {
+                    camera.position.x = roomEntryPos.current.x + (dx / d) * ROOM_ROAM_RADIUS;
+                    camera.position.z = roomEntryPos.current.z + (dz / d) * ROOM_ROAM_RADIUS;
+                }
+            }
         }
 
         const t = state.clock.elapsedTime;

@@ -7,6 +7,7 @@ import { PRODUCT_MODELS } from './ProductModels';
 import RoomShell from './RoomShell';
 import BoutiqueLighting from './BoutiqueLighting';
 import FurnitureModel from '../../FurnitureModel';
+import BoutiqueDecor from './BoutiqueDecor';
 import { useScene } from '../../../../context/SceneContext';
 import { useAchievements } from '../../../../context/AchievementsContext';
 import { usePerformance } from '../../../../context/PerformanceContext';
@@ -463,6 +464,7 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
         <group ref={groupRef} position={[0, -1.2, 0]}>
             <group position={[0, 0, SHELL_Z_OFFSET]}>
                 <RoomShell width={ROOM_WIDTH} height={ROOM_HEIGHT} depth={ROOM_DEPTH} shadowsEnabled={settings.shadows} />
+                <BoutiqueDecor shadowsEnabled={settings.shadows} />
                 <BoutiqueLighting
                     roomWidth={ROOM_WIDTH}
                     roomHeight={ROOM_HEIGHT}

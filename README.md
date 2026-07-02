@@ -1,4 +1,4 @@
-# 🎨 ITom Dev | Interactive 3D WebGL Portfolio
+# 🎨 Hakkilo XR | Vitrine 3D Immersive en Réalité Virtuelle
 
 <div align="center">
   <img src="https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react" alt="React" />
@@ -10,86 +10,51 @@
 
 <br/>
 
-Welcome to the open-source repository of **Tomasz "ITom" Szmajda's** interactive 3D Web Developer portfolio. This project pushes the limits of modern web technologies by blending spatial WebGL computing, complex React ecosystems, and highly optimized frontend engineering.
+Bienvenue sur le dépôt du site vitrine 3D interactif de **Hakkilo XR**, une startup innovante spécialisée dans la réalité virtuelle. Ce site propose une expérience immersive unique en déambulation 3D à travers un bâtiment virtuel.
 
 > [!NOTE]
-> Ensure hardware acceleration is enabled in your browser settings to experience the smooth 60 FPS high-tier rendering of this application.
+> Assurez-vous que l'accélération matérielle est activée dans les paramètres de votre navigateur pour profiter d'une expérience fluide à 60 FPS.
 
-## 🚀 Key Performance Architectures (2026 Standards)
+## 🏗️ Concept UX & Navigation
 
-This application is strictly optimized for cross-device operability, achieving zero lag spikes even on mobile processors through several bespoke architectural implementations:
+Le site est conçu comme un bâtiment unique composé d'un hall d'entrée suivi d'un couloir infini. L'utilisateur déambule au scroll :
+- **Entrée principale** : Introduction de la marque.
+- **Couloir infini** : Navigation fluide rythmée par des portes d'accès.
+- **Salles thématiques (sections)** : Chaque porte s'ouvre sur une section spécifique (Boutique & Exposition Studio, Présentation, Galerie, Contact).
 
-1. **Invisible Semantic SEO Fallback:** Bypasses WebGL canvas SEO limitations via strategic `sr-only-seo` indexing DOM injections, rendering fully visible semantic trees to native search-engine crawlers without mounting heavy bundles.
-2. **Asynchronous Shader Compilation:** Enforces `gl.compileAsync` during the Preloading phase inside a hidden `RoomWarmup` Suspense boundary. This allows Three.js to pre-compile complex materials asynchronously without blocking the main React update thread.
-3. **Baked Global Tinting & Lighing Extraction:** Replaced real-time WebGL shadow maps and infinite light rays with baked-in global textures (`apply_global_tint.js`), dropping the GPU compute overhead entirely while maintaining visual depth.
-4. **DOM Mutation Bypassing:** Critical animation properties (like SVG preloader states tracking 130+ concurrent HTTP texture requests) write directly to the `ref.current.style`, intentionally bypassing React’s `setState` render cycles to conserve CPU.
-5. **Adaptive Device Tiering:** Auto-detects `navigator.deviceMemory`, hardware concurrency, and viewport sizes to scale WebGL resolutions (`dpr`), antialiasing algorithms, and texture loading strictness on the fly.
+## 🛠️ Stack Technique
 
----
+Le projet repose sur des technologies web modernes et performantes :
+- **Framework & Outils** : React 19, Vite 7
+- **3D & Rendu** : Three.js, React Three Fiber (R3F), `@react-three/drei`
+- **Animation** : GSAP 3 (Scroll-driven animations, transition de caméra)
+- **Style** : SCSS
 
-## 🏗️ 3D Scene Architecture
+## 🚀 Fonctionnalités & Optimisations
 
-```mermaid
-graph TD;
-    A[App.jsx] --> B[SceneProvider Context];
-    A --> C[canvas];
-    A --> D[2D DOM / SEO / HUD];
-    
-    C --> E[Experience.jsx];
-    E --> F[RoomWarmup Pre-compiler];
-    E --> G[Infinite Corridor Manager];
-    
-    G --> H[Gallery Room];
-    G --> I[Studio Room];
-    G --> J[Contact Room];
-    G --> K[About Room];
-    
-    H -.-> L{useTexture & useGLTF};
-    L -.-> M(GPU Memory);
-```
+1. **Génération de Couloir Infini** : Rendu et recyclage dynamique des segments de couloirs pour maintenir un niveau de performance optimal.
+2. **Gestionnaire de Performance** : Détection des capacités matérielles (`LOW`, `MEDIUM`, `HIGH`) pour adapter la résolution, l'anticrénelage et le rendu des ombres à la volée.
+3. **Compilation de Shaders Asynchrone** : Précompilation des matériaux complexes au chargement (`gl.compileAsync` via `RoomWarmup`) pour éviter les saccades lors de la déambulation.
+4. **Transition de Caméra Fluide** : Entrées et sorties de pièces animées de manière cinématique avec GSAP, en totale synchronisation avec l'état global.
 
 ---
 
-## 🛠️ Local Development Setup
+## 🛠️ Démarrage Local
 
-To run this application natively on your local machine:
+Pour lancer l'application sur votre machine locale :
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/ITomPoland/portfolio-itom.git
-   cd portfolio-itom
-   ```
-
-2. **Install dependencies:**
-   Make sure you are on Node.js v20+.
+1. **Installer les dépendances** :
+   Assurez-vous de disposer de Node.js v20+.
    ```bash
    npm install
    ```
 
-3. **Start the local Dev Server:**
+2. **Lancer le serveur de développement** :
    ```bash
    npm run dev
    ```
 
-> [!IMPORTANT]
-> Since this project heavily utilizes `vite-plugin-compression` and hundreds of high-res textures, your initial local load might take a few seconds as the dev-server buffers asset delivery. For performance testing, always run `npm run build && npm run preview`.
-
-## 🤝 Contributing & Feedback
-
-All PRs improving the shader physics, 3D math logic, or component memoization runtimes are welcome. Please refer to our new `.github` Issue and Pull Request templates when submitting!
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingRoom`)
-
-
-## License
-
-The code in this repository is licensed under the [MIT License](LICENSE). 
-**Note:** All personal assets, 3D textures, images, and copywriting are copyright of Tomasz Szmajda and may not be reused or reproduced without explicit permission.
-3. Commit your Changes (`git commit -m 'feat: Added realistic liquid simulation to Contact Room'`)
-4. Push to the Branch (`git push origin feature/AmazingRoom`)
-5. Open a Pull Request
-
----
-
-*Designed and Developed by [Tomasz Szmajda (ITom Dev)](https://itomdev.com).*
+3. **Construire le projet pour la production** :
+   ```bash
+   npm run build
+   ```

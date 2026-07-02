@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
+import { useTexture } from '@react-three/drei';
 
 /**
  * BoutiqueDecor — Additional decorative elements for the Studio (Boutique) Room.
@@ -8,10 +9,17 @@ import * as THREE from 'three';
  * 
  * Elements:
  * 1. Central Pedestal (Socle) under floating products with emissive accent line.
- * 2. 3 Wall Art Frames (left, right, back wall) with custom color placeholder paintings.
+ * 2. 3 Wall Art Frames (left, right, back wall) with custom generated artwork textures.
  * 3. Ceiling architectural light panel fixture.
  */
 const BoutiqueDecor = ({ shadowsEnabled = true }) => {
+    // Load generated wall art textures
+    const [texLeft, texRight, texBack] = useTexture([
+        '/textures/boutique/wall-art-left.jpg',
+        '/textures/boutique/wall-art-right.jpg',
+        '/textures/boutique/wall-art-back.jpg',
+    ]);
+
     // Memoize materials to prevent recreation across re-renders
     const materials = useMemo(() => {
         return {
@@ -31,17 +39,17 @@ const BoutiqueDecor = ({ shadowsEnabled = true }) => {
                 metalness: 0.1,
             }),
             canvasLeft: new THREE.MeshStandardMaterial({
-                color: '#0f172a', // Sleek dark blue
+                map: texLeft,
                 roughness: 0.9,
                 metalness: 0.0,
             }),
             canvasRight: new THREE.MeshStandardMaterial({
-                color: '#311042', // Rich plum
+                map: texRight,
                 roughness: 0.9,
                 metalness: 0.0,
             }),
             canvasBack: new THREE.MeshStandardMaterial({
-                color: '#0d2818', // Deep forest green
+                map: texBack,
                 roughness: 0.9,
                 metalness: 0.0,
             }),
@@ -56,7 +64,7 @@ const BoutiqueDecor = ({ shadowsEnabled = true }) => {
                 emissiveIntensity: 1.0,
             }),
         };
-    }, []);
+    }, [texLeft, texRight, texBack]);
 
     return (
         <group>

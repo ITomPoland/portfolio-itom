@@ -37,8 +37,8 @@ const CLUSTER_Y = 1.5; // height of the floating cluster above the floor
 const CLUSTER_Z = SHELL_Z_OFFSET; // cluster sits at the room's centre depth
 
 const CAMERA_Y_OFFSET = -1.4; // Negative = camera lower, Positive = camera higher
-const CAMERA_ZOOM_DISTANCE = 1.8; // Distance from product when zoomed in
-const CAMERA_PAN_RIGHT = 1; // How far camera moves right after zoom (for content panel space)
+const CAMERA_ZOOM_DISTANCE = 2.1; // Distance from product when zoomed in
+const CAMERA_PAN_RIGHT = 0.65; // How far camera moves right after zoom (for content panel space)
 
 // Free-roam room camera: scroll/touch = walk in the direction you're looking, mouse
 // position = look around — same "scroll to move, mouse to look" language as the
@@ -459,8 +459,23 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
             productData.forEach((item, index) => {
                 const ref = productRefs.current[index];
                 if (ref) {
-                    ref.position.y = item.baseY + Math.sin(t * 0.8 + index * 1.7) * 0.06;
-                    ref.rotation.y = item.rot + Math.sin(t * 0.5 + index * 2.3) * 0.05;
+                    if (selectedProduct && selectedProduct.id === item.id) {
+                        // Slowly spin the selected product on Y axis
+                        ref.rotation.y += 0.6 * delta;
+                    } else {
+                        ref.position.y = item.baseY + Math.sin(t * 0.8 + index * 1.7) * 0.06;
+                        ref.rotation.y = item.rot + Math.sin(t * 0.5 + index * 2.3) * 0.05;
+                    }
+                }
+            });
+        } else if (selectedProduct) {
+            // Keep spinning selected product even if hovered or cluster is technically frozen
+            productData.forEach((item, index) => {
+                if (selectedProduct.id === item.id) {
+                    const ref = productRefs.current[index];
+                    if (ref) {
+                        ref.rotation.y += 0.6 * delta;
+                    }
                 }
             });
         }

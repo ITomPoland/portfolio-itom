@@ -92,14 +92,16 @@ const RoomInterior = memo(({ label, showRoom, onReady, isExiting }) => {
             corridorFloor: isStudioVestibule
                 ? new THREE.MeshStandardMaterial({ color: '#3a3a3d', roughness: 0.3, metalness: 0.05, side: THREE.DoubleSide })
                 : new THREE.MeshBasicMaterial({ color: '#e0e0e0', map: floorTex, side: THREE.DoubleSide }),
+            // Matches RoomShell.jsx's wall/ceiling tones exactly so the vestibule (visible through
+            // the doorway gap) reads as a continuation of the room, not a brighter separate zone.
             corridorWallL: isStudioVestibule
-                ? new THREE.MeshStandardMaterial({ color: '#e8e4dc', roughness: 0.85, side: THREE.DoubleSide })
+                ? new THREE.MeshStandardMaterial({ color: '#cfcac1', roughness: 0.85, side: THREE.DoubleSide })
                 : new THREE.MeshBasicMaterial({ color: '#e0e0e0', map: wallTexL, side: THREE.DoubleSide }),
             corridorWallR: isStudioVestibule
-                ? new THREE.MeshStandardMaterial({ color: '#e8e4dc', roughness: 0.85, side: THREE.DoubleSide })
+                ? new THREE.MeshStandardMaterial({ color: '#cfcac1', roughness: 0.85, side: THREE.DoubleSide })
                 : new THREE.MeshBasicMaterial({ color: '#e0e0e0', map: wallTexR, side: THREE.DoubleSide }),
             corridorCeiling: isStudioVestibule
-                ? new THREE.MeshStandardMaterial({ color: '#f5f4f0', roughness: 0.9, side: THREE.DoubleSide })
+                ? new THREE.MeshStandardMaterial({ color: '#efece7', roughness: 0.9, side: THREE.DoubleSide })
                 : new THREE.MeshBasicMaterial({ color: '#e0e0e0', map: ceilTex, side: THREE.DoubleSide }),
             bbLeft: new THREE.MeshBasicMaterial({ color: '#e0e0e0',  map: bbLeft, side: THREE.DoubleSide }),
             bbRight: new THREE.MeshBasicMaterial({ color: '#e0e0e0',  map: bbRight, side: THREE.DoubleSide }),

@@ -13,14 +13,14 @@ const RoomShell = ({
     width = 12,
     height = 4.5,
     depth = 12,
-    wallColor = '#e8e4dc',
-    floorColor = '#3a3a3d',
-    ceilingColor = '#f5f4f0',
+    wallColor = '#cfcac1',
+    floorColor = '#6b655d',
+    ceilingColor = '#efece7',
     shadowsEnabled = true,
 }) => {
     const materials = useMemo(() => ({
         wall: new THREE.MeshStandardMaterial({ color: wallColor, roughness: 0.85, metalness: 0.0, side: THREE.DoubleSide }),
-        floor: new THREE.MeshStandardMaterial({ color: floorColor, roughness: 0.3, metalness: 0.05, side: THREE.DoubleSide }),
+        floor: new THREE.MeshStandardMaterial({ color: floorColor, roughness: 0.92, metalness: 0.0, side: THREE.DoubleSide }),
         ceiling: new THREE.MeshStandardMaterial({ color: ceilingColor, roughness: 0.9, metalness: 0.0, side: THREE.DoubleSide }),
     }), [wallColor, floorColor, ceilingColor]);
 
@@ -54,7 +54,24 @@ const RoomShell = ({
                 <planeGeometry args={[depth, height]} />
             </mesh>
 
-            {/* Front (+Z) intentionally left open — the corridor threshold sits there. */}
+            {/* Front (+Z) wall — two panels flanking a central doorway, so the room reads
+                as fully ENCLOSED (kills the "see-through to the void" toward the door)
+                while the doorway gap lines up with the corridor threshold. */}
+            {(() => {
+                const doorHalf = 1.4;             // half-width of the central doorway gap
+                const panelW = halfW - doorHalf;  // width of each flanking front panel
+                const panelCX = doorHalf + panelW / 2;
+                return (
+                    <>
+                        <mesh position={[-panelCX, height / 2, halfD]} material={materials.wall} receiveShadow={shadowsEnabled}>
+                            <planeGeometry args={[panelW, height]} />
+                        </mesh>
+                        <mesh position={[panelCX, height / 2, halfD]} material={materials.wall} receiveShadow={shadowsEnabled}>
+                            <planeGeometry args={[panelW, height]} />
+                        </mesh>
+                    </>
+                );
+            })()}
         </group>
     );
 };

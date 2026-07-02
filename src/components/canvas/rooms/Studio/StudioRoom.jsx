@@ -30,7 +30,7 @@ const FURNITURE = [
     { id: 'lamp', path: '/models/boutique/lamp/street_lamp_02_1k.gltf', position: [4, 0, -6], rotation: [0, 0, 0], scale: 0.55 },
 ];
 
-const CLUSTER_RADIUS = 1.7; // distance of each product from the cluster's centre
+const CLUSTER_RADIUS = 1.05; // distance of each product from the cluster's centre (sits over the pedestal)
 const CLUSTER_Y = 1.5; // height of the floating cluster above the floor
 const CLUSTER_Z = SHELL_Z_OFFSET; // cluster sits at the room's centre depth
 
@@ -105,6 +105,7 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
 
     // Refs to product meshes for direct position/rotation updates in useFrame
     const productRefs = useRef([]);
+    const anyProductHoveredRef = useRef(false); // freeze cluster + bob while hovering a product (easy to click)
 
     // Content State
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -411,7 +412,7 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
     useFrame((state, delta) => {
         if (!clusterRef.current) return;
 
-        if (!isDraggingRef.current && !isAnimating && !selectedProduct) {
+        if (!isDraggingRef.current && !isAnimating && !selectedProduct && !anyProductHoveredRef.current) {
             clusterRef.current.rotation.y += autoRotationSpeed.current * delta + rotationVelocity.current;
             rotationVelocity.current *= FRICTION;
         }
@@ -450,14 +451,17 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
             }
         }
 
-        const t = state.clock.elapsedTime;
-        productData.forEach((item, index) => {
-            const ref = productRefs.current[index];
-            if (ref) {
-                ref.position.y = item.baseY + Math.sin(t * 0.8 + index * 1.7) * 0.06;
-                ref.rotation.y = item.rot + Math.sin(t * 0.5 + index * 2.3) * 0.05;
-            }
-        });
+        // Freeze the gentle bob/spin while a product is hovered, so it's easy to click.
+        if (!anyProductHoveredRef.current) {
+            const t = state.clock.elapsedTime;
+            productData.forEach((item, index) => {
+                const ref = productRefs.current[index];
+                if (ref) {
+                    ref.position.y = item.baseY + Math.sin(t * 0.8 + index * 1.7) * 0.06;
+                    ref.rotation.y = item.rot + Math.sin(t * 0.5 + index * 2.3) * 0.05;
+                }
+            });
+        }
     });
 
     return (
@@ -501,6 +505,7 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                         isSelected={selectedProduct?.id === item.id}
                         onProductClick={handleProductClick}
                         disabled={isAnimating}
+                        onHover={(v) => { anyProductHoveredRef.current = v; }}
                     />
                 ))}
             </group>
@@ -511,7 +516,7 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
 // ===========================================
 // PRODUCT BLOCK - a single floating showcase item
 // ===========================================
-const ProductBlock = memo(({ item, meshRef, isSelected, onProductClick, disabled }) => {
+const ProductBlock = memo(({ item, meshRef, isSelected, onProductClick, disabled, onHover }) => {
     const hoverRef = useRef(false);
     const ProductModel = PRODUCT_MODELS[item.category];
 
@@ -525,10 +530,12 @@ const ProductBlock = memo(({ item, meshRef, isSelected, onProductClick, disabled
                 if (disabled) return;
                 e.stopPropagation();
                 hoverRef.current = true;
+                onHover?.(true);
                 document.body.style.cursor = 'pointer';
             }}
             onPointerOut={() => {
                 hoverRef.current = false;
+                onHover?.(false);
                 document.body.style.cursor = 'auto';
             }}
             onPointerUp={(e) => {

@@ -538,7 +538,7 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                                     rel="noopener noreferrer"
                                     className="studio-action-button"
                                 >
-                                    Open Link ↗
+                                    {content.ctaLabel || 'Open Link ↗'}
                                 </a>
                             </div>
                         </>

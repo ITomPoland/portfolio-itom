@@ -6,6 +6,7 @@ import EntranceDoors from './entrance/EntranceDoors';
 import EmptyCorridor from './entrance/EmptyCorridor';
 import TeleportRoom from './corridor/TeleportRoom';
 import RoomWarmup from './corridor/RoomWarmup';
+import PostProcessing from './PostProcessing';
 import useInfiniteCamera from '../../hooks/useInfiniteCamera';
 import SignSystem from './entrance/SignSystem';
 import { useScene } from '../../context/SceneContext';
@@ -71,6 +72,11 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
             <RoomWarmup onWarmupComplete={onSceneReady} isLowTier={isLowTier} />
 
             {/* === GLOBAL LIGHTING === */}
+            {/* Everything else in the app is meshBasicMaterial (unlit — ignores scene
+                lights entirely), so this tiny fill only matters for the new lit PBR
+                surfaces (Boutique door/shell). Without it, those materials render
+                near-black/invisible from outside their own local lights' range. */}
+            <hemisphereLight args={['#ffffff', '#3a3a3d', 0.25]} />
             {/* <ambientLight intensity={isLowTier ? 2.5 : 2.2} /> */}
             {/* <directionalLight
                 position={[5, 10, 5]}
@@ -109,6 +115,10 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
 
             {/* === TELEPORT ROOM (renders room directly during teleportation) === */}
             <TeleportRoom />
+
+            {/* === POSTPROCESSING (SSAO + Bloom for the real-3D Boutique room) === */}
+            {/* Not mounted at all on LOW tier, to skip EffectComposer's render-target cost entirely. */}
+            {performanceTier !== 'LOW' && <PostProcessing />}
         </>
     );
 };

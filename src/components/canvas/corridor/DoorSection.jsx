@@ -1178,52 +1178,72 @@ const DoorSection = ({
                             <meshBasicMaterial color="#e0e0e0" transparent={true} opacity={0} depthWrite={false} />
                         </mesh>
 
-                        {/* Painted layer (behind sketch) - hidden after 2 frames to precompile shader */}
-                        <mesh
-                            ref={doorPaintedRef}
-                            position={[doorMeshX, -0.2, -0.001]}
-                            scale={[(side === 'right' && label !== 'THE STUDIO') ? -1 : 1, 1, 1]}
-                        >
-                            <planeGeometry args={[doorWidth, doorHeight]} />
-                            <meshBasicMaterial color="#e0e0e0"
-                                map={doorPaintedTexture}
-                                transparent={true}
-                                alphaTest={0.5}
-                                roughness={0.8}
-                            />
-                        </mesh>
+                        {label === 'THE STUDIO' ? (
+                            /* === REAL 3D DOOR SLAB (Boutique only) ===
+                               Same hinge group / gsap.to(doorRef.current.rotation, ...) / enterRoom()
+                               logic above is untouched — only this leaf's geometry+material changes
+                               from a flat sketch texture to a lit panel. doorPaintedRef/doorMaterialRef
+                               simply stay unattached here (all their usages are already null-guarded). */
+                            <>
+                                <mesh position={[doorMeshX, -0.2, 0]} castShadow receiveShadow>
+                                    <boxGeometry args={[doorWidth, doorHeight, 0.05]} />
+                                    <meshStandardMaterial color="#3a332c" roughness={0.55} metalness={0.05} />
+                                </mesh>
+                                {/* This door slab is a lit MeshStandardMaterial, but there is no global
+                                    scene lighting (rest of the app is unlit meshBasicMaterial) — a small
+                                    local light keeps it from rendering pure black. */}
+                                <pointLight position={[doorMeshX, 0.6, 0.6]} intensity={0.6} distance={2.5} color="#fff4e0" />
+                            </>
+                        ) : (
+                            <>
+                                {/* Painted layer (behind sketch) - hidden after 2 frames to precompile shader */}
+                                <mesh
+                                    ref={doorPaintedRef}
+                                    position={[doorMeshX, -0.2, -0.001]}
+                                    scale={[side === 'right' ? -1 : 1, 1, 1]}
+                                >
+                                    <planeGeometry args={[doorWidth, doorHeight]} />
+                                    <meshBasicMaterial color="#e0e0e0"
+                                        map={doorPaintedTexture}
+                                        transparent={true}
+                                        alphaTest={0.5}
+                                        roughness={0.8}
+                                    />
+                                </mesh>
 
-                        {/* Sketch overlay (front) - brush-stroke discard reveals painted beneath */}
-                        <mesh
-                            position={[doorMeshX, -0.2, 0]}
-                            scale={[(side === 'right' && label !== 'THE STUDIO') ? -1 : 1, 1, 1]}
-                        >
-                            <planeGeometry args={[doorWidth, doorHeight]} />
-                            <revealMaterial color="#e0e0e0"
-                                ref={doorMaterialRef}
-                                map={doorTexture}
-                                transparent={true}
-                                alphaTest={0.1}
-                                roughness={0.8}
-                                uProgress={0.0}
-                            />
-                        </mesh>
+                                {/* Sketch overlay (front) - brush-stroke discard reveals painted beneath */}
+                                <mesh
+                                    position={[doorMeshX, -0.2, 0]}
+                                    scale={[side === 'right' ? -1 : 1, 1, 1]}
+                                >
+                                    <planeGeometry args={[doorWidth, doorHeight]} />
+                                    <revealMaterial color="#e0e0e0"
+                                        ref={doorMaterialRef}
+                                        map={doorTexture}
+                                        transparent={true}
+                                        alphaTest={0.1}
+                                        roughness={0.8}
+                                        uProgress={0.0}
+                                    />
+                                </mesh>
 
-                        {/* Door Back Texture */}
-                        <mesh
-                            position={[doorMeshX, -0.2, -0.01]}
-                            rotation={[0, Math.PI, 0]}
-                            scale={[side === 'right' ? -1 : 1, 1, 1]}
-                        >
-                            <planeGeometry args={[doorWidth, doorHeight]} />
-                            <meshBasicMaterial color="#e0e0e0"
-                                map={doorBackTexture}
-                                transparent={true}
-                                alphaTest={0.1}
-                                roughness={0.8}
-                                side={THREE.DoubleSide}
-                            />
-                        </mesh>
+                                {/* Door Back Texture */}
+                                <mesh
+                                    position={[doorMeshX, -0.2, -0.01]}
+                                    rotation={[0, Math.PI, 0]}
+                                    scale={[side === 'right' ? -1 : 1, 1, 1]}
+                                >
+                                    <planeGeometry args={[doorWidth, doorHeight]} />
+                                    <meshBasicMaterial color="#e0e0e0"
+                                        map={doorBackTexture}
+                                        transparent={true}
+                                        alphaTest={0.1}
+                                        roughness={0.8}
+                                        side={THREE.DoubleSide}
+                                    />
+                                </mesh>
+                            </>
+                        )}
 
                         {/* Handle Layer - pivot at screw position */}
                         <group ref={handleRef} position={[doorMeshX + (side === 'left' ? 0.45 : -0.45), -0.29, 0.03]}>

@@ -1,73 +1,78 @@
-import { useRef, useState, useEffect, useMemo, useCallback, memo } from 'react';
-import { useFrame, useThree, useLoader } from '@react-three/fiber';
+import { useRef, useState, useEffect, useMemo, useCallback, memo, Suspense } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import gsap from 'gsap';
-import { CONTENT_DATA, PLATFORM_CONFIG, getLatestContent } from './contentData';
+import { PRODUCTS } from './productData';
+import { PRODUCT_MODELS } from './ProductModels';
+import RoomShell from './RoomShell';
+import BoutiqueLighting from './BoutiqueLighting';
+import FurnitureModel from '../../FurnitureModel';
 import { useScene } from '../../../../context/SceneContext';
 import { useAchievements } from '../../../../context/AchievementsContext';
-import { TextureLoader } from 'three';
-import FloatingCodeParticles from './FloatingCodeParticles';
-import { PositionalAudio } from '@react-three/drei';
-import { useAudio } from '../../../../context/AudioManager';
-import '../../shaders/RevealMaterial';
-import { isTouchDevice } from '../../../../utils/deviceDetect';
-import { usePaintMaterial } from '../Gallery/usePaintMaterial';
-
-// ============================================
-// ⚙️ PAINT CONFIGURATION - TWEAK HERE (Skąd-Dokąd)
-// Edytuj te wartości, aby zmienić kierunek i zakres animacji wejścia
-// ============================================
-const STUDIO_PAINT_CONFIG = {
-    dirX: 0.0,
-    dirY: -1.0,    // Kierunek: od góry (-1) do dołu
-    dirZ: 0.0,
-    startDist: -10.0, // Początek fali
-    endDist: 10.0,   // Koniec fali
-    noiseAxes: 'xz'  // Płaszczyzna szumu
-};
-
-// ============================================
-// ⚙️ AUDIO SETTINGS - TWEAK HERE
-// Edytuj te wartości, aby zmienić głośność i zasięg słyszalności szumu monitorów
-// ============================================
-export const AUDIO_SETTINGS = {
-    volume: 1,
-    distance: 2,
-    rolloff: 1.0
-};
+import { usePerformance } from '../../../../context/PerformanceContext';
 
 // ============================================
 // CONFIG - Adjust these values as needed
 // ============================================
-const CAMERA_Y_OFFSET = -6; // Negative = camera lower, Positive = camera higher
-const CAMERA_ZOOM_DISTANCE = 3; // Distance from monitor front when zoomed in
+const ROOM_WIDTH = 10;
+const ROOM_HEIGHT = 4.2;
+const ROOM_DEPTH = 10;
+const SHELL_Z_OFFSET = -ROOM_DEPTH / 2 + 2; // shell's open doorway edge sits near local z=+2
+
+// Room-dressing furniture — real GLBs sourced earlier (Poly-Haven-style, PBR-ready),
+// placed via the same data-driven {position, rotation, scale} pattern as CorridorDecorations.jsx.
+const FURNITURE = [
+    { id: 'armchair', path: '/models/boutique/armchair/ArmChair_01_1k.gltf', position: [-3.3, 0, -0.5], rotation: [0, Math.PI / 4, 0], scale: 1 },
+    { id: 'sofa', path: '/models/boutique/sofa.glb', position: [3.2, 0, -1.2], rotation: [0, -Math.PI / 3, 0], scale: 1 },
+    { id: 'desk', path: '/models/boutique/desk/metal_office_desk_1k.gltf', position: [0, 0, -7], rotation: [0, Math.PI, 0], scale: 1 },
+    { id: 'plant', path: '/models/boutique/plant/celandine_01_1k.gltf', position: [-4, 0, -6.5], rotation: [0, 0, 0], scale: 1 },
+    { id: 'lamp', path: '/models/boutique/lamp/street_lamp_02_1k.gltf', position: [4, 0, -6], rotation: [0, 0, 0], scale: 0.55 },
+];
+
+const CLUSTER_RADIUS = 1.7; // distance of each product from the cluster's centre
+const CLUSTER_Y = 1.5; // height of the floating cluster above the floor
+const CLUSTER_Z = SHELL_Z_OFFSET; // cluster sits at the room's centre depth
+
+const CAMERA_Y_OFFSET = -1.4; // Negative = camera lower, Positive = camera higher
+const CAMERA_ZOOM_DISTANCE = 1.8; // Distance from product when zoomed in
 const CAMERA_PAN_RIGHT = 1; // How far camera moves right after zoom (for content panel space)
-const TOWER_RADIUS = 2.2; // All monitors at same distance from center (smaller = narrower)
-const MONITORS_PER_RING = 4; // How many monitors per vertical level
-const FALL_SPEED = 0.3; // How fast monitors fall down
-const TOWER_HEIGHT = 12; // Total visible height of tower
-const VERTICAL_SPACING = 2.5; // Space between monitor rings
-const TOWER_Y_START = -5; // Starting Y offset for tower (negative = lower) -> CONTROLS HEIGHT (UP/DOWN)
-const TOWER_Z_START = -10; // Starting Z position (negative = further away) -> CONTROLS DISTANCE
+
+// Free-roam room camera: scroll/touch = walk in the direction you're looking, mouse
+// position = look around — same "scroll to move, mouse to look" language as the
+// corridor's useInfiniteCamera, but in 2D and bounded to the room's floor instead of
+// a single fixed dolly line, so the furniture around the edges is actually reachable.
+const ROOM_MARGIN = 0.7;
+const ROOM_BOUNDS = {
+    minX: -ROOM_WIDTH / 2 + ROOM_MARGIN,
+    maxX: ROOM_WIDTH / 2 - ROOM_MARGIN,
+    minZ: SHELL_Z_OFFSET - ROOM_DEPTH / 2 + ROOM_MARGIN,
+    maxZ: SHELL_Z_OFFSET + ROOM_DEPTH / 2 - ROOM_MARGIN,
+};
+const MOVE_SENSITIVITY = 0.0035;
+const TOUCH_MOVE_SENSITIVITY = 0.012;
+const MOVE_DECAY = 0.9;
+const LOOK_YAW_RANGE = 0.8; // radians either way (~46°)
+const LOOK_PITCH_RANGE = 0.2;
+const LOOK_SMOOTHING = 0.06;
 
 const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
     const groupRef = useRef();
-    const towerRef = useRef();
+    const clusterRef = useRef();
     const { camera, size } = useThree();
+    const { settings } = usePerformance();
 
     // Responsive camera parameters based on PIXEL width
     const responsiveParams = useMemo(() => {
-        const isMobile = size.width < 768; // Standard mobile breakpoint
+        const isMobile = size.width < 768;
         const isTablet = size.width < 1024 && size.width >= 768;
 
-
         return {
-            zoomDistance: isMobile ? 2 : isTablet ? 3 : CAMERA_ZOOM_DISTANCE,
+            zoomDistance: isMobile ? 1.3 : isTablet ? 1.5 : CAMERA_ZOOM_DISTANCE,
             panRight: isMobile ? 0 : isTablet ? 0.5 : Math.max(0.3, (size.width / 1920) * CAMERA_PAN_RIGHT),
-            panDown: isMobile ? 9.7 : 0, // Positive = camera DOWN = monitor at TOP
-            yOffset: isMobile ? 2.5 : isTablet ? -3 : CAMERA_Y_OFFSET,
-            towerRadius: isMobile ? 1.5 : (isTablet ? 1.8 : TOWER_RADIUS),
-            isMobile, // Pass through boolean
+            panDown: isMobile ? 0.9 : 0,
+            yOffset: isMobile ? 0.3 : isTablet ? -0.2 : CAMERA_Y_OFFSET,
+            clusterRadius: isMobile ? 1.2 : (isTablet ? 1.4 : CLUSTER_RADIUS),
+            isMobile,
         };
     }, [size.width]);
 
@@ -79,84 +84,43 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
     // State
     const isDraggingRef = useRef(false);
     const lastXRef = useRef(0);
-    const dragDistance = useRef(0); // Changed to ref to prevent 100x/sec re-renders on drag
+    const dragDistance = useRef(0);
 
     // Physics
     const rotationVelocity = useRef(0);
-    const autoRotationSpeed = useRef(0.12); // Now a ref to support changing direction
-    const DRAG_SENSITIVITY = 0.008; // Increased from 0.005
-    const FRICTION = 0.98; // Increased from 0.95 (longer spin)
+    const autoRotationSpeed = useRef(0.12);
+    const DRAG_SENSITIVITY = 0.008;
+    const FRICTION = 0.98;
 
-    // Vertical Fall Physics
-    const fallSpeed = useRef(FALL_SPEED); // Start with default
-    const BASE_FALL_SPEED = FALL_SPEED;
-    const SCROLL_SENSITIVITY = 0.006; // Tripled from 0.002
-    const SWIPE_SENSITIVITY = 0.005; // Adjusted
-    const SPEED_DECAY = 0.985; // Slower return to normal (was 0.96)
+    // Free-roam camera state — entry look direction captured once so mouse-look adds
+    // an offset instead of snapping, plus movement velocity/look-offset targets.
+    const roomEntryYaw = useRef(null);
+    const roomEntryPitch = useRef(null);
+    const targetYawOffset = useRef(0);
+    const currentYawOffset = useRef(0);
+    const targetPitchOffset = useRef(0);
+    const currentPitchOffset = useRef(0);
+    const moveVelocity = useRef(0);
+    const touchAnchorRef = useRef({ x: 0, y: 0 });
+
+    // Refs to product meshes for direct position/rotation updates in useFrame
+    const productRefs = useRef([]);
 
     // Content State
-    const [selectedMonitor, setSelectedMonitor] = useState(null);
+    const [selectedProduct, setSelectedProduct] = useState(null);
     const [isAnimating, setIsAnimating] = useState(false);
 
     // Global Scene Context for Overlay
-    const { openOverlay, overlayContent, isTeleporting } = useScene();
+    const { openOverlay, overlayContent, isTeleporting, isInRoom } = useScene();
 
     // Achievements Context
     const { showTutorial, unlockAchievement, hidePopup } = useAchievements();
-    const { globalVolume, isMuted } = useAudio();
-    const effectiveVolume = isMuted ? 0 : AUDIO_SETTINGS.volume * globalVolume;
-
-    const audioRef = useRef();
-    useEffect(() => {
-        if (audioRef.current && audioRef.current.setVolume) {
-            audioRef.current.setVolume(effectiveVolume);
-        }
-    }, [effectiveVolume]);
 
     useEffect(() => {
         if (isExiting || isTeleporting) {
             hidePopup();
         }
     }, [isExiting, isTeleporting, hidePopup]);
-
-    // ===== PAINT TRANSITION (top-to-bottom) =====
-    const { onBeforeCompile: paintOnBeforeCompile, animatePaint, resetPaint, uniformsData: paintUniforms, updateRoomOrigin } = usePaintMaterial(STUDIO_PAINT_CONFIG);
-
-    const [isTransitioning, setIsTransitioning] = useState(false);
-
-    const wasTeleportedRef = useRef(false);
-    useEffect(() => {
-        if (isTeleporting) wasTeleportedRef.current = true;
-    }, [isTeleporting]);
-
-    useEffect(() => {
-        if (showRoom && !isWarmup) {
-            if (wasTeleportedRef.current || isTeleporting) {
-                paintUniforms.uPaintProgress.value = 1.0;
-                setIsTransitioning(false);
-            } else {
-                setIsTransitioning(true);
-                resetPaint();
-                animatePaint(0.2, 2.5);
-                setTimeout(() => {
-                    setIsTransitioning(false);
-                }, 2700);
-            }
-        } else {
-            paintUniforms.uPaintProgress.value = 1.0;
-        }
-    }, [showRoom, isWarmup, isTeleporting]);
-
-    const latestContent = getLatestContent();
-
-    // Monitor Y offsets for falling animation (mutable)
-    const monitorOffsets = useRef([]);
-    // Refs to monitor meshes for direct position updates (avoids 28 useFrame hooks)
-    const monitorRefs = useRef([]);
-
-    // Track tower state for floating particles parallax (REFS not state!)
-    const particleTowerRotation = useRef(0);
-    const particleFallOffset = useRef(0);
 
     // Track if we've signaled ready
     const hasSignaledReady = useRef(false);
@@ -165,9 +129,6 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
 
     // Real render-based ready detection - count actual rendered frames
     useFrame(() => {
-        // Update room origin for paint shader
-        updateRoomOrigin(groupRef);
-
         if (hasSignaledReady.current) return;
 
         frameCount.current++;
@@ -180,101 +141,41 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
         }
     });
 
-    // Build cylindrical tower - all monitors at same radius, shuffled content, staggered heights
-    const monitorData = useMemo(() => {
-        const items = [];
+    // Arrange products in a single ring, facing outward
+    const productData = useMemo(() => {
+        const count = PRODUCTS.length;
+        const angleStep = (Math.PI * 2) / count;
+        const currentRadius = responsiveParams.clusterRadius;
 
-        // Shuffle content for mixed appearance (seeded for consistency)
-        const shuffledContent = [...CONTENT_DATA].sort(() => 0.5 - Math.random());
+        return PRODUCTS.map((product, index) => {
+            const angle = index * angleStep;
+            const x = Math.cos(angle) * currentRadius;
+            const z = Math.sin(angle) * currentRadius;
+            // Gentle per-item height stagger for an organic, non-mechanical look
+            const yJitter = Math.sin(index * 2.1) * 0.12;
 
-        // Calculate how many rings we need
-        const totalMonitors = shuffledContent.length;
-        const ringsNeeded = Math.ceil(totalMonitors / MONITORS_PER_RING);
+            return {
+                ...product,
+                index,
+                x,
+                z,
+                baseY: yJitter,
+                angle,
+                rot: -angle + Math.PI / 2,
+            };
+        });
+    }, [responsiveParams.clusterRadius]);
 
-        let contentIndex = 0;
-        const currentRadius = responsiveParams.towerRadius;
-
-        for (let ring = 0; ring < ringsNeeded && contentIndex < shuffledContent.length; ring++) {
-            const angleStep = (Math.PI * 2) / MONITORS_PER_RING;
-            const angleOffset = ring % 2 === 0 ? 0 : angleStep / 2; // Offset alternate rings
-
-            for (let i = 0; i < MONITORS_PER_RING && contentIndex < shuffledContent.length; i++) {
-                const contentItem = shuffledContent[contentIndex];
-                const platform = PLATFORM_CONFIG[contentItem.platform];
-                const angle = i * angleStep + angleOffset;
-
-                const x = Math.cos(angle) * currentRadius;
-                const z = Math.sin(angle) * currentRadius;
-
-                // Staggered Y - base + random jitter for organic look
-                const baseY = ring * VERTICAL_SPACING;
-                const yJitter = (Math.sin(contentIndex * 1.7) + Math.cos(contentIndex * 2.3)) * 0.4; // Pseudo-random
-                const finalY = baseY + yJitter;
-
-                let width, height, depth;
-                switch (platform.shape) {
-                    case 'tv':
-                        width = 1.6; height = 1.187; depth = 1.0; // Legacy 1.348 ratio
-                        break;
-                    case 'monitor':
-                        width = 1.6; height = 1; depth = 0.15; // Legacy 1.835 ratio
-                        break;
-                    case 'phone':
-                        width = 0.6; height = 1.139; depth = 0.1; // Legacy 0.527 ratio
-                        break;
-                    default:
-                        width = 1.4; height = 1.0; depth = 0.6;
-                }
-
-                items.push({
-                    ...contentItem,
-                    index: contentIndex,
-                    x,
-                    baseY: finalY, // Staggered Y position
-                    z,
-                    width, height, depth,
-                    angle: angle,
-                    rot: -angle + Math.PI / 2,
-                    platformConfig: platform,
-                    isLatest: contentItem.id === latestContent.id,
-                });
-
-                contentIndex++;
-            }
-        }
-
-        // Initialize offsets
-        monitorOffsets.current = items.map(() => 0);
-
-        // Pre-compute totalHeight for seamless loop (avoid calculating in useFrame)
-        const minBaseY = items.length > 0 ? Math.min(...items.map(m => m.baseY)) : 0;
-        const maxBaseY = items.length > 0 ? Math.max(...items.map(m => m.baseY)) : 0;
-        // Make sure we have a baseline height so monitors don't instantly teleport if there's only 1 row
-        const totalHeight = Math.max(VERTICAL_SPACING * 3, maxBaseY - minBaseY + VERTICAL_SPACING);
-
-        return { items, totalHeight };
-    }, [latestContent.id, responsiveParams.towerRadius]);
-
-    // Destructure for easier access
-    const monitors = monitorData.items;
-    const totalHeight = monitorData.totalHeight;
-
-    // Need a ref for lastY too
-    const lastYRef = useRef(0);
-
-    // --- INTERACTION ---
+    // --- INTERACTION: drag-to-rotate the cluster (only while pointer-down on it) ---
     const handlePointerDown = (e) => {
         if (isAnimating) return;
-        // e.preventDefault(); // Might block scroll, good for custom drag
-        e.stopPropagation(); // Stop bubbling
+        e.stopPropagation();
 
         isDraggingRef.current = true;
         lastXRef.current = e.clientX;
-        lastYRef.current = e.clientY; // Store init Y
         dragDistance.current = 0;
         rotationVelocity.current = 0;
 
-        // Disable auto-rotate immediately
         document.body.style.cursor = 'grabbing';
     };
 
@@ -284,55 +185,29 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
     }, []);
 
     const handlePointerMove = useCallback((e) => {
-        if (!isDraggingRef.current || !towerRef.current || isAnimating) return;
+        if (!isDraggingRef.current || !clusterRef.current || isAnimating) return;
 
         const clientX = e.clientX || (e.touches && e.touches[0]?.clientX);
-        const clientY = e.clientY || (e.touches && e.touches[0]?.clientY);
-
-        if (!clientX || !clientY) return;
+        if (!clientX) return;
 
         const deltaX = clientX - lastXRef.current;
-        const deltaY = clientY - lastYRef.current;
-
         lastXRef.current = clientX;
-        lastYRef.current = clientY;
+        dragDistance.current += Math.abs(deltaX);
 
-        dragDistance.current += Math.abs(deltaX) + Math.abs(deltaY);
-
-        // HORIZONTAL -> Rotation
         if (Math.abs(deltaX) > 1) {
             autoRotationSpeed.current = Math.sign(deltaX) * 0.12;
         }
         rotationVelocity.current = deltaX * DRAG_SENSITIVITY;
-        towerRef.current.rotation.y += rotationVelocity.current;
-
-        // VERTICAL -> Fall Speed
-        fallSpeed.current += deltaY * SWIPE_SENSITIVITY;
+        clusterRef.current.rotation.y += rotationVelocity.current;
 
         unlockAchievement('studio_interact');
     }, [isAnimating, unlockAchievement]);
 
-    // Wheel Listener for Desktop
-    useEffect(() => {
-        const handleWheel = (e) => {
-            // e.deltaY > 0 means scroll DOWN.
-            // Scroll DOWN -> Monitors go DOWN (Speed +).
-            // Scroll UP -> Monitors go UP (Speed -).
-            fallSpeed.current += e.deltaY * SCROLL_SENSITIVITY;
-            unlockAchievement('studio_interact');
-        };
-
-        window.addEventListener('wheel', handleWheel);
-        return () => window.removeEventListener('wheel', handleWheel);
-    }, [unlockAchievement]);
-
-    // Global Event Listeners for seamless drag
     useEffect(() => {
         window.addEventListener('pointerup', handlePointerUp);
         window.addEventListener('pointermove', handlePointerMove);
-        // Also touch events for mobile if pointer events fail (though React usually patches)
         window.addEventListener('touchend', handlePointerUp);
-        window.addEventListener('touchmove', handlePointerMove); // Native touchmove
+        window.addEventListener('touchmove', handlePointerMove);
 
         return () => {
             window.removeEventListener('pointerup', handlePointerUp);
@@ -342,87 +217,130 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
         };
     }, [handlePointerUp, handlePointerMove]);
 
-    // STEP 1 ONLY: Rotate tower to center the clicked monitor
-    const handleMonitorClick = useCallback((item) => {
-        // Prevent click if we were dragging
-        if (dragDistance.current > 5 || isAnimating || !towerRef.current) return;
+    // Capture the camera's entry look direction once the door's own fly-through
+    // animation has FULLY finished (isInRoom, not showRoom — showRoom flips true much
+    // earlier, while DoorSection.jsx is still mid-flight animating camera.position
+    // itself; taking over that early fought the entry animation for control of the
+    // camera every frame, which is what produced the sideways/broken-looking entry).
+    useEffect(() => {
+        if (isInRoom && roomEntryYaw.current === null) {
+            camera.rotation.order = 'YXZ';
+            roomEntryYaw.current = camera.rotation.y;
+            roomEntryPitch.current = camera.rotation.x;
+        }
+    }, [isInRoom, camera]);
+
+    // Mouse position drives look direction, always-on (no drag needed) — same
+    // convention as the corridor's own mouse-look.
+    useEffect(() => {
+        const handleMouseMove = (e) => {
+            if (isAnimating || selectedProduct) return;
+            const normalizedX = (e.clientX / window.innerWidth) * 2 - 1;
+            const normalizedY = (e.clientY / window.innerHeight) * 2 - 1;
+            targetYawOffset.current = -normalizedX * LOOK_YAW_RANGE;
+            targetPitchOffset.current = -normalizedY * LOOK_PITCH_RANGE;
+        };
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+    }, [isAnimating, selectedProduct]);
+
+    // Desktop scroll wheel = walk forward/back in the direction the camera is
+    // currently looking (scroll down = advance, matching the corridor's convention).
+    useEffect(() => {
+        const handleWheel = (e) => {
+            if (isAnimating || selectedProduct) return;
+            moveVelocity.current += e.deltaY * MOVE_SENSITIVITY;
+            unlockAchievement('studio_interact');
+        };
+        window.addEventListener('wheel', handleWheel);
+        return () => window.removeEventListener('wheel', handleWheel);
+    }, [isAnimating, selectedProduct, unlockAchievement]);
+
+    // Mobile: single-finger drag anywhere (not just on the product cluster) looks
+    // around (horizontal) and walks forward/back (vertical) — skipped while the
+    // cluster-drag handler above already owns the gesture (isDraggingRef).
+    useEffect(() => {
+        const handleTouchStart = (e) => {
+            if (!e.touches[0]) return;
+            touchAnchorRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        };
+        const handleTouchMoveRoam = (e) => {
+            if (isAnimating || selectedProduct || isDraggingRef.current || !e.touches[0]) return;
+            const touch = e.touches[0];
+            const dx = touch.clientX - touchAnchorRef.current.x;
+            const dy = touch.clientY - touchAnchorRef.current.y;
+            touchAnchorRef.current = { x: touch.clientX, y: touch.clientY };
+            targetYawOffset.current = THREE.MathUtils.clamp(
+                targetYawOffset.current - dx * 0.004,
+                -LOOK_YAW_RANGE,
+                LOOK_YAW_RANGE
+            );
+            moveVelocity.current += -dy * TOUCH_MOVE_SENSITIVITY;
+            unlockAchievement('studio_interact');
+        };
+        window.addEventListener('touchstart', handleTouchStart);
+        window.addEventListener('touchmove', handleTouchMoveRoam);
+        return () => {
+            window.removeEventListener('touchstart', handleTouchStart);
+            window.removeEventListener('touchmove', handleTouchMoveRoam);
+        };
+    }, [isAnimating, selectedProduct, unlockAchievement]);
+
+    // STEP 1: Rotate cluster to face the clicked product toward the camera
+    const handleProductClick = useCallback((item) => {
+        if (dragDistance.current > 5 || isAnimating || !clusterRef.current) return;
 
         setIsAnimating(true);
-        setSelectedMonitor(item);
+        setSelectedProduct(item);
         rotationVelocity.current = 0;
 
         unlockAchievement('studio_interact');
 
-        // Monitor's facing rotation (item.rot = -angle + PI/2)
-        // Monitor's screen faces local +Z, rotated by item.rot
-        // Tower rotated by towerRotation
-        // World facing = item.rot + towerRotation
-        // We want world facing = 0 (toward camera at +Z)
-        // So: towerRotation = -item.rot
+        const productFacingRotation = item.rot;
+        let targetRotation = -productFacingRotation;
 
-        const monitorFacingRotation = item.rot;
-        let targetRotation = -monitorFacingRotation;
-
-        // Normalize current rotation
-        let currentRotation = towerRef.current.rotation.y % (Math.PI * 2);
+        let currentRotation = clusterRef.current.rotation.y % (Math.PI * 2);
         if (currentRotation < 0) currentRotation += Math.PI * 2;
 
-        // Normalize target
         while (targetRotation < 0) targetRotation += Math.PI * 2;
         targetRotation = targetRotation % (Math.PI * 2);
 
-        // Find shortest path from current to target
         let delta = targetRotation - currentRotation;
         if (delta > Math.PI) delta -= Math.PI * 2;
         if (delta < -Math.PI) delta += Math.PI * 2;
 
-        // Final target = current + shortest delta
-        const finalRotation = towerRef.current.rotation.y + delta;
+        const finalRotation = clusterRef.current.rotation.y + delta;
 
-
-        // STEP 1: Animate tower rotation
-        gsap.to(towerRef.current.rotation, {
+        gsap.to(clusterRef.current.rotation, {
             y: finalRotation,
             duration: 0.8,
             ease: 'power2.inOut',
             onComplete: () => {
-                // STEP 2: After rotation, move camera Y to center on monitor
-                // Store original camera Y if not stored
                 if (originalCameraY.current === null) {
                     originalCameraY.current = camera.position.y;
                 }
 
-                // Monitor's world Y position
-                // Group is at y=-1.2, tower at y=0 relative to group
-                // Monitor's current Y = baseY + offset
-                const monitorCurrentY = item.baseY + (monitorOffsets.current[item.index] || 0);
-                const monitorWorldY = -1.2 + monitorCurrentY + responsiveParams.yOffset;
+                const productWorldY = -1.2 + CLUSTER_Y + item.baseY + responsiveParams.yOffset;
 
-                // STEP 3: Move camera FORWARD (in the direction it's looking)
-                // Store original camera position if not stored
                 if (originalCameraZ.current === null) {
                     originalCameraZ.current = camera.position.z;
                     originalCameraX.current = camera.position.x;
                 }
 
-                // Get camera's forward direction
                 const forward = new THREE.Vector3();
                 camera.getWorldDirection(forward);
 
-                // Get camera's right direction (cross product of forward and up)
                 const up = new THREE.Vector3(0, 1, 0);
                 const right = new THREE.Vector3();
                 right.crossVectors(forward, up).normalize();
 
-                // STEP 3 & 4: Move camera forward + right/down (using responsive values)
                 const zoomDist = responsiveParams.zoomDistance;
                 const panRight = responsiveParams.panRight;
                 const panDown = responsiveParams.panDown;
 
                 const targetX = camera.position.x + forward.x * zoomDist + right.x * panRight;
                 const targetZ = camera.position.z + forward.z * zoomDist + right.z * panRight;
-                const targetY = monitorWorldY - panDown; // Pan down moves camera down = monitor at top
-
+                const targetY = productWorldY - panDown;
 
                 gsap.to(camera.position, {
                     x: targetX,
@@ -432,32 +350,27 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                     ease: 'power2.inOut',
                     onComplete: () => {
                         setIsAnimating(false);
-                        openOverlay(item); // Open global overlay in HUD
+                        openOverlay(item);
                     }
                 });
             }
         });
-
-    }, [isAnimating, camera, responsiveParams, openOverlay]);
+    }, [isAnimating, camera, responsiveParams, openOverlay, unlockAchievement]);
 
     // Trigger camera return ONLY when overlay is explicitly closed
-    // We use a ref to track if overlay was previously open to avoid initial race conditions
     const prevOverlayContent = useRef(null);
 
     useEffect(() => {
-        // If it WAS open (prev) and is NOW closed (null) AND we are viewing a monitor -> Return camera
-        if (prevOverlayContent.current && !overlayContent && selectedMonitor && !isAnimating) {
+        if (prevOverlayContent.current && !overlayContent && selectedProduct && !isAnimating) {
             handleReturnCamera();
         }
-
-        // Update ref for next render
         prevOverlayContent.current = overlayContent;
-    }, [overlayContent, selectedMonitor, isAnimating]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [overlayContent, selectedProduct, isAnimating]);
 
     const handleReturnCamera = useCallback(() => {
         setIsAnimating(true);
 
-        // Slightly faster return
         if (originalCameraX.current !== null && originalCameraY.current !== null && originalCameraZ.current !== null) {
             gsap.to(camera.position, {
                 x: originalCameraX.current,
@@ -467,377 +380,139 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                 ease: 'power2.inOut',
                 onComplete: () => {
                     setIsAnimating(false);
-                    setSelectedMonitor(null); // Resume auto-rotation
+                    setSelectedProduct(null);
                 }
             });
         } else {
             setIsAnimating(false);
-            setSelectedMonitor(null);
+            setSelectedProduct(null);
         }
     }, [camera]);
 
-    // Cleaned up old listener effect that is now handled by the global effect above
-
+    // Idle auto-rotation + gentle per-product bob (levitation feel) + free-roam camera
     useFrame((state, delta) => {
-        if (!towerRef.current) return;
+        if (!clusterRef.current) return;
 
-        // Auto-rotate and Physics when idle
-        if (!isDraggingRef.current && !isAnimating && !selectedMonitor) {
-            towerRef.current.rotation.y += autoRotationSpeed.current * delta + rotationVelocity.current;
+        if (!isDraggingRef.current && !isAnimating && !selectedProduct) {
+            clusterRef.current.rotation.y += autoRotationSpeed.current * delta + rotationVelocity.current;
             rotationVelocity.current *= FRICTION;
-
-            // Decay fall speed back to base speed (but keep direction!)
-            // If going down (>0), drift to positive base. If going up (<0), drift to negative base.
-            const targetDrift = fallSpeed.current > 0 ? BASE_FALL_SPEED : -BASE_FALL_SPEED;
-            fallSpeed.current = THREE.MathUtils.lerp(fallSpeed.current, targetDrift, 1.0 - SPEED_DECAY);
-
-            // totalHeight is now pre-computed in useMemo for performance
-            // Update all monitor offsets and positions in a single loop (no child useFrames needed)
-            monitors.forEach((monitor, index) => {
-                // Update offset
-                monitorOffsets.current[index] -= fallSpeed.current * delta;
-
-                // Calculate current Y
-                const currentY = monitor.baseY + monitorOffsets.current[index];
-
-                // If below threshold (-2), teleport to top (seamless loop)
-                // If moving UP (negative speed), we need to check TOP threshold too!
-                if (currentY < -2 && fallSpeed.current > 0) {
-                    // Falling Down -> Reset to top
-                    monitorOffsets.current[index] += totalHeight;
-                } else if (currentY > totalHeight - 2 && fallSpeed.current < 0) {
-                    // Moving Up -> Reset to bottom
-                    monitorOffsets.current[index] -= totalHeight;
-                }
-
-                // Direct DOM update - bypass React reconciliation for performance
-                const ref = monitorRefs.current[index];
-                if (ref) {
-                    ref.position.y = monitor.baseY + monitorOffsets.current[index];
-                }
-            });
-
-            // Update particle refs directly (no setState = no re-render = smooth!)
-            particleTowerRotation.current = towerRef.current.rotation.y;
-            particleFallOffset.current = fallSpeed.current; // Pass velocity, not offset!
         }
+
+        // Free-roam look + walk — paused while a click-to-focus animation owns the camera.
+        if (roomEntryYaw.current !== null && !isAnimating && !selectedProduct) {
+            currentYawOffset.current = THREE.MathUtils.lerp(currentYawOffset.current, targetYawOffset.current, LOOK_SMOOTHING);
+            currentPitchOffset.current = THREE.MathUtils.lerp(currentPitchOffset.current, targetPitchOffset.current, LOOK_SMOOTHING);
+            camera.rotation.y = roomEntryYaw.current + currentYawOffset.current;
+            camera.rotation.x = roomEntryPitch.current + currentPitchOffset.current;
+
+            moveVelocity.current *= MOVE_DECAY;
+            const forward = new THREE.Vector3();
+            camera.getWorldDirection(forward);
+            forward.y = 0;
+            forward.normalize();
+            camera.position.x += forward.x * moveVelocity.current;
+            camera.position.z += forward.z * moveVelocity.current;
+            camera.position.x = THREE.MathUtils.clamp(camera.position.x, ROOM_BOUNDS.minX, ROOM_BOUNDS.maxX);
+            camera.position.z = THREE.MathUtils.clamp(camera.position.z, ROOM_BOUNDS.minZ, ROOM_BOUNDS.maxZ);
+        }
+
+        const t = state.clock.elapsedTime;
+        productData.forEach((item, index) => {
+            const ref = productRefs.current[index];
+            if (ref) {
+                ref.position.y = item.baseY + Math.sin(t * 0.8 + index * 1.7) * 0.06;
+                ref.rotation.y = item.rot + Math.sin(t * 0.5 + index * 2.3) * 0.05;
+            }
+        });
     });
 
     return (
         <group ref={groupRef} position={[0, -1.2, 0]}>
-            {!isWarmup && (
-                <PositionalAudio
-                    ref={audioRef}
-                    url="/sounds/szummonitorow.mp3"
-                    distanceModel="exponential"
-                    refDistance={AUDIO_SETTINGS.distance}
-                    rolloffFactor={AUDIO_SETTINGS.rolloff}
-                    loop
-                    autoplay
-                    volume={effectiveVolume}
+            <group position={[0, 0, SHELL_Z_OFFSET]}>
+                <RoomShell width={ROOM_WIDTH} height={ROOM_HEIGHT} depth={ROOM_DEPTH} shadowsEnabled={settings.shadows} />
+                <BoutiqueLighting
+                    roomWidth={ROOM_WIDTH}
+                    roomHeight={ROOM_HEIGHT}
+                    roomDepth={ROOM_DEPTH}
+                    targetPosition={[0, CLUSTER_Y, 0]}
                 />
-            )}
 
-            {/* THE INFINITE TOWER */}
+                {/* Room-dressing furniture, loaded async — isolated Suspense so it
+                    doesn't block the rest of the room while GLBs stream in. */}
+                <Suspense fallback={null}>
+                    {FURNITURE.map((piece) => (
+                        <FurnitureModel key={piece.id} {...piece} />
+                    ))}
+                </Suspense>
+            </group>
+
+            {/* THE FLOATING PRODUCT CLUSTER */}
             <group
-                ref={towerRef}
-                position={[0, TOWER_Y_START, TOWER_Z_START]}
+                ref={clusterRef}
+                position={[0, CLUSTER_Y, CLUSTER_Z]}
                 onPointerDown={handlePointerDown}
             >
-                {/* Invisible Hit Cylinder for easier drag interaction */}
+                {/* Invisible hit cylinder for easier drag interaction */}
                 <mesh visible={false}>
-                    <cylinderGeometry args={[responsiveParams.towerRadius + 0.5, responsiveParams.towerRadius + 0.5, TOWER_HEIGHT * 1.5, 16]} />
+                    <cylinderGeometry args={[responsiveParams.clusterRadius + 0.6, responsiveParams.clusterRadius + 0.6, 1.2, 16]} />
                     <meshBasicMaterial color="#e0e0e0" />
                 </mesh>
 
-                {monitors.map((item, index) => (
-                    <MonitorBlock
+                {productData.map((item, index) => (
+                    <ProductBlock
                         key={item.id}
                         item={item}
-                        index={index}
-                        meshRef={(el) => { monitorRefs.current[index] = el; }}
-                        isSelected={selectedMonitor?.id === item.id}
-                        onMonitorClick={handleMonitorClick}
+                        meshRef={(el) => { productRefs.current[index] = el; }}
+                        isSelected={selectedProduct?.id === item.id}
+                        onProductClick={handleProductClick}
                         disabled={isAnimating}
-                        paintOnBeforeCompile={paintOnBeforeCompile}
-                        paintUniforms={paintUniforms}
                     />
                 ))}
             </group>
-
-            {/* Floating code symbols parallax background */}
-            <FloatingCodeParticles
-                towerRotationRef={particleTowerRotation}
-                fallOffsetRef={particleFallOffset}
-            />
         </group>
     );
 };
 
 // ===========================================
-// MONITOR BLOCK COMPONENT - with Paint Reveal on Hover
-// Uses proven two-box approach: painted box behind + sketch box with revealMaterial in front
+// PRODUCT BLOCK - a single floating showcase item
 // ===========================================
-const MonitorBlock = memo(({ item, meshRef, isSelected, onMonitorClick, disabled, paintOnBeforeCompile, paintUniforms }) => {
-    // Position.y is updated directly by parent's useFrame via meshRef
-    const paintedBoxRef = useRef();
-    const hideDelayRef = useRef();
-    // RevealMaterial refs for each face (up to 6)
-    const matRef0 = useRef(); // +X right
-    const matRef1 = useRef(); // -X left
-    const matRef2 = useRef(); // +Y top
-    const matRef3 = useRef(); // -Y bottom
-    const matRef4 = useRef(); // +Z front
-    const matRef5 = useRef(); // -Z back
-    const matRefs = [matRef0, matRef1, matRef2, matRef3, matRef4, matRef5];
-
-    // Check platform types
-    const isBlogMonitor = item.platform === 'blog';
-    const isTvMonitor = item.platform === 'youtube';
-    const isPhoneMonitor = item.platform === 'tiktok';
-
-    // Determine the URL for the front texture (custom or default)
-    const frontTextureUrl = item.frontTexture || (
-        isBlogMonitor ? '/textures/studio/monitor_front.webp' :
-            isTvMonitor ? '/textures/studio/tv_front.webp' :
-                '/textures/studio/phone_front.webp'
-    );
-
-    // Dynamic Dummy texture for touch devices 
-    const isTouch = isTouchDevice();
-    const dummyTex = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-
-    // Determine painted front texture URL
-    const paintedFrontTextureUrl = isTouch ? dummyTex : (item.paintedFrontTexture || (
-        isBlogMonitor ? '/textures/studio/monitor_front_painted.webp' :
-            isTvMonitor ? '/textures/studio/tv_front_painted.webp' :
-                '/textures/studio/phone_front_painted.webp'
-    ));
-
-    // Load dynamic front texture
-    const frontTex = useLoader(TextureLoader, frontTextureUrl);
-    const frontPaintedTex = useLoader(TextureLoader, paintedFrontTextureUrl);
-
-    // Load Monitor textures (Blog) - shell + painted
-    const monitorBack = useLoader(TextureLoader, '/textures/studio/monitor_back.webp');
-    const monitorTop = useLoader(TextureLoader, '/textures/studio/monitor_top.webp');
-    const monitorBottom = useLoader(TextureLoader, '/textures/studio/monitor_bottom.webp');
-    const monitorLeft = useLoader(TextureLoader, '/textures/studio/monitor_left.webp');
-    const monitorRight = useLoader(TextureLoader, '/textures/studio/monitor_right.webp');
-    const monitorBackPainted = useLoader(TextureLoader, isTouch ? dummyTex : '/textures/studio/monitor_back_painted.webp');
-    const monitorTopPainted = useLoader(TextureLoader, isTouch ? dummyTex : '/textures/studio/monitor_top_painted.webp');
-    const monitorBottomPainted = useLoader(TextureLoader, isTouch ? dummyTex : '/textures/studio/monitor_bottom_painted.webp');
-    const monitorLeftPainted = useLoader(TextureLoader, isTouch ? dummyTex : '/textures/studio/monitor_left_painted.webp');
-    const monitorRightPainted = useLoader(TextureLoader, isTouch ? dummyTex : '/textures/studio/monitor_right_painted.webp');
-
-    // Load TV textures (YouTube) - shell + painted
-    const tvBack = useLoader(TextureLoader, '/textures/studio/tv_back.webp');
-    const tvTop = useLoader(TextureLoader, '/textures/studio/tv_top.webp');
-    const tvBottom = useLoader(TextureLoader, '/textures/studio/tv_bottom.webp');
-    const tvSide = useLoader(TextureLoader, '/textures/studio/tv_side.webp');
-    const tvBackPainted = useLoader(TextureLoader, isTouch ? dummyTex : '/textures/studio/tv_back_painted.webp');
-    const tvTopPainted = useLoader(TextureLoader, isTouch ? dummyTex : '/textures/studio/tv_top_painted.webp');
-    const tvBottomPainted = useLoader(TextureLoader, isTouch ? dummyTex : '/textures/studio/tv_bottom_painted.webp');
-    const tvSidePainted = useLoader(TextureLoader, isTouch ? dummyTex : '/textures/studio/tv_side_painted.webp');
-
-    // Load Phone textures (TikTok) - shell + painted
-    const phoneBack = useLoader(TextureLoader, '/textures/studio/phone_back.webp');
-    const phoneSide = useLoader(TextureLoader, '/textures/studio/phone_side.webp');
-    const phoneBackPainted = useLoader(TextureLoader, isTouch ? dummyTex : '/textures/studio/phone_back_painted.webp');
-    const phoneSidePainted = useLoader(TextureLoader, isTouch ? dummyTex : '/textures/studio/phone_side_painted.webp');
-
-    // Build texture config for current device type
-    // Each entry: { sketch, painted } — if painted is null, that face won't have reveal
-    const faceConfig = useMemo(() => {
-        if (isBlogMonitor) {
-            return [
-                { sketch: monitorRight, painted: monitorRightPainted },    // +X
-                { sketch: monitorLeft, painted: monitorLeftPainted },      // -X
-                { sketch: monitorTop, painted: monitorTopPainted },        // +Y
-                { sketch: monitorBottom, painted: monitorBottomPainted },  // -Y
-                { sketch: frontTex, painted: frontPaintedTex },            // +Z front
-                { sketch: monitorBack, painted: monitorBackPainted },      // -Z
-            ];
-        } else if (isTvMonitor) {
-            return [
-                { sketch: tvSide, painted: tvSidePainted },       // +X
-                { sketch: tvSide, painted: tvSidePainted },       // -X
-                { sketch: tvTop, painted: tvTopPainted },          // +Y
-                { sketch: tvBottom, painted: tvBottomPainted },    // -Y
-                { sketch: frontTex, painted: frontPaintedTex },    // +Z front
-                { sketch: tvBack, painted: tvBackPainted },        // -Z
-            ];
-        } else if (isPhoneMonitor) {
-            return [
-                { sketch: phoneSide, painted: phoneSidePainted },  // +X
-                { sketch: phoneSide, painted: phoneSidePainted },  // -X
-                { sketch: phoneSide, painted: phoneSidePainted },  // +Y
-                { sketch: phoneSide, painted: phoneSidePainted },  // -Y
-                { sketch: frontTex, painted: frontPaintedTex },    // +Z front
-                { sketch: phoneBack, painted: phoneBackPainted },  // -Z
-            ];
-        }
-        return null;
-    }, [
-        isBlogMonitor, isTvMonitor, isPhoneMonitor,
-        frontTex, frontPaintedTex,
-        monitorBack, monitorTop, monitorBottom, monitorLeft, monitorRight,
-        monitorBackPainted, monitorTopPainted, monitorBottomPainted, monitorLeftPainted, monitorRightPainted,
-        tvBack, tvTop, tvBottom, tvSide,
-        tvBackPainted, tvTopPainted, tvBottomPainted, tvSidePainted,
-        phoneBack, phoneSide, phoneBackPainted, phoneSidePainted
-    ]);
-
-    // Painted materials for inner box (standard materials showing painted textures)
-    const paintedMaterials = useMemo(() => {
-        if (!faceConfig) return null;
-        return faceConfig.map(f => {
-            const mat = new THREE.MeshBasicMaterial({
-                color: '#e0e0e0',
-                map: f.painted || f.sketch // Use sketch as fallback if no painted version
-            });
-            // Apply paint transition shader
-            if (paintOnBeforeCompile) {
-                mat.onBeforeCompile = paintOnBeforeCompile;
-                mat.customProgramCacheKey = () => 'paintOnBeforeCompile_studio_painted';
-                mat.transparent = true;
-                mat.needsUpdate = true;
-            }
-            return mat;
-        });
-    }, [faceConfig, paintOnBeforeCompile]);
-
-    // Sketch materials for outer box (standard materials, used for faces WITHOUT reveal)
-    const sketchMaterials = useMemo(() => {
-        if (!faceConfig) return null;
-        return faceConfig.map(f => {
-            if (f.painted) return null; // Will use revealMaterial instead
-            const mat = new THREE.MeshBasicMaterial({ color: '#e0e0e0', map: f.sketch });
-            // Apply paint transition shader
-            if (paintOnBeforeCompile) {
-                mat.onBeforeCompile = paintOnBeforeCompile;
-                mat.customProgramCacheKey = () => 'paintOnBeforeCompile_studio_sketch';
-                mat.transparent = true;
-                mat.needsUpdate = true;
-            }
-            return mat;
-        });
-    }, [faceConfig, paintOnBeforeCompile]);
-
-    // --- HOVER STATE MANAGEMENT (NO REACT RE-RENDERS!) ---
-    const isHoveredRef = useRef(false);
-
-    const updatePaintState = useCallback(() => {
-        if (!faceConfig) return;
-
-        const shouldPaint = !isTouch && (isHoveredRef.current || isSelected);
-        const targetProgress = shouldPaint ? 1.0 : 0.0;
-        const duration = shouldPaint ? 0.8 : 0.5;
-
-        // Animate each revealMaterial face
-        matRefs.forEach((ref) => {
-            if (ref.current) {
-                gsap.to(ref.current, {
-                    uProgress: targetProgress,
-                    duration,
-                    ease: 'power2.out',
-                    overwrite: true
-                });
-            }
-        });
-
-        // Show/hide painted box
-        if (shouldPaint) {
-            if (hideDelayRef.current) hideDelayRef.current.kill();
-            if (paintedBoxRef.current) paintedBoxRef.current.visible = true;
-        } else {
-            // Hide painted box after reverse animation completes
-            // On initial mount (when hideDelay is empty), hide it very quickly (0.05s) just to allow 1-3 frames for compilation
-            const delay = hideDelayRef.current === undefined ? 0.05 : (duration + 0.05);
-            hideDelayRef.current = gsap.delayedCall(delay, () => {
-                if (paintedBoxRef.current) paintedBoxRef.current.visible = false;
-            });
-        }
-    }, [faceConfig, isSelected, isTouch]);
-
-    // React to purely external changes (e.g., overlay closes and isSelected becomes false)
-    useEffect(() => {
-        updatePaintState();
-    }, [isSelected, updatePaintState]);
-
-    if (!faceConfig) {
-        // Fallback for unknown platform
-        return (
-            <group ref={meshRef} position={[item.x, item.baseY, item.z]} rotation={[0, item.rot, 0]}>
-                <mesh>
-                    <boxGeometry args={[item.width, item.height, item.depth]} />
-                    <meshBasicMaterial color={item.platformConfig.color} />
-                </mesh>
-            </group>
-        );
-    }
+const ProductBlock = memo(({ item, meshRef, isSelected, onProductClick, disabled }) => {
+    const hoverRef = useRef(false);
+    const ProductModel = PRODUCT_MODELS[item.category];
 
     return (
         <group
             ref={meshRef}
             position={[item.x, item.baseY, item.z]}
             rotation={[0, item.rot, 0]}
+            scale={item.scale || 1}
             onPointerOver={(e) => {
                 if (disabled) return;
                 e.stopPropagation();
-                isHoveredRef.current = true;
-                updatePaintState();
+                hoverRef.current = true;
                 document.body.style.cursor = 'pointer';
             }}
             onPointerOut={() => {
-                isHoveredRef.current = false;
-                updatePaintState();
+                hoverRef.current = false;
                 document.body.style.cursor = 'auto';
             }}
             onPointerUp={(e) => {
                 if (disabled) return;
                 e.stopPropagation();
-                onMonitorClick(item);
+                onProductClick(item);
             }}
         >
-            {/* PAINTED BOX (behind) — initially visible to force shader compilation during loading phase */}
-            <mesh ref={paintedBoxRef} visible={true}>
-                <boxGeometry args={[item.width, item.height, item.depth]} />
-                {paintedMaterials.map((mat, i) => (
-                    <primitive key={`p${i}`} attach={`material-${i}`} object={mat} />
-                ))}
-            </mesh>
-
-            {/* SKETCH BOX (front) — revealMaterial faces get discarded on hover */}
-            <mesh>
-                <boxGeometry args={[item.width, item.height, item.depth]} />
-                {faceConfig.map((face, i) => {
-                    if (face.painted) {
-                        // This face has a painted version → use revealMaterial for brush-stroke discard
-                        return (
-                            <revealMaterial color="#e0e0e0"
-                                key={`s${i}`}
-                                ref={matRefs[i]}
-                                attach={`material-${i}`}
-                                map={face.sketch}
-                                transparent={true}
-                                alphaTest={0.1}
-                                paintUniforms={paintUniforms}
-                                paintConfig={STUDIO_PAINT_CONFIG}
-                                uProgress={0.0}
-                            />
-                        );
-                    } else {
-                        // No painted version → standard material (no reveal)
-                        return (
-                            <primitive key={`s${i}`} attach={`material-${i}`} object={sketchMaterials[i]} />
-                        );
-                    }
-                })}
-            </mesh>
+            {ProductModel ? <ProductModel /> : (
+                <mesh>
+                    <boxGeometry args={[0.2, 0.15, 0.1]} />
+                    <meshStandardMaterial color="#888" />
+                </mesh>
+            )}
+            {isSelected && (
+                <pointLight color="#00d4ff" intensity={0.6} distance={0.6} />
+            )}
         </group>
     );
 });
 
 export default StudioRoom;
-

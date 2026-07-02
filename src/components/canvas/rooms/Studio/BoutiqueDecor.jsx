@@ -10,7 +10,6 @@ import * as THREE from 'three';
  * 1. Central Pedestal (Socle) under floating products with emissive accent line.
  * 2. 3 Wall Art Frames (left, right, back wall) with custom color placeholder paintings.
  * 3. Ceiling architectural light panel fixture.
- * 4. 2 Decorative Plants (low-poly styles) in the rear corners.
  */
 const BoutiqueDecor = ({ shadowsEnabled = true }) => {
     // Memoize materials to prevent recreation across re-renders
@@ -55,21 +54,6 @@ const BoutiqueDecor = ({ shadowsEnabled = true }) => {
                 color: '#ffffff',
                 emissive: '#e0f2fe',
                 emissiveIntensity: 1.0,
-            }),
-            plantPot: new THREE.MeshStandardMaterial({
-                color: '#ececec',
-                roughness: 0.5,
-                metalness: 0.1,
-            }),
-            plantLeaf: new THREE.MeshStandardMaterial({
-                color: '#15803d', // Rich botanical green
-                roughness: 0.8,
-                metalness: 0.0,
-            }),
-            soil: new THREE.MeshStandardMaterial({
-                color: '#451a03', // Soil brown
-                roughness: 0.9,
-                metalness: 0.0,
             }),
         };
     }, []);
@@ -150,73 +134,6 @@ const BoutiqueDecor = ({ shadowsEnabled = true }) => {
                     <planeGeometry args={[1.8, 1.8]} />
                     <primitive object={materials.ceilingLight} attach="material" />
                 </mesh>
-            </group>
-
-            {/* 4. DECORATIVE CORNER PLANTS */}
-            {/* Rear-Left Plant */}
-            <group position={[-4.2, 0, -4.2]}>
-                {/* Ceramic Pot */}
-                <mesh position={[0, 0.3, 0]} castShadow={shadowsEnabled} receiveShadow={shadowsEnabled}>
-                    <cylinderGeometry args={[0.3, 0.22, 0.6, 12]} />
-                    <primitive object={materials.plantPot} attach="material" />
-                </mesh>
-                {/* Soil inside pot */}
-                <mesh position={[0, 0.59, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-                    <planeGeometry args={[0.56, 0.56]} />
-                    <primitive object={materials.soil} attach="material" />
-                </mesh>
-                {/* Leaves / Plant Geometry (Stylized / Low-Poly primitives) */}
-                <group position={[0, 0.6, 0]}>
-                    <mesh position={[0, 0.35, 0]} castShadow={shadowsEnabled}>
-                        <coneGeometry args={[0.25, 0.8, 5]} />
-                        <primitive object={materials.plantLeaf} attach="material" />
-                    </mesh>
-                    <mesh position={[-0.12, 0.2, 0.1]} rotation={[0.2, 0, 0.4]} castShadow={shadowsEnabled}>
-                        <coneGeometry args={[0.18, 0.6, 5]} />
-                        <primitive object={materials.plantLeaf} attach="material" />
-                    </mesh>
-                    <mesh position={[0.12, 0.25, -0.1]} rotation={[-0.2, 0, -0.4]} castShadow={shadowsEnabled}>
-                        <coneGeometry args={[0.2, 0.7, 5]} />
-                        <primitive object={materials.plantLeaf} attach="material" />
-                    </mesh>
-                    <mesh position={[0.08, 0.15, 0.15]} rotation={[0.3, 0.3, -0.2]} castShadow={shadowsEnabled}>
-                        <coneGeometry args={[0.15, 0.5, 5]} />
-                        <primitive object={materials.plantLeaf} attach="material" />
-                    </mesh>
-                </group>
-            </group>
-
-            {/* Rear-Right Plant */}
-            <group position={[4.2, 0, -4.2]}>
-                {/* Ceramic Pot */}
-                <mesh position={[0, 0.3, 0]} castShadow={shadowsEnabled} receiveShadow={shadowsEnabled}>
-                    <cylinderGeometry args={[0.3, 0.22, 0.6, 12]} />
-                    <primitive object={materials.plantPot} attach="material" />
-                </mesh>
-                {/* Soil inside pot */}
-                <mesh position={[0, 0.59, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-                    <planeGeometry args={[0.56, 0.56]} />
-                    <primitive object={materials.soil} attach="material" />
-                </mesh>
-                {/* Leaves / Plant Geometry (Stylized / Low-Poly primitives) */}
-                <group position={[0, 0.6, 0]}>
-                    <mesh position={[0, 0.4, 0]} castShadow={shadowsEnabled}>
-                        <coneGeometry args={[0.22, 0.9, 5]} />
-                        <primitive object={materials.plantLeaf} attach="material" />
-                    </mesh>
-                    <mesh position={[0.1, 0.22, 0.12]} rotation={[0.25, -0.2, -0.35]} castShadow={shadowsEnabled}>
-                        <coneGeometry args={[0.17, 0.65, 5]} />
-                        <primitive object={materials.plantLeaf} attach="material" />
-                    </mesh>
-                    <mesh position={[-0.1, 0.28, -0.08]} rotation={[-0.15, 0.2, 0.35]} castShadow={shadowsEnabled}>
-                        <coneGeometry args={[0.19, 0.75, 5]} />
-                        <primitive object={materials.plantLeaf} attach="material" />
-                    </mesh>
-                    <mesh position={[-0.08, 0.18, 0.12]} rotation={[0.35, -0.1, 0.25]} castShadow={shadowsEnabled}>
-                        <coneGeometry args={[0.14, 0.55, 5]} />
-                        <primitive object={materials.plantLeaf} attach="material" />
-                    </mesh>
-                </group>
             </group>
         </group>
     );

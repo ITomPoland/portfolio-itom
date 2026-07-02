@@ -28,6 +28,8 @@ const FURNITURE = [
     { id: 'desk', path: '/models/boutique/desk/metal_office_desk_1k.gltf', position: [0, 0, -7], rotation: [0, Math.PI, 0], scale: 1 },
     { id: 'plant', path: '/models/boutique/plant/celandine_01_1k.gltf', position: [-4, 0, -6.5], rotation: [0, 0, 0], scale: 1 },
     { id: 'lamp', path: '/models/boutique/lamp/street_lamp_02_1k.gltf', position: [4, 0, -6], rotation: [0, 0, 0], scale: 0.55 },
+    { id: 'plant-corner-left', path: '/models/boutique/plant/celandine_01_1k.gltf', position: [-4.2, 0, -4.2], rotation: [0, 0, 0], scale: 1 },
+    { id: 'plant-corner-right', path: '/models/boutique/plant/celandine_01_1k.gltf', position: [4.2, 0, -4.2], rotation: [0, 0, 0], scale: 1 },
 ];
 
 const CLUSTER_RADIUS = 1.05; // distance of each product from the cluster's centre (sits over the pedestal)

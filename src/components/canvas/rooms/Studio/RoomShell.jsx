@@ -58,7 +58,11 @@ const RoomShell = ({
                 as fully ENCLOSED (kills the "see-through to the void" toward the door)
                 while the doorway gap lines up with the corridor threshold. */}
             {(() => {
-                const doorHalf = 1.4;             // half-width of the central doorway gap
+                // Must stay <= the vestibule's half-width (RoomInterior.jsx's ROOM_CONFIG.corridorWidth
+                // is 2.2, i.e. walls at x=±1.1) or the flanking panels start further out than the
+                // vestibule walls end, leaving a gap with no wall — a leak you can walk out through,
+                // and a jarring seam where the vestibule's geometry shows through instead of this wall.
+                const doorHalf = 1.0;             // half-width of the central doorway gap
                 const panelW = halfW - doorHalf;  // width of each flanking front panel
                 const panelCX = doorHalf + panelW / 2;
                 return (

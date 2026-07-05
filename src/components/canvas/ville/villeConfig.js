@@ -30,12 +30,12 @@ export const VILLE_PITCH_CLAMP = 1.2;       // rad
 // world-space, straight from the prototype scene. The door trigger mesh is built by
 // VilleBuildings (agy), which calls `onDoorEnter(roomId, id)` on click.
 export const VILLE_BUILDINGS = [
-    { id: 'hall',     position: [0, 0, 0],     rotationY: 0,               roomId: null,      teaser: 'hall',     label: 'HAKKILO XR' },
-    { id: 'studio',   position: [-26, 0, -26], rotationY: Math.PI * 0.75,  roomId: 'studio',  label: 'LE STUDIO' },
-    { id: 'presa',    position: [26, 0, -26],  rotationY: -Math.PI * 0.75, roomId: 'about',   label: 'PRÉSENTATION' },
-    { id: 'galerie',  position: [-26, 0, 26],  rotationY: Math.PI * 1.25,  roomId: 'gallery', label: 'LA GALERIE' },
-    { id: 'contact',  position: [26, 0, 26],   rotationY: Math.PI * 0.25,  roomId: 'contact', label: 'CONTACT' },
-    { id: 'academie', position: [0, 0, -44],   rotationY: 0,               roomId: null,      teaser: 'academie', label: "L'ACADÉMIE" },
+    { id: 'hall',     position: [0, 0, 0],     rotationY: 0,               roomId: null,      teaser: 'hall',     label: 'HAKKILO XR',    collider: 7 },
+    { id: 'studio',   position: [-26, 0, -26], rotationY: Math.PI * 0.75,  roomId: 'studio',  label: 'LE STUDIO',                        collider: 8 },
+    { id: 'presa',    position: [26, 0, -26],  rotationY: -Math.PI * 0.75, roomId: 'about',   label: 'PRÉSENTATION',                     collider: 7 },
+    { id: 'galerie',  position: [-26, 0, 26],  rotationY: Math.PI * 1.25,  roomId: 'gallery', label: 'LA GALERIE',                       collider: 8.5 },
+    { id: 'contact',  position: [26, 0, 26],   rotationY: Math.PI * 0.25,  roomId: 'contact', label: 'CONTACT',                          collider: 5.5 },
+    { id: 'academie', position: [0, 0, -44],   rotationY: 0,               roomId: null,      teaser: 'academie', label: "L'ACADÉMIE",   collider: 9 },
 ];
 
 // Day/night — night when local hour ≥ 19 or < 7 (prototype `isNightNow`). `nightAmount` eases

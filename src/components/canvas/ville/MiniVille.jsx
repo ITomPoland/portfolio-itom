@@ -60,7 +60,7 @@ export default function MiniVille() {
         scene.fog = new THREE.Fog(VILLE_FOG_DAY, VILLE_FOG_NEAR, VILLE_FOG_FAR);
         scene.background = new THREE.Color(VILLE_FOG_DAY);
 
-        collidersRef.current = VILLE_BUILDINGS.map((b) => ({ x: b.position[0], z: b.position[2], r: 7 }));
+        collidersRef.current = VILLE_BUILDINGS.map((b) => ({ x: b.position[0], z: b.position[2], r: b.collider ?? 7 }));
 
         return () => {
             camera.far = prevFar;

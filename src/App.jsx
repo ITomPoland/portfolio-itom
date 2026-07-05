@@ -4,6 +4,7 @@ import { Preload, useTexture, Text, PerformanceMonitor } from '@react-three/drei
 import * as THREE from 'three';
 
 import Preloader from './components/dom/Preloader';
+import RootErrorBoundary from './components/dom/RootErrorBoundary';
 import PaperTransition from './components/dom/PaperTransition';
 import { AudioProvider, useAudio } from './context/AudioManager';
 import { initAudio } from './utils/audioManager';
@@ -211,10 +212,12 @@ export default function App() {
   }, []);
 
   return (
-    <PerformanceProvider>
-      <AchievementsProvider>
-        <AppContent />
-      </AchievementsProvider>
-    </PerformanceProvider>
+    <RootErrorBoundary>
+      <PerformanceProvider>
+        <AchievementsProvider>
+          <AppContent />
+        </AchievementsProvider>
+      </PerformanceProvider>
+    </RootErrorBoundary>
   );
 }

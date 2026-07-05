@@ -224,9 +224,8 @@ function PlazaLampModel({ x, z, lampHeadMat }) {
     return (
         <group>
             <primitive object={cloned} position={localPos} scale={scale} rotation={[0, rotY, 0]} />
-            <mesh position={[x, 4.55, z]}>
+            <mesh position={[x, 4.55, z]} material={lampHeadMat}>
                 <sphereGeometry args={[0.16, 10, 8]} />
-                <primitive object={lampHeadMat} attach="material" />
             </mesh>
         </group>
     );
@@ -238,13 +237,11 @@ function PlazaLampModel({ x, z, lampHeadMat }) {
 function SimplePole({ x, z, lampPoleMat, lampHeadMat }) {
     return (
         <group>
-            <mesh position={[x, 2.3, z]}>
+            <mesh position={[x, 2.3, z]} material={lampPoleMat}>
                 <cylinderGeometry args={[0.07, 0.1, 4.6, 6]} />
-                <primitive object={lampPoleMat} attach="material" />
             </mesh>
-            <mesh position={[x, 4.7, z]}>
+            <mesh position={[x, 4.7, z]} material={lampHeadMat}>
                 <sphereGeometry args={[0.24, 10, 8]} />
-                <primitive object={lampHeadMat} attach="material" />
             </mesh>
         </group>
     );

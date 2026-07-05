@@ -8,6 +8,7 @@ import VilleGround from './VilleGround';
 import VilleBuildings from './VilleBuildings';
 import VilleDecor from './VilleDecor';
 import VilleScenery from './VilleScenery';
+import RootErrorBoundary from '../../dom/RootErrorBoundary';
 import {
     VILLE_BUILDINGS,
     VILLE_CAMERA_FAR,
@@ -97,16 +98,21 @@ export default function MiniVille() {
             <hemisphereLight ref={hemiRef} args={['#dfeaff', '#8a7a5c', 0.85]} />
             <directionalLight ref={sunRef} position={[38, 55, 22]} intensity={2.2} color="#fff2dc" />
 
-            {/* Far horizon: grass / mountains / skyline / stars (agy 018) */}
-            <VilleScenery textures={textures} nightRef={nightRef} />
+            {/* Far horizon: grass / mountains / skyline / stars (agy 018) — isolated so a failure
+                here can't blank the whole city */}
+            <RootErrorBoundary fallback={null}>
+                <VilleScenery textures={textures} nightRef={nightRef} />
+            </RootErrorBoundary>
 
             {/* Ground: full terrain / plaza / streets / sidewalks / markings (agy 015) */}
             <VilleGround textures={textures} nightRef={nightRef} />
 
             {/* Decor: surrounding buildings, trees, café, street lamps + night lights (agy 017) */}
-            <Suspense fallback={null}>
-                <VilleDecor nightRef={nightRef} />
-            </Suspense>
+            <RootErrorBoundary fallback={null}>
+                <Suspense fallback={null}>
+                    <VilleDecor nightRef={nightRef} />
+                </Suspense>
+            </RootErrorBoundary>
 
             {/* Detailed hero buildings + clickable doors (agy 016) */}
             <VilleBuildings textures={textures} nightRef={nightRef} onDoorEnter={handleDoor} />

@@ -351,7 +351,7 @@ const IntroMilestone = ({ z, scrollProgressRef }) => {
                 anchorY="middle"
                 font="/fonts/RubikScribble-Regular.ttf"
             >
-                TOMASZ SZMAJDA
+                HAKKILO XR
             </Text>
 
             {/* Subtitle - Brand (spreads right) */}
@@ -364,7 +364,7 @@ const IntroMilestone = ({ z, scrollProgressRef }) => {
                 anchorY="middle"
                 font="/fonts/CabinSketch-Regular.ttf"
             >
-                (ITOM)
+                (STUDIO)
             </Text>
 
             {/* Avatar on cloud - floating + spreads up-left */}

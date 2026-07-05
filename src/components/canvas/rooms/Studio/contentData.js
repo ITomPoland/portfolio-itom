@@ -31,18 +31,18 @@ export const PLATFORM_CONFIG = {
     },
 };
 
-// Sample content data - replace with real content later
+// Content data - Rebranded for Hakkilo XR
 const RAW_CONTENT_DATA = [
     // ============ YouTube Videos ============
     {
         id: 'yt-001',
         platform: 'youtube',
-        title: 'I Built a Website for Young Multi for $__,___',
-        description: 'It\'s late 2025, we\'re flying to space, and Young Multi... still didn\'t have his own website. So I took matters into my own hands.',
+        title: "Création de l'expérience interactive Hakkilo XR",
+        description: "Découvrez les coulisses de la création de la plateforme Hakkilo XR, notre environnement immersif 3D.",
         frontTexture: '/textures/studio/tvfront_filmikprojektdlamultiego.webp',
         paintedFrontTexture: '/textures/studio/tvfront_filmikprojektdlamultiego_painted.webp',
         thumbnail: null,
-        url: 'https://www.youtube.com/watch?v=AOz4fB7NV_I&t=21s',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2026-01-10',
         views: '1.2K',
         duration: '15:32',
@@ -50,12 +50,12 @@ const RAW_CONTENT_DATA = [
     {
         id: 'yt-002',
         platform: 'youtube',
-        title: 'Turning an ordinary selfie into a professional AI photoshoot! How Google Nano Banana transformed my photo! (For Free)',
-        description: '📸 Watch how I turned a basic selfie into a professional photoshoot using a free AI tool from Google! In this step-by-step tutorial, I reveal my secret trick for crafting perfect prompts, even if you\'re a total beginner.',
+        title: "Comment l'IA transforme la création d'assets 3D pour le Web",
+        description: "Tutoriel complet sur l'utilisation des outils IA pour générer des textures et des modèles optimisés pour les applications WebGL.",
         frontTexture: '/textures/studio/tvfront_filmikedytowaniezdjec.webp',
         paintedFrontTexture: '/textures/studio/tvfront_filmikedytowaniezdjec_painted.webp',
         thumbnail: null,
-        url: 'https://www.youtube.com/watch?v=WQTOD7uXHNY&t=10s',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-10-11',
         views: '121',
         duration: '7:45',
@@ -63,10 +63,10 @@ const RAW_CONTENT_DATA = [
     {
         id: 'yt-003',
         platform: 'youtube',
-        title: 'React Three Fiber Crash Course',
-        description: 'Everything you need to know to get started with 3D in React.',
+        title: 'Cours intensif React Three Fiber',
+        description: 'Tout ce qu\'il faut savoir pour intégrer de la 3D interactive dans vos applications React.',
         thumbnail: null,
-        url: 'https://www.youtube.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-12-28',
         views: '2.4K',
         duration: '22:10',
@@ -74,10 +74,10 @@ const RAW_CONTENT_DATA = [
     {
         id: 'yt-004',
         platform: 'youtube',
-        title: 'Shaders for Beginners',
-        description: 'Introduction to GLSL shaders in WebGL and Three.js.',
+        title: 'Introduction aux Shaders GLSL',
+        description: 'Débutez avec l\'écriture de shaders personnalisés pour optimiser vos rendus WebGL.',
         thumbnail: null,
-        url: 'https://www.youtube.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-12-15',
         views: '1.8K',
         duration: '18:33',
@@ -85,10 +85,10 @@ const RAW_CONTENT_DATA = [
     {
         id: 'yt-005',
         platform: 'youtube',
-        title: 'GSAP + Three.js Integration',
-        description: 'How to animate 3D objects with GSAP ScrollTrigger.',
+        title: 'Intégration GSAP et Three.js',
+        description: 'Animez vos scènes 3D de façon fluide en exploitant les triggers de défilement.',
         thumbnail: null,
-        url: 'https://www.youtube.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-12-01',
         views: '3.1K',
         duration: '20:15',
@@ -96,10 +96,10 @@ const RAW_CONTENT_DATA = [
     {
         id: 'yt-006',
         platform: 'youtube',
-        title: 'Building Interactive 3D Scenes',
-        description: 'Raycasting, hover effects, and click interactions in Three.js.',
+        title: 'Création de scènes 3D interactives',
+        description: 'Gestion du raycasting, des survols et des interactions utilisateur en 3D.',
         thumbnail: null,
-        url: 'https://www.youtube.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-11-20',
         views: '2.8K',
         duration: '25:00',
@@ -107,10 +107,10 @@ const RAW_CONTENT_DATA = [
     {
         id: 'yt-007',
         platform: 'youtube',
-        title: 'WebGL Performance Deep Dive',
-        description: 'Optimizing draw calls, geometry instancing, and more.',
+        title: 'Optimisation des performances WebGL',
+        description: 'Techniques avancées : réduction des draw calls, instanciation et compression d\'assets.',
         thumbnail: null,
-        url: 'https://www.youtube.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-11-10',
         views: '1.5K',
         duration: '30:22',
@@ -118,10 +118,10 @@ const RAW_CONTENT_DATA = [
     {
         id: 'yt-008',
         platform: 'youtube',
-        title: 'Procedural Textures Tutorial',
-        description: 'Creating textures with noise and math functions.',
+        title: 'Tutoriel Textures Procédurales',
+        description: 'Générez vos propres textures dynamiques en utilisant le bruit mathématique de Three.js.',
         thumbnail: null,
-        url: 'https://www.youtube.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-10-28',
         views: '1.9K',
         duration: '18:45',
@@ -131,82 +131,82 @@ const RAW_CONTENT_DATA = [
     {
         id: 'blog-001',
         platform: 'blog',
-        title: 'Double Site of the Day confirmed! 🏆🏆',
-        description: 'You\'ve probably noticed I\'ve been sharing a bunch of SOTD certificates on my stories lately. Yes, it\'s true—the YOUNG MULTI project officially scored a "double" and got recognized on the international stage...',
+        title: 'Double récompense Site of the Day ! 🏆🏆',
+        description: 'Hakkilo XR est fier d\'annoncer que son projet a été doublement primé à l\'international pour son excellence visuelle et technique.',
         frontTexture: '/textures/studio/monitorfront_postnafbdoublewinner.webp',
         paintedFrontTexture: '/textures/studio/monitorfront_postnafbdoublewinner_painted.webp',
         thumbnail: null,
-        url: 'https://www.facebook.com/tomasz.szmajda.58/posts/pfbid0TmvbFrc9ASYBQHpv3fcz5gM9WZrgrLMzZFbbtSFySmzQNickLRNh6ubu388D7hHXl?rdid=nWrKXJXR8EqibqvZ',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2026-01-08',
         readTime: '5 min',
     },
     {
         id: 'blog-002',
         platform: 'blog',
-        title: 'The Hand-Drawn Aesthetic',
-        description: 'How I achieved a sketch-like visual style using shaders.',
+        title: 'L\'esthétique du dessin à la main',
+        description: 'Comment nous avons créé un style visuel esquissé unique grâce aux shaders personnalisés.',
         thumbnail: null,
-        url: 'https://www.facebook.com/tomasz.szmajda.58',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-12-20',
         readTime: '8 min',
     },
     {
         id: 'blog-003',
         platform: 'blog',
-        title: 'Optimizing 3D for the Web',
-        description: 'Performance tips for smooth 60fps 3D experiences.',
+        title: 'Optimiser la 3D pour le Web',
+        description: 'Astuces clés pour maintenir un rendu à 60 images par seconde en toutes circonstances.',
         thumbnail: null,
-        url: 'https://www.facebook.com/tomasz.szmajda.58',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-12-10',
         readTime: '6 min',
     },
     {
         id: 'blog-004',
         platform: 'blog',
-        title: 'Creative Coding Journey',
-        description: 'My path from traditional dev to creative development.',
+        title: 'Le parcours du Creative Coding',
+        description: 'Notre transition du développement web traditionnel vers des expériences interactives immersives.',
         thumbnail: null,
-        url: 'https://www.facebook.com/tomasz.szmajda.58',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-11-25',
         readTime: '10 min',
     },
     {
         id: 'blog-005',
         platform: 'blog',
-        title: 'The Future of Web Experiences',
-        description: 'Where I think interactive web is heading.',
+        title: 'L\'avenir des expériences Web',
+        description: 'Analyse des tendances futures de la 3D interactive et de la réalité mixte sur le web.',
         thumbnail: null,
-        url: 'https://www.facebook.com/tomasz.szmajda.58',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-11-15',
         readTime: '7 min',
     },
     {
         id: 'blog-006',
         platform: 'blog',
-        title: 'Design Systems for 3D',
-        description: 'Creating consistent 3D component libraries.',
+        title: 'Design Systems pour la 3D',
+        description: 'Comment structurer une bibliothèque cohérente de composants 3D réutilisables.',
         thumbnail: null,
-        url: 'https://www.facebook.com/tomasz.szmajda.58',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-11-01',
         readTime: '12 min',
     },
     {
         id: 'blog-007',
         platform: 'blog',
-        title: 'Accessibility in 3D Web',
-        description: 'Making immersive experiences accessible to everyone.',
+        title: 'L\'accessibilité dans le Web 3D',
+        description: 'Conception inclusive et outils d\'accessibilité pour les interfaces en trois dimensions.',
         thumbnail: null,
-        url: 'https://www.facebook.com/tomasz.szmajda.58',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-10-20',
         readTime: '9 min',
     },
     {
         id: 'blog-008',
         platform: 'blog',
-        title: 'Audio in Web Experiences',
-        description: 'Adding spatial audio to enhance immersion.',
+        title: 'L\'audio spatialisé sur le Web',
+        description: 'Utiliser l\'audio directionnel pour enrichir l\'immersion sensorielle de vos scènes.',
         thumbnail: null,
-        url: 'https://www.facebook.com/tomasz.szmajda.58',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-10-10',
         readTime: '6 min',
     },
@@ -215,12 +215,12 @@ const RAW_CONTENT_DATA = [
     {
         id: 'tt-001',
         platform: 'tiktok',
-        title: 'Zaobserwuj mnie na TikToku! ✨',
-        description: 'Dzielę się tam wskazówkami z designu, kodowania i nie tylko.',
+        title: 'Suivez Hakkilo XR sur les réseaux ! ✨',
+        description: 'Retrouvez toutes nos astuces de design, de modélisation 3D et de codage créatif.',
         frontTexture: '/textures/studio/phonefront_followmeontiktok.webp',
         paintedFrontTexture: '/textures/studio/phonefront_followmeontiktok_painted.webp',
         thumbnail: null,
-        url: 'https://www.tiktok.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2026-01-09',
         views: '15.2K',
         likes: '1.2K',
@@ -228,10 +228,10 @@ const RAW_CONTENT_DATA = [
     {
         id: 'tt-002',
         platform: 'tiktok',
-        title: 'Coding a door animation 🚪',
-        description: 'POV: You open a door in Three.js',
+        title: 'Coder l\'ouverture d\'une porte 🚪',
+        description: 'POV : L\'animation fluide d\'une entrée 3D sous Three.js',
         thumbnail: null,
-        url: 'https://www.tiktok.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2026-01-03',
         views: '8.5K',
         likes: '756',
@@ -239,10 +239,10 @@ const RAW_CONTENT_DATA = [
     {
         id: 'tt-003',
         platform: 'tiktok',
-        title: 'When the shader finally works 🎉',
-        description: 'The satisfaction of debugging shaders',
+        title: 'Quand le shader fonctionne enfin 🎉',
+        description: 'La satisfaction absolue après le débuggage de matrices GLSL',
         thumbnail: null,
-        url: 'https://www.tiktok.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-12-25',
         views: '22.1K',
         likes: '3.4K',
@@ -250,10 +250,10 @@ const RAW_CONTENT_DATA = [
     {
         id: 'tt-004',
         platform: 'tiktok',
-        title: 'Day in the life: WebGL Dev',
-        description: 'What I do as a creative developer',
+        title: 'Une journée avec l\'équipe WebGL',
+        description: 'Découvrez le quotidien de nos développeurs 3D',
         thumbnail: null,
-        url: 'https://www.tiktok.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-12-18',
         views: '12.3K',
         likes: '1.1K',
@@ -261,10 +261,10 @@ const RAW_CONTENT_DATA = [
     {
         id: 'tt-005',
         platform: 'tiktok',
-        title: 'React vs Three.js POV 😅',
-        description: 'The struggle is real',
+        title: 'Intégration React et Three.js 😅',
+        description: 'Quand le cycle de vie de React rencontre le rendu 3D',
         thumbnail: null,
-        url: 'https://www.tiktok.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-12-12',
         views: '45.2K',
         likes: '5.8K',
@@ -272,10 +272,10 @@ const RAW_CONTENT_DATA = [
     {
         id: 'tt-006',
         platform: 'tiktok',
-        title: 'Making a 3D button 🔘',
-        description: '30 seconds of pure satisfaction',
+        title: 'Créer un bouton en 3D interactif 🔘',
+        description: 'Intégration de micro-animations sur un bouton R3F',
         thumbnail: null,
-        url: 'https://www.tiktok.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-12-05',
         views: '18.7K',
         likes: '2.1K',
@@ -283,10 +283,10 @@ const RAW_CONTENT_DATA = [
     {
         id: 'tt-007',
         platform: 'tiktok',
-        title: 'This shader took 3 hours 💀',
-        description: 'Was it worth it? Absolutely.',
+        title: 'Ce shader a nécessité 3 heures de dev 💀',
+        description: 'Mais le résultat en valait largement la peine !',
         thumbnail: null,
-        url: 'https://www.tiktok.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-11-28',
         views: '33.4K',
         likes: '4.2K',
@@ -294,10 +294,10 @@ const RAW_CONTENT_DATA = [
     {
         id: 'tt-008',
         platform: 'tiktok',
-        title: 'Hover effects compilation ✨',
-        description: 'My favorite micro-interactions',
+        title: 'Compilation d\'effets de survol ✨',
+        description: 'Nos micro-interactions favorites pour wower l\'utilisateur',
         thumbnail: null,
-        url: 'https://www.tiktok.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-11-20',
         views: '28.9K',
         likes: '3.6K',
@@ -305,10 +305,10 @@ const RAW_CONTENT_DATA = [
     {
         id: 'tt-009',
         platform: 'tiktok',
-        title: 'Loading screen ideas 🔄',
-        description: 'Creative preloader concepts',
+        title: 'Concepts d\'écrans de chargement 🔄',
+        description: 'Quelques préchargeurs 3D originaux pour vos applications',
         thumbnail: null,
-        url: 'https://www.tiktok.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-11-15',
         views: '19.3K',
         likes: '2.4K',
@@ -316,10 +316,10 @@ const RAW_CONTENT_DATA = [
     {
         id: 'tt-010',
         platform: 'tiktok',
-        title: 'Cursor goes brrr 🖱️',
-        description: 'Custom cursor madness',
+        title: 'Personnalisation du curseur 🖱️',
+        description: 'Ajout d\'une physique de suivi sur le pointeur de souris',
         thumbnail: null,
-        url: 'https://www.tiktok.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-11-08',
         views: '41.2K',
         likes: '5.1K',
@@ -327,10 +327,10 @@ const RAW_CONTENT_DATA = [
     {
         id: 'tt-011',
         platform: 'tiktok',
-        title: 'Parallax scrolling magic 🪄',
-        description: 'Simple but effective',
+        title: 'Effet de défilement parallaxe 🪄',
+        description: 'Créer une sensation de profondeur lors du scroll',
         thumbnail: null,
-        url: 'https://www.tiktok.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-11-01',
         views: '25.6K',
         likes: '3.0K',
@@ -338,10 +338,10 @@ const RAW_CONTENT_DATA = [
     {
         id: 'tt-012',
         platform: 'tiktok',
-        title: 'Text animation inspo 📝',
-        description: 'Typography that moves',
+        title: 'Animations de texte en 3D 📝',
+        description: 'Mettre en valeur la typographie de façon animée',
         thumbnail: null,
-        url: 'https://www.tiktok.com/@itompoland',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
         date: '2025-10-25',
         views: '31.8K',
         likes: '4.0K',

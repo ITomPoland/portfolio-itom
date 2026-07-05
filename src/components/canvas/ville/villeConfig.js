@@ -58,3 +58,15 @@ export const VILLE_FOG_FAR = 210;
 
 // Asset base — agy copies the prototype's GLB/textures here (task 013).
 export const VILLE_ASSET_BASE = '/ville-assets';
+
+// Guided tour (mode 'guide' = DEFAULT): a CatmullRom spline through the city, advanced by
+// scroll (desktop) / vertical swipe (mobile). 18 waypoints at eye height, faithful to the
+// prototype — circles the central plaza and passes every building. Look-around is a damped offset.
+export const VILLE_TOUR_WAYPOINTS = [
+    [0, 1.7, 52], [0, 1.7, 32], [-6, 1.7, 23], [-19, 1.7, 19], [-21, 1.7, 6], [-21, 1.7, -8],
+    [-18, 1.7, -18], [-8, 1.7, -22], [-3, 1.7, -30], [0, 1.7, -37], [3, 1.7, -30], [8, 1.7, -22],
+    [19, 1.7, -19], [21, 1.7, -6], [21, 1.7, 10], [19, 1.7, 19], [8, 1.7, 22], [0, 1.7, 30],
+];
+export const VILLE_TOUR_TENSION = 0.3;
+export const VILLE_TOUR_SCROLL_SENS = 0.00012; // wheel deltaY → path progress
+export const VILLE_TOUR_SWIPE_SENS = 1.1;       // touch vertical-drag fraction → path progress

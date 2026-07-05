@@ -37,7 +37,7 @@ const NIGHT_SUN = new THREE.Color('#39508f');
  */
 export default function MiniVille() {
     const { scene, camera } = useThree();
-    const { markEntered, teleportTo, isTeleporting, isInRoom } = useScene();
+    const { markEntered, teleportTo, isTeleporting, isInRoom, villeNavMode } = useScene();
 
     const textures = useMemo(() => makeVilleTextures(), []);
     const nightRef = useRef(villeIsNightNow() ? 1 : 0);
@@ -45,7 +45,7 @@ export default function MiniVille() {
     const sunRef = useRef();
     const hemiRef = useRef();
 
-    useVilleControls({ enabled: !isTeleporting && !isInRoom, collidersRef });
+    useVilleControls({ enabled: !isTeleporting && !isInRoom, mode: villeNavMode, collidersRef });
 
     // Enter the city immediately + take over camera far / fog / sky, and build colliders.
     useEffect(() => {

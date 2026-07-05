@@ -15,6 +15,7 @@ export const SceneProvider = ({ children }) => {
     const [hasEntered, setHasEntered] = useState(false);  // Has user clicked entrance doors?
     const [exitRequested, setExitRequested] = useState(false); // Signal to request exit from room
     const [overlayContent, setOverlayContent] = useState(null); // Content for overlay (Studio monitor etc)
+    const [villeNavMode, setVilleNavMode] = useState('guide'); // 'guide' (scroll tour, default) | 'libre' (free walk)
 
     // Teleportation states
     const [teleportTarget, setTeleportTarget] = useState(null); // Room ID to teleport to
@@ -65,6 +66,10 @@ export const SceneProvider = ({ children }) => {
 
     const closeOverlay = useCallback(() => {
         setOverlayContent(null);
+    }, []);
+
+    const toggleVilleNavMode = useCallback(() => {
+        setVilleNavMode((m) => (m === 'guide' ? 'libre' : 'guide'));
     }, []);
 
     // Teleportation functions
@@ -143,6 +148,9 @@ export const SceneProvider = ({ children }) => {
         markEntered,
         openOverlay,    // Exposed
         closeOverlay,   // Exposed
+        villeNavMode,
+        setVilleNavMode,
+        toggleVilleNavMode,
         isInRoom: currentRoom !== null,
         // Teleportation
         teleportTarget,
@@ -169,6 +177,9 @@ export const SceneProvider = ({ children }) => {
         markEntered,
         openOverlay,
         closeOverlay,
+        villeNavMode,
+        setVilleNavMode,
+        toggleVilleNavMode,
         // Teleportation dependencies
         teleportTarget,
         isTeleporting,

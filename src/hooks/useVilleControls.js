@@ -11,44 +11,66 @@ import {
     VILLE_LOOK_SENSITIVITY,
     VILLE_PITCH_SENSITIVITY,
     VILLE_PITCH_CLAMP,
+    VILLE_TOUR_WAYPOINTS,
+    VILLE_TOUR_TENSION,
+    VILLE_TOUR_SCROLL_SENS,
+    VILLE_TOUR_SWIPE_SENS,
 } from '../components/canvas/ville/villeConfig';
 
-// Drag this many px from the touch-start = full joystick input.
-const JOYSTICK_RADIUS = 46;
+const JOYSTICK_RADIUS = 46;      // px from touch-start = full joystick input (libre mode)
+const GUIDE_YAW_CLAMP = 1.6;     // rad — look-around limits in guided mode
+const GUIDE_PITCH_CLAMP = 0.9;
+
+// Guided-tour spline, built once from the config waypoints (faithful to the prototype).
+const TOUR_PATH = new THREE.CatmullRomCurve3(
+    VILLE_TOUR_WAYPOINTS.map((w) => new THREE.Vector3(w[0], w[1], w[2])),
+    false,
+    'catmullrom',
+    VILLE_TOUR_TENSION,
+);
 
 /**
- * useVilleControls — GTA-style free-walk controls for the Mini Ville, MOBILE-FIRST.
+ * useVilleControls — two navigation modes for the Mini Ville, MOBILE-FIRST.
  *
- * Desktop:
- *   - Forward / back : Z, W, ArrowUp / S, ArrowDown
- *   - Turn (yaw)     : Q, A, ArrowLeft / D, ArrowRight        (FIX: Q/D turn, they no longer strafe)
- *   - Look           : mouse drag
- * Mobile (touch, split screen):
- *   - LEFT half  = move joystick (drag up/down = forward/back, left/right = turn — no strafe)
- *   - RIGHT half = look-drag (yaw + pitch)
+ * mode='guide' (DEFAULT): guided scroll tour. The camera follows a CatmullRom spline through the
+ *   city; you advance with the wheel (desktop) or a vertical swipe (mobile), and glance around with
+ *   a drag (a damped offset that springs back to the path-forward direction).
+ * mode='libre': free walk. Z/W/S + Q/A/D/arrows (Q/D = turn, not strafe) on desktop; on mobile the
+ *   left half is a move joystick and the right half is look-drag.
  *
  * Invariant preserved: when `enabled` is false (inside a building / mid-teleport) the hook does NOT
- * touch the camera, so DoorSection / TeleportRoom keep the room-entry camera. Position/yaw/pitch
- * persist while disabled → leaving a room drops you back where you stood.
+ * touch the camera, so DoorSection / TeleportRoom keep the room-entry camera. Guide progress (pathT)
+ * and free-walk position persist while disabled → leaving a room resumes where you were.
  */
-export default function useVilleControls({ enabled = true, collidersRef = null } = {}) {
+export default function useVilleControls({ enabled = true, mode = 'guide', collidersRef = null } = {}) {
     const { camera, gl } = useThree();
 
+    const enabledRef = useRef(enabled);
+    const modeRef = useRef(mode);
+    const prevMode = useRef(mode);
+    enabledRef.current = enabled;
+    modeRef.current = mode;
+
+    // Free-walk state.
     const keys = useRef({});
     const yaw = useRef(VILLE_SPAWN.yaw);
     const pitch = useRef(VILLE_SPAWN.pitch);
     const pos = useRef(new THREE.Vector3(...VILLE_SPAWN.position));
-    const enabledRef = useRef(enabled);
-    const wasEnabled = useRef(false);
     const tmpDir = useRef(new THREE.Vector3());
+    const tmpFwd = useRef(new THREE.Vector3());
 
-    // Desktop mouse drag-look.
+    // Guided-tour state.
+    const pathT = useRef(0);
+    const pathTTarget = useRef(0);
+    const lookYawOff = useRef(0);
+    const lookPitchOff = useRef(0);
+    const tmpP = useRef(new THREE.Vector3());
+    const tmpAhead = useRef(new THREE.Vector3());
+
+    // Shared pointer state.
     const mouseDrag = useRef({ active: false, x: 0, y: 0 });
-    // Touch: left-half move joystick (x/y normalized -1..1), right-half look (last client pos).
-    const touchMove = useRef({ id: null, ox: 0, oy: 0, x: 0, y: 0 });
-    const touchLook = useRef({ id: null, x: 0, y: 0 });
-
-    enabledRef.current = enabled;
+    const touchMove = useRef({ id: null, ox: 0, oy: 0, x: 0, y: 0 }); // libre joystick, normalized
+    const touchLook = useRef({ id: null, x: 0, y: 0 });               // guide/libre look-drag
 
     useEffect(() => {
         const dom = gl.domElement;
@@ -62,18 +84,43 @@ export default function useVilleControls({ enabled = true, collidersRef = null }
         };
         const onKeyUp = (e) => { keys.current[e.code] = false; };
 
-        const applyLook = (dxPx, dyPx) => {
-            yaw.current -= (dxPx / window.innerWidth) * VILLE_LOOK_SENSITIVITY;
-            pitch.current = THREE.MathUtils.clamp(
-                pitch.current - (dyPx / window.innerHeight) * VILLE_PITCH_SENSITIVITY,
-                -VILLE_PITCH_CLAMP,
-                VILLE_PITCH_CLAMP,
-            );
+        // Wheel advances the guided tour (desktop).
+        const onWheel = (e) => {
+            if (!enabledRef.current || modeRef.current !== 'guide') return;
+            pathTTarget.current = THREE.MathUtils.clamp(pathTTarget.current + e.deltaY * VILLE_TOUR_SCROLL_SENS, 0, 1);
+        };
+
+        // A drag delta, interpreted per mode + input type.
+        const applyDrag = (dxPx, dyPx, isTouch) => {
+            if (modeRef.current === 'guide') {
+                lookYawOff.current = THREE.MathUtils.clamp(
+                    lookYawOff.current - (dxPx / window.innerWidth) * VILLE_LOOK_SENSITIVITY,
+                    -GUIDE_YAW_CLAMP, GUIDE_YAW_CLAMP,
+                );
+                if (isTouch) {
+                    // vertical swipe advances the tour (drag up = forward)
+                    pathTTarget.current = THREE.MathUtils.clamp(
+                        pathTTarget.current - (dyPx / window.innerHeight) * VILLE_TOUR_SWIPE_SENS, 0, 1,
+                    );
+                } else {
+                    lookPitchOff.current = THREE.MathUtils.clamp(
+                        lookPitchOff.current - (dyPx / window.innerHeight) * VILLE_PITCH_SENSITIVITY,
+                        -GUIDE_PITCH_CLAMP, GUIDE_PITCH_CLAMP,
+                    );
+                }
+            } else {
+                yaw.current -= (dxPx / window.innerWidth) * VILLE_LOOK_SENSITIVITY;
+                pitch.current = THREE.MathUtils.clamp(
+                    pitch.current - (dyPx / window.innerHeight) * VILLE_PITCH_SENSITIVITY,
+                    -VILLE_PITCH_CLAMP, VILLE_PITCH_CLAMP,
+                );
+            }
         };
 
         const onPointerDown = (e) => {
             if (e.pointerType === 'touch') {
-                if (e.clientX < window.innerWidth / 2) {
+                // libre + left half = move joystick; everything else = look/advance drag
+                if (modeRef.current === 'libre' && e.clientX < window.innerWidth / 2) {
                     touchMove.current = { id: e.pointerId, ox: e.clientX, oy: e.clientY, x: 0, y: 0 };
                 } else {
                     touchLook.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
@@ -89,12 +136,12 @@ export default function useVilleControls({ enabled = true, collidersRef = null }
                     touchMove.current.x = THREE.MathUtils.clamp((e.clientX - touchMove.current.ox) / JOYSTICK_RADIUS, -1, 1);
                     touchMove.current.y = THREE.MathUtils.clamp((e.clientY - touchMove.current.oy) / JOYSTICK_RADIUS, -1, 1);
                 } else if (e.pointerId === touchLook.current.id) {
-                    applyLook(e.clientX - touchLook.current.x, e.clientY - touchLook.current.y);
+                    applyDrag(e.clientX - touchLook.current.x, e.clientY - touchLook.current.y, true);
                     touchLook.current.x = e.clientX;
                     touchLook.current.y = e.clientY;
                 }
             } else if (mouseDrag.current.active) {
-                applyLook(e.clientX - mouseDrag.current.x, e.clientY - mouseDrag.current.y);
+                applyDrag(e.clientX - mouseDrag.current.x, e.clientY - mouseDrag.current.y, false);
                 mouseDrag.current.x = e.clientX;
                 mouseDrag.current.y = e.clientY;
             }
@@ -113,6 +160,7 @@ export default function useVilleControls({ enabled = true, collidersRef = null }
 
         window.addEventListener('keydown', onKeyDown);
         window.addEventListener('keyup', onKeyUp);
+        window.addEventListener('wheel', onWheel, { passive: true });
         dom.addEventListener('pointerdown', onPointerDown);
         window.addEventListener('pointermove', onPointerMove);
         window.addEventListener('pointerup', onPointerUp);
@@ -122,6 +170,7 @@ export default function useVilleControls({ enabled = true, collidersRef = null }
             dom.style.touchAction = prevTouchAction;
             window.removeEventListener('keydown', onKeyDown);
             window.removeEventListener('keyup', onKeyUp);
+            window.removeEventListener('wheel', onWheel);
             dom.removeEventListener('pointerdown', onPointerDown);
             window.removeEventListener('pointermove', onPointerMove);
             window.removeEventListener('pointerup', onPointerUp);
@@ -132,19 +181,45 @@ export default function useVilleControls({ enabled = true, collidersRef = null }
 
     useFrame((_, delta) => {
         camera.rotation.order = 'YXZ';
+        if (!enabledRef.current) return;
 
-        if (!enabledRef.current) { wasEnabled.current = false; return; }
-        if (!wasEnabled.current) { camera.position.copy(pos.current); wasEnabled.current = true; }
-
-        const k = keys.current;
         const dt = Math.min(delta, 0.05);
+        const m = modeRef.current;
 
-        // --- Turn (yaw): keyboard + touch joystick X. No strafe. ---
+        // On switch INTO free-walk, seed yaw/pitch/pos from the current camera (no jump).
+        if (prevMode.current !== m) {
+            if (m === 'libre') {
+                const d = tmpFwd.current;
+                camera.getWorldDirection(d);
+                yaw.current = Math.atan2(-d.x, -d.z) + Math.PI;
+                pitch.current = Math.asin(THREE.MathUtils.clamp(d.y, -1, 1));
+                pos.current.copy(camera.position);
+                pos.current.y = VILLE_EYE_Y;
+            }
+            prevMode.current = m;
+        }
+
+        if (m === 'guide') {
+            pathT.current += (pathTTarget.current - pathT.current) * Math.min(1, dt * 3.5);
+            const p = TOUR_PATH.getPointAt(THREE.MathUtils.clamp(pathT.current, 0, 1), tmpP.current);
+            const ahead = TOUR_PATH.getPointAt(Math.min(pathT.current + 0.012, 1), tmpAhead.current);
+            const baseYaw = Math.atan2(-(ahead.x - p.x), -(ahead.z - p.z)) + Math.PI;
+            // Look-around springs back toward the path-forward direction.
+            lookYawOff.current *= (1 - Math.min(1, dt * 0.8));
+            lookPitchOff.current *= (1 - Math.min(1, dt * 0.8));
+            camera.position.copy(p);
+            camera.rotation.y = baseYaw + lookYawOff.current;
+            camera.rotation.x = lookPitchOff.current;
+            camera.rotation.z = 0;
+            return;
+        }
+
+        // --- Free walk ---
+        const k = keys.current;
         let turn = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyQ || k.KeyA || k.ArrowLeft ? 1 : 0);
         turn = THREE.MathUtils.clamp(turn + touchMove.current.x, -1, 1);
         if (turn) yaw.current -= turn * VILLE_TURN_SPEED * dt;
 
-        // --- Forward / back: keyboard + touch joystick Y (drag up = forward). ---
         let fwd = (k.KeyW || k.KeyZ || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0);
         fwd = THREE.MathUtils.clamp(fwd - touchMove.current.y, -1, 1);
         if (fwd) {
@@ -156,7 +231,6 @@ export default function useVilleControls({ enabled = true, collidersRef = null }
         pos.current.x = THREE.MathUtils.clamp(pos.current.x, -VILLE_BOUNDS, VILLE_BOUNDS);
         pos.current.z = THREE.MathUtils.clamp(pos.current.z, -VILLE_BOUNDS, VILLE_BOUNDS);
 
-        // Sphere-collider push-back (buildings/decor register { x, z, r }).
         const colliders = collidersRef?.current;
         if (colliders) {
             for (const c of colliders) {
@@ -171,21 +245,9 @@ export default function useVilleControls({ enabled = true, collidersRef = null }
         }
 
         pos.current.y = VILLE_EYE_Y;
-
         camera.position.copy(pos.current);
         camera.rotation.y = yaw.current;
         camera.rotation.x = pitch.current;
         camera.rotation.z = 0;
     });
-
-    return {
-        getYaw: () => yaw.current,
-        getPosition: () => pos.current,
-        resetToSpawn: () => {
-            pos.current.set(...VILLE_SPAWN.position);
-            yaw.current = VILLE_SPAWN.yaw;
-            pitch.current = VILLE_SPAWN.pitch;
-            wasEnabled.current = false;
-        },
-    };
 }

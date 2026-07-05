@@ -10,6 +10,8 @@ import { initAudio } from './utils/audioManager';
 import { PerformanceProvider, usePerformance } from './context/PerformanceContext';
 import { SceneProvider } from './context/SceneContext';
 import NavigationUI from './components/ui/NavigationUI';
+import VilleNavToggle from './components/ui/VilleNavToggle';
+import { VILLE_MODE } from './components/canvas/ville/villeConfig';
 import GlobalOverlay from './components/ui/GlobalOverlay';
 import ScreenReaderOverlay from './components/ui/ScreenReaderOverlay';
 import posthog from 'posthog-js';
@@ -179,6 +181,7 @@ function AppContent() {
           {isLoaded && (
             <>
               <NavigationUI />
+              {VILLE_MODE && <VilleNavToggle />}
               <GlobalOverlay />
               <PaperTransition />
               <ScreenReaderOverlay />

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect, useCallback } from 'react';
+import { useMemo, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import useVilleControls from '../../../hooks/useVilleControls';
@@ -6,6 +6,8 @@ import { useScene } from '../../../context/SceneContext';
 import { makeVilleTextures } from './villeTextures';
 import VilleGround from './VilleGround';
 import VilleBuildings from './VilleBuildings';
+import VilleDecor from './VilleDecor';
+import VilleScenery from './VilleScenery';
 import {
     VILLE_BUILDINGS,
     VILLE_CAMERA_FAR,
@@ -95,8 +97,16 @@ export default function MiniVille() {
             <hemisphereLight ref={hemiRef} args={['#dfeaff', '#8a7a5c', 0.85]} />
             <directionalLight ref={sunRef} position={[38, 55, 22]} intensity={2.2} color="#fff2dc" />
 
+            {/* Far horizon: grass / mountains / skyline / stars (agy 018) */}
+            <VilleScenery textures={textures} nightRef={nightRef} />
+
             {/* Ground: full terrain / plaza / streets / sidewalks / markings (agy 015) */}
             <VilleGround textures={textures} nightRef={nightRef} />
+
+            {/* Decor: surrounding buildings, trees, café, street lamps + night lights (agy 017) */}
+            <Suspense fallback={null}>
+                <VilleDecor nightRef={nightRef} />
+            </Suspense>
 
             {/* Detailed hero buildings + clickable doors (agy 016) */}
             <VilleBuildings textures={textures} nightRef={nightRef} onDoorEnter={handleDoor} />

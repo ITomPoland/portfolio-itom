@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import useVilleControls from '../../../hooks/useVilleControls';
 import { useScene } from '../../../context/SceneContext';
 import { makeVilleTextures } from './villeTextures';
+import VilleGround from './VilleGround';
 import {
     VILLE_BUILDINGS,
     VILLE_CAMERA_FAR,
@@ -93,15 +94,8 @@ export default function MiniVille() {
             <hemisphereLight ref={hemiRef} args={['#dfeaff', '#8a7a5c', 0.85]} />
             <directionalLight ref={sunRef} position={[38, 55, 22]} intensity={2.2} color="#fff2dc" />
 
-            {/* Ground (placeholder — agy 015 replaces with terrain/plaza/streets/decor) */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]}>
-                <planeGeometry args={[560, 560]} />
-                <meshStandardMaterial map={textures.texTerre} roughness={1} />
-            </mesh>
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
-                <circleGeometry args={[19, 48]} />
-                <meshStandardMaterial map={textures.texPaves} roughness={0.95} />
-            </mesh>
+            {/* Ground: full terrain / plaza / streets / sidewalks / markings (agy 015) */}
+            <VilleGround textures={textures} nightRef={nightRef} />
 
             {/* Building placeholders + door triggers (agy 016 replaces with detailed silhouettes) */}
             {VILLE_BUILDINGS.map((b) => (

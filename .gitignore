@@ -27,3 +27,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Claude Design export — reference/spec, kept local, not shipped
+prototype/
+# stray large local download
+/download

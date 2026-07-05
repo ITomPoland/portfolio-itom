@@ -10,6 +10,8 @@ import PostProcessing from './PostProcessing';
 import useInfiniteCamera from '../../hooks/useInfiniteCamera';
 import SignSystem from './entrance/SignSystem';
 import { useScene } from '../../context/SceneContext';
+import { VILLE_MODE } from './ville/villeConfig';
+import MiniVille from './ville/MiniVille';
 
 // Positioning:
 // - Segment -1's SegmentDoors are at Z=15
@@ -39,8 +41,8 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
         scrollSpeed: 0.025,
         parallaxIntensity: 0.4,
         smoothing: 0.06,
-        scrollEnabled: hasEntered && !isTeleporting && !isInRoom,
-        parallaxEnabled: hasEntered && !isTeleporting && !isInRoom
+        scrollEnabled: !VILLE_MODE && hasEntered && !isTeleporting && !isInRoom,
+        parallaxEnabled: !VILLE_MODE && hasEntered && !isTeleporting && !isInRoom
     });
 
     // NOTE: Camera override is now managed directly by DoorSection.jsx
@@ -87,31 +89,28 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
             /> */}
             {/* <directionalLight position={[-5, 8, -10]} intensity={0.4} color="#ffffff" /> */}
 
-            {/* === EMPTY CORRIDOR (provides context during entrance) === */}
-            {!hasEntered && (
-                <EmptyCorridor camera={camera} />
-            )}
+            {/* === MINI VILLE (open-city exterior — replaces the corridor when VILLE_MODE) === */}
+            {VILLE_MODE && <MiniVille />}
 
-            {/* === ENTRANCE DOORS (visible until entered) === */}
-            {!hasEntered && (
-                <EntranceDoors
-                    position={[0, 0, ENTRANCE_DOORS_Z]}
-                    onComplete={handleEntranceComplete}
-                />
+            {/* === INFINITE CORRIDOR EXTERIOR (only when not in city mode) === */}
+            {!VILLE_MODE && (
+                <>
+                    {!hasEntered && <EmptyCorridor camera={camera} />}
+                    {!hasEntered && (
+                        <EntranceDoors
+                            position={[0, 0, ENTRANCE_DOORS_Z]}
+                            onComplete={handleEntranceComplete}
+                        />
+                    )}
+                    {!hasEntered && <SignSystem position={[0, 0, ENTRANCE_DOORS_Z]} />}
+                    <InfiniteCorridorManager
+                        onDoorEnter={handleDoorEnter}
+                        hideDoorsForSegments={hasEntered ? [] : [-1]}
+                        clipSegmentNeg1={!hasEntered}
+                        setCameraOverride={setCameraOverride}
+                    />
+                </>
             )}
-
-            {/* Separate SignSystem to avoid fragment nesting issues if any */}
-            {!hasEntered && (
-                <SignSystem position={[0, 0, ENTRANCE_DOORS_Z]} />
-            )}
-
-            {/* === INFINITE CORRIDOR (segment -1 SegmentDoors hidden during entrance) === */}
-            <InfiniteCorridorManager
-                onDoorEnter={handleDoorEnter}
-                hideDoorsForSegments={hasEntered ? [] : [-1]} // Hide segment -1's doors until entered
-                clipSegmentNeg1={!hasEntered} // Clip segment -1 visualization until entered
-                setCameraOverride={setCameraOverride}
-            />
 
             {/* === TELEPORT ROOM (renders room directly during teleportation) === */}
             <TeleportRoom />

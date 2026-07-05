@@ -100,7 +100,7 @@ export default function MiniVille() {
 
             {/* Far horizon: grass / mountains / skyline / stars (agy 018) — isolated so a failure
                 here can't blank the whole city */}
-            <RootErrorBoundary fallback={null}>
+            <RootErrorBoundary label="VilleScenery" fallback={null}>
                 <VilleScenery textures={textures} nightRef={nightRef} />
             </RootErrorBoundary>
 
@@ -108,7 +108,7 @@ export default function MiniVille() {
             <VilleGround textures={textures} nightRef={nightRef} />
 
             {/* Decor: surrounding buildings, trees, café, street lamps + night lights (agy 017) */}
-            <RootErrorBoundary fallback={null}>
+            <RootErrorBoundary label="VilleDecor" fallback={null}>
                 <Suspense fallback={null}>
                     <VilleDecor nightRef={nightRef} />
                 </Suspense>

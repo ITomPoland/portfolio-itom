@@ -19,8 +19,10 @@ export default class RootErrorBoundary extends React.Component {
     }
 
     componentDidCatch(error, info) {
+        // Even when isolated (fallback={null}), the failure is NOT silent: it's logged here with a
+        // label + component stack so you can see exactly what broke and fix it.
         // eslint-disable-next-line no-console
-        console.error('[Hakkilo] Erreur non rattrapée :', error, info?.componentStack);
+        console.error(`[Hakkilo] "${this.props.label || 'app'}" — rendu échoué :`, error, info?.componentStack);
     }
 
     render() {

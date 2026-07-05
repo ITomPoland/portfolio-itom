@@ -55,6 +55,9 @@ export default function useVilleControls({ enabled = true, collidersRef = null }
         const onKeyUp = (e) => { keys.current[e.code] = false; };
         const onPointerDown = (e) => { dragging.current = true; last.current = { x: e.clientX, y: e.clientY }; };
         const onPointerUp = () => { dragging.current = false; };
+        // Focus loss (Alt-Tab, click away): keyup is never delivered, so purge held keys to stop
+        // the camera drifting when focus returns. (Fable audit P3-2.)
+        const onBlur = () => { keys.current = {}; dragging.current = false; };
         const onPointerMove = (e) => {
             if (!dragging.current || !enabledRef.current) return;
             const dx = (e.clientX - last.current.x) / window.innerWidth;
@@ -73,12 +76,14 @@ export default function useVilleControls({ enabled = true, collidersRef = null }
         dom.addEventListener('pointerdown', onPointerDown);
         window.addEventListener('pointerup', onPointerUp);
         window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('blur', onBlur);
         return () => {
             window.removeEventListener('keydown', onKeyDown);
             window.removeEventListener('keyup', onKeyUp);
             dom.removeEventListener('pointerdown', onPointerDown);
             window.removeEventListener('pointerup', onPointerUp);
             window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('blur', onBlur);
         };
     }, [gl]);
 

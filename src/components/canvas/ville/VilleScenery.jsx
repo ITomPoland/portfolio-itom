@@ -257,8 +257,8 @@ export default function VilleScenery({ textures, nightRef }) {
             <instancedMesh ref={skylineRef} args={[skyBoxGeo, null, 52]}>
                 <meshStandardMaterial
                     ref={skyMatRef}
-                    map={textures.texSkyline}
-                    emissiveMap={textures.texSkyline}
+                    map={textures.texSkyline.map}
+                    emissiveMap={textures.texSkyline.emissiveMap}
                     emissive="#ffd9a0"
                     emissiveIntensity={0}
                     roughness={0.9}

@@ -1,33 +1,25 @@
-https://portfolio-itom.pages.dev/*
-  X-Robots-Tag: noindex
-
-https://itomdev.com/*
+/*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
 
-# Cache static assets for 1 year (Performance & SEO Server Score)
-https://itomdev.com/*.js
+# Cache static assets for 1 year (Performance & SEO)
+/*.js
   Cache-Control: public, max-age=31536000, immutable
-
-https://itomdev.com/*.css
+/*.css
   Cache-Control: public, max-age=31536000, immutable
-
-https://itomdev.com/*.webp
+/*.webp
   Cache-Control: public, max-age=31536000, immutable
-
-https://itomdev.com/*.png
+/*.png
   Cache-Control: public, max-age=31536000, immutable
-
-https://itomdev.com/*.ktx2
+/*.ktx2
   Cache-Control: public, max-age=31536000, immutable
-
-https://itomdev.com/*.glb
+/*.glb
   Cache-Control: public, max-age=31536000, immutable
-
-https://itomdev.com/*.mp3
+/*.gltf
   Cache-Control: public, max-age=31536000, immutable
-
-https://itomdev.com/fonts/*
+/*.mp3
+  Cache-Control: public, max-age=31536000, immutable
+/fonts/*
   Cache-Control: public, max-age=31536000, immutable

@@ -5,6 +5,7 @@ import useVilleControls from '../../../hooks/useVilleControls';
 import { useScene } from '../../../context/SceneContext';
 import { makeVilleTextures } from './villeTextures';
 import VilleGround from './VilleGround';
+import VilleBuildings from './VilleBuildings';
 import {
     VILLE_BUILDINGS,
     VILLE_CAMERA_FAR,
@@ -31,8 +32,8 @@ const NIGHT_SUN = new THREE.Color('#39508f');
  *   - teleportTo(roomId) on door click → TeleportRoom / DoorSection keep room-entry ownership,
  *   - buildings without an interior yet (hall/academie) are non-interactive for now.
  *
- * Placeholder geometry (ground + boxes) is intentionally minimal — agy tasks 015/016 replace it
- * with the full terrain and detailed building meshes (both consume makeVilleTextures()).
+ * Geometry lives in VilleGround (terrain/plaza/streets, agy 015) and VilleBuildings (hero
+ * silhouettes + clickable doors, agy 016); both consume makeVilleTextures().
  */
 export default function MiniVille() {
     const { scene, camera } = useThree();
@@ -97,26 +98,8 @@ export default function MiniVille() {
             {/* Ground: full terrain / plaza / streets / sidewalks / markings (agy 015) */}
             <VilleGround textures={textures} nightRef={nightRef} />
 
-            {/* Building placeholders + door triggers (agy 016 replaces with detailed silhouettes) */}
-            {VILLE_BUILDINGS.map((b) => (
-                <group key={b.id} position={b.position} rotation={[0, b.rotationY, 0]}>
-                    <mesh position={[0, 5, 0]}>
-                        <boxGeometry args={[11, 10, 11]} />
-                        <meshStandardMaterial color={b.roomId ? '#b34a2a' : '#3554E8'} roughness={0.85} />
-                    </mesh>
-                    {b.roomId && (
-                        <mesh
-                            position={[0, 1.7, 5.6]}
-                            onClick={(e) => { e.stopPropagation(); handleDoor(b); }}
-                            onPointerOver={() => { document.body.style.cursor = 'pointer'; }}
-                            onPointerOut={() => { document.body.style.cursor = 'default'; }}
-                        >
-                            <boxGeometry args={[2.6, 3.4, 0.5]} />
-                            <meshStandardMaterial color="#121014" emissive="#3554E8" emissiveIntensity={0.5} />
-                        </mesh>
-                    )}
-                </group>
-            ))}
+            {/* Detailed hero buildings + clickable doors (agy 016) */}
+            <VilleBuildings textures={textures} nightRef={nightRef} onDoorEnter={handleDoor} />
         </group>
     );
 }

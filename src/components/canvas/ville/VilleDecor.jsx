@@ -72,7 +72,7 @@ function KenneyBuilding({ file, position, rotationY, heightTarget }) {
  * Celandine plant component loader
  */
 function CelandinePlant({ position, scaleMultiplier, rotationY }) {
-    const { scene } = useGLTF('/ville-assets/models/celandine/celandine_01.bin.glb');
+    const { scene } = useGLTF('/ville-assets/models/celandine/celandine_01_1k.gltf');
 
     const { cloned, localPos, scale } = useMemo(() => {
         const clone = scene.clone(true);
@@ -204,7 +204,7 @@ function ProceduralTree({ x, z, scale, rotationY }) {
  * Detailed Plaza street lamp model
  */
 function PlazaLampModel({ x, z, lampHeadMat }) {
-    const { scene } = useGLTF('/ville-assets/models/street_lamp/street_lamp_02.bin.glb');
+    const { scene } = useGLTF('/ville-assets/models/street_lamp/street_lamp_02_1k.gltf');
 
     const { cloned, localPos, scale, rotY } = useMemo(() => {
         const clone = scene.clone(true);
@@ -480,5 +480,5 @@ useGLTF.preload('/ville-assets/kenney/building-skyscraper-a.glb');
 useGLTF.preload('/ville-assets/kenney/building-skyscraper-c.glb');
 useGLTF.preload('/ville-assets/kenney/detail-parasol-a.glb');
 useGLTF.preload('/ville-assets/kenney/detail-parasol-b.glb');
-useGLTF.preload('/ville-assets/models/street_lamp/street_lamp_02.bin.glb');
-useGLTF.preload('/ville-assets/models/celandine/celandine_01.bin.glb');
+useGLTF.preload('/ville-assets/models/street_lamp/street_lamp_02_1k.gltf');
+useGLTF.preload('/ville-assets/models/celandine/celandine_01_1k.gltf');

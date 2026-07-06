@@ -13,6 +13,7 @@ import { SceneProvider } from './context/SceneContext';
 import NavigationUI from './components/ui/NavigationUI';
 import VilleNavToggle from './components/ui/VilleNavToggle';
 import VilleThemeToggle from './components/ui/VilleThemeToggle';
+import VilleDoorPrompt from './components/ui/VilleDoorPrompt';
 import { VILLE_MODE } from './components/canvas/ville/villeConfig';
 import GlobalOverlay from './components/ui/GlobalOverlay';
 import ScreenReaderOverlay from './components/ui/ScreenReaderOverlay';
@@ -184,6 +185,7 @@ function AppContent() {
               <NavigationUI />
               {VILLE_MODE && <VilleNavToggle />}
               {VILLE_MODE && <VilleThemeToggle />}
+              {VILLE_MODE && <VilleDoorPrompt />}
               <GlobalOverlay />
               <PaperTransition />
               <ScreenReaderOverlay />

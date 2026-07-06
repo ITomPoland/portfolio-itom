@@ -41,13 +41,21 @@ const NIGHT_SUN = new THREE.Color('#39508f');
  */
 export default function MiniVille() {
     const { scene, camera } = useThree();
-    const { markEntered, teleportTo, isTeleporting, isInRoom, villeNavMode, villeTheme } = useScene();
+    const { markEntered, teleportTo, isTeleporting, isInRoom, villeNavMode, villeTheme, setVilleNearDoor } = useScene();
 
     const textures = useMemo(() => makeVilleTextures(), []);
     const nightRef = useRef(villeNightTargetFor(villeTheme));
     const collidersRef = useRef([]);
     const sunRef = useRef();
     const hemiRef = useRef();
+    const doorsRef = useRef(new Map());     // building.id → { building, x, z } (world door pos)
+    const nearDoorIdRef = useRef(null);     // last id pushed to context (avoid per-frame setState)
+
+    // DoorMarkers publish their world position here (walk-in "Entrer" prompt).
+    const registerDoor = useCallback((building, x, z) => {
+        doorsRef.current.set(building.id, { building, x, z });
+        return () => doorsRef.current.delete(building.id);
+    }, []);
 
     useVilleControls({ enabled: !isTeleporting && !isInRoom, mode: villeNavMode, collidersRef });
 
@@ -87,6 +95,23 @@ export default function MiniVille() {
             sunRef.current.color.copy(DAY_SUN).lerp(NIGHT_SUN, n);
         }
         if (hemiRef.current) hemiRef.current.intensity = THREE.MathUtils.lerp(0.85, 0.12, n);
+
+        // Walk-in doors: nearest enterable door within 4 m → publish to context (only on change).
+        let nearest = null;
+        let nearestD2 = 16; // 4 m squared
+        if (!isTeleporting && !isInRoom) {
+            doorsRef.current.forEach((d) => {
+                const dx = camera.position.x - d.x;
+                const dz = camera.position.z - d.z;
+                const d2 = dx * dx + dz * dz;
+                if (d2 < nearestD2) { nearestD2 = d2; nearest = d.building; }
+            });
+        }
+        const nearId = nearest ? nearest.id : null;
+        if (nearId !== nearDoorIdRef.current) {
+            nearDoorIdRef.current = nearId;
+            setVilleNearDoor(nearest);
+        }
     });
 
     const handleDoor = useCallback((building) => {
@@ -121,7 +146,7 @@ export default function MiniVille() {
             </RootErrorBoundary>
 
             {/* Detailed hero buildings + clickable doors (agy 016) */}
-            <VilleBuildings textures={textures} nightRef={nightRef} onDoorEnter={handleDoor} />
+            <VilleBuildings textures={textures} nightRef={nightRef} onDoorEnter={handleDoor} registerDoor={registerDoor} />
         </group>
     );
 }

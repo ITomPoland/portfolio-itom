@@ -29,7 +29,8 @@ export default function VilleThemeToggle() {
 const btnStyle = {
     position: 'fixed',
     right: 'max(1rem, env(safe-area-inset-right))',
-    bottom: 'max(1rem, env(safe-area-inset-bottom))',
+    // raised above the bottom-centre VilleNavToggle + hint so they never overlap on phones
+    bottom: 'calc(max(1rem, env(safe-area-inset-bottom)) + 5.5rem)',
     zIndex: 60,
     minHeight: '44px',
     padding: '0.6rem 1rem',

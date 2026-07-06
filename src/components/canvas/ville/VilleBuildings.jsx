@@ -6,9 +6,21 @@ import { VILLE_BUILDINGS } from './villeConfig';
 /**
  * Sub-component for the interactive door markers (bouncing arrow + ground ring + hitbox)
  */
-function DoorMarker({ x, doorTop, z, color, roomId, onDoorEnter, building }) {
+function DoorMarker({ x, doorTop, z, color, roomId, onDoorEnter, building, registerDoor }) {
     const coneRef = useRef();
+    const hitRef = useRef();
     const baseVal = doorTop + 1.05;
+
+    // Walk-in entry: publish this door's WORLD position so MiniVille can detect the
+    // visitor standing in front of it (proximity "Entrer" prompt). getWorldPosition
+    // resolves the parent building's translation+rotation for us.
+    const isInteractive = !!roomId;
+    useEffect(() => {
+        if (!registerDoor || !isInteractive || !hitRef.current) return undefined;
+        const p = new THREE.Vector3();
+        hitRef.current.getWorldPosition(p);
+        return registerDoor(building, p.x, p.z);
+    }, [registerDoor, building, isInteractive]);
 
     useFrame((state) => {
         if (coneRef.current) {
@@ -18,7 +30,6 @@ function DoorMarker({ x, doorTop, z, color, roomId, onDoorEnter, building }) {
         }
     });
 
-    const isInteractive = !!roomId;
     const eventHandlers = isInteractive ? {
         onClick: (e) => {
             e.stopPropagation();
@@ -66,7 +77,7 @@ function DoorMarker({ x, doorTop, z, color, roomId, onDoorEnter, building }) {
             </mesh>
 
             {/* Invisible but raycastable Click Hitbox */}
-            <mesh position={[x, 1.8, z + 0.4]}>
+            <mesh ref={hitRef} position={[x, 1.8, z + 0.4]}>
                 <boxGeometry args={[2.4, 3.6, 1.6]} />
                 <meshBasicMaterial transparent opacity={0} depthWrite={false} />
             </mesh>
@@ -113,7 +124,7 @@ const SIGNS_CONFIG = [
     { text: "L'ACADÉMIE", color: '#BFD1FF', position: [0, 9.9, -40.5], rotationY: 0, scale: 1.2 }
 ];
 
-export default function VilleBuildings({ textures, nightRef, onDoorEnter }) {
+export default function VilleBuildings({ textures, nightRef, onDoorEnter, registerDoor }) {
     const emissiveMaterialsRef = useRef([]);
 
     useEffect(() => {
@@ -227,7 +238,8 @@ export default function VilleBuildings({ textures, nightRef, onDoorEnter }) {
                                     z={5.9} 
                                     color={0x7C9AFF} 
                                     roomId={b.roomId} 
-                                    onDoorEnter={onDoorEnter} 
+                                    onDoorEnter={onDoorEnter}
+                                    registerDoor={registerDoor}
                                     building={b} 
                                 />
                             </group>
@@ -274,7 +286,8 @@ export default function VilleBuildings({ textures, nightRef, onDoorEnter }) {
                                     z={4.75} 
                                     color={0xC1502E} 
                                     roomId={b.roomId} 
-                                    onDoorEnter={onDoorEnter} 
+                                    onDoorEnter={onDoorEnter}
+                                    registerDoor={registerDoor}
                                     building={b} 
                                 />
                             </group>
@@ -312,7 +325,8 @@ export default function VilleBuildings({ textures, nightRef, onDoorEnter }) {
                                     z={4.75} 
                                     color={0x3554E8} 
                                     roomId={b.roomId} 
-                                    onDoorEnter={onDoorEnter} 
+                                    onDoorEnter={onDoorEnter}
+                                    registerDoor={registerDoor}
                                     building={b} 
                                 />
                             </group>
@@ -370,7 +384,8 @@ export default function VilleBuildings({ textures, nightRef, onDoorEnter }) {
                                     z={5.25} 
                                     color={0xE09F3E} 
                                     roomId={b.roomId} 
-                                    onDoorEnter={onDoorEnter} 
+                                    onDoorEnter={onDoorEnter}
+                                    registerDoor={registerDoor}
                                     building={b} 
                                 />
                             </group>
@@ -415,7 +430,8 @@ export default function VilleBuildings({ textures, nightRef, onDoorEnter }) {
                                     z={3.75} 
                                     color={0x3E7C59} 
                                     roomId={b.roomId} 
-                                    onDoorEnter={onDoorEnter} 
+                                    onDoorEnter={onDoorEnter}
+                                    registerDoor={registerDoor}
                                     building={b} 
                                 />
                             </group>
@@ -488,7 +504,8 @@ export default function VilleBuildings({ textures, nightRef, onDoorEnter }) {
                                     z={3.6} 
                                     color={0x7C9AFF} 
                                     roomId={b.roomId} 
-                                    onDoorEnter={onDoorEnter} 
+                                    onDoorEnter={onDoorEnter}
+                                    registerDoor={registerDoor}
                                     building={b} 
                                 />
                             </group>

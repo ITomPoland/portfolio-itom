@@ -13,9 +13,9 @@ let hasPlayedDrawAnimation = false;
 /**
  * HeroText Component - Hand-drawn Style with Sketch Fonts
  * 
- * WOW Effects for Awwwards SOTD:
- * - ITOM in Rubik Scribble font (splits into letters during scroll)
- * - Creative developer in Cabin Sketch font (also splits)
+ * WOW effects:
+ * - HAKKILO in Rubik Scribble font (splits into letters during scroll)
+ * - Studio immersif tagline in Cabin Sketch font (also splits)
  * - Floating micro-animations
  * - Parallax split effect
  * - RESPONSIVE: scales down on mobile
@@ -54,19 +54,22 @@ const HeroText = ({ position = [0, 0.3, 0] }) => {
     // Pre-allocate Vector3 to avoid per-frame garbage collection
     const worldPosVec = useRef(new THREE.Vector3());
 
-    // Letter positions for ITOM split effect
+    // Letter positions for HAKKILO split effect (7 letters, evenly spaced)
     const letters = useMemo(() => [
-        { char: 'I', baseX: -0.95, splitDir: -1.6, delay: 0 },
-        { char: 'T', baseX: -0.43, splitDir: -0.6, delay: 0 },
-        { char: 'O', baseX: 0.23, splitDir: 0.6, delay: 0 },
-        { char: 'M', baseX: 0.95, splitDir: 1.8, delay: 0 },
+        { char: 'H', baseX: -1.5, splitDir: -1.8, delay: 0 },
+        { char: 'A', baseX: -1.0, splitDir: -1.2, delay: 0 },
+        { char: 'K', baseX: -0.5, splitDir: -0.6, delay: 0 },
+        { char: 'K', baseX: 0.0, splitDir: 0.0, delay: 0 },
+        { char: 'I', baseX: 0.5, splitDir: 0.6, delay: 0 },
+        { char: 'L', baseX: 1.0, splitDir: 1.2, delay: 0 },
+        { char: 'O', baseX: 1.5, splitDir: 1.8, delay: 0 },
     ], []);
 
     // Tagline words for split effect
     const taglineWords = useMemo(() => [
         { text: '<', baseX: -0.85, splitDir: -1.5, delay: 0 },
-        { text: 'creative', baseX: -0.4, splitDir: -0.8, delay: 0 },
-        { text: 'developer', baseX: 0.4, splitDir: 0.8, delay: 0 },
+        { text: 'studio', baseX: -0.4, splitDir: -0.8, delay: 0 },
+        { text: 'immersif', baseX: 0.4, splitDir: 0.8, delay: 0 },
         { text: '/>', baseX: 0.85, splitDir: 1.5, delay: 0 },
     ], []);
 
@@ -97,7 +100,7 @@ const HeroText = ({ position = [0, 0.3, 0] }) => {
 
         splitAmount.current = THREE.MathUtils.lerp(splitAmount.current, targetSplit.current, 0.08);
 
-        // Apply split to each letter of ITOM
+        // Apply split to each letter of the title
         letterRefs.current.forEach((ref, i) => {
             if (ref) {
                 // Ensure opacity is 1
@@ -131,13 +134,13 @@ const HeroText = ({ position = [0, 0.3, 0] }) => {
 
     return (
         <group ref={groupRef} position={position} scale={[scale, scale, 1]}>
-            {/* ITOM Letters - Rubik Scribble font with fade-in animation */}
+            {/* Title letters - Rubik Scribble font with fade-in animation */}
             {letters.map((letter, i) => (
                 <Text
-                    key={letter.char}
+                    key={`${letter.char}-${i}`}
                     ref={(el) => (letterRefs.current[i] = el)}
                     position={[letter.baseX, 0.2, 0]}
-                    fontSize={0.9}
+                    fontSize={0.55}
                     font={RUBIK_SCRIBBLE_URL}
                     color="#ffffff"
                     outlineWidth={0.012}
@@ -168,8 +171,8 @@ const HeroText = ({ position = [0, 0.3, 0] }) => {
             ))}
 
             {/* Small decorative doodles around title */}
-            <SmallStar position={[-1.2, 0.55, 0]} scale={0.07} />
-            <SmallStar position={[1.25, 0.45, 0]} scale={0.05} />
+            <SmallStar position={[-1.85, 0.55, 0]} scale={0.07} />
+            <SmallStar position={[1.9, 0.45, 0]} scale={0.05} />
             <SmallStar position={[-1.0, -0.6, 0]} scale={0.04} />
             <SmallStar position={[1.1, -0.55, 0]} scale={0.035} />
         </group>

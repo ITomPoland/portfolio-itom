@@ -16,7 +16,7 @@ import MiniVille from './ville/MiniVille';
 // Positioning:
 // - Segment -1's SegmentDoors are at Z=15
 // - Entrance doors at Z=22 (in front of segment doors)
-// - ITOM/Avatar at Z≈5.5
+// - Hero text/Avatar at Z≈5.5
 // - Camera starts at Z=28, ends at Z=8 (in front of avatar)
 const ENTRANCE_DOORS_Z = 22;
 
@@ -26,7 +26,7 @@ const ENTRANCE_DOORS_Z = 22;
  * Flow:
  * 1. Preloader fades out -> user sees 3D entrance doors
  * 2. Click doors -> they open + camera flies through
- * 3. Behind doors: infinite corridor with ITOM
+ * 3. Behind doors: infinite corridor with hero text
  */
 const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
     // Use SceneContext for room state

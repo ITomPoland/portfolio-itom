@@ -33,41 +33,44 @@ export const GALLERY_INTERACTION_AUDIO_SETTINGS = {
 };
 
 // Define the unique projects and their textures
+// TODO: vraies réalisations Hakkilo XR — les textures front/painted ci-dessous viennent encore du
+// template d'origine (copyright auteur) et doivent être régénérées (pipeline agy/nanobanana 2)
+// avant mise en ligne. Contenu texte déjà purgé.
 const UNIQUE_PROJECTS = [
     {
-        id: 'monetune',
-        title: 'MONETUNE',
+        id: 'formation-vr',
+        title: 'FORMATION VR',
         front: '/textures/gallery/monetuneprzod.webp',
         painted: '/textures/gallery/monetuneprzod_painted.webp',
-        url: 'https://monetune.pl',
-        description: 'MoneTune is a step-by-step blueprint that teaches beginners how to generate passive income using AI-created music. Without any musical skills, you will learn how to easily produce professional tracks, publish them on platforms like Spotify, and monetize your digital assets.',
-        techStack: ['/textures/gallery/wordpresslogo.webp', '/textures/gallery/elementorlogo.webp', '/textures/gallery/phplogo.webp', '/textures/gallery/csslogo.webp']
+        url: 'https://hakkilo.africa', // TODO: vrai lien
+        description: "Module de formation immersive en réalité virtuelle : des environnements 3D interactifs pour apprendre par la pratique, conçus pour les entreprises et les écoles.",
+        techStack: ['/textures/gallery/reactlogo.webp', '/textures/gallery/jslogo.webp', '/textures/gallery/htmllogo.webp', '/textures/gallery/csslogo.webp']
     },
     {
-        id: 'timber',
-        title: 'TIMBERKITTY',
+        id: 'visite-virtuelle',
+        title: 'VISITE VIRTUELLE',
         front: '/textures/gallery/timberkittyprzod.webp',
         painted: '/textures/gallery/timberkittyprzod_painted.webp',
-        url: 'https://timberkitty.netlify.app',
-        description: 'TimberKitty is an addictive, free-to-play browser arcade game built in pure JavaScript. Players control a lumberjack cat to chop wood, save birds, complete daily missions, and compete on global leaderboards.',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
+        description: "Visite virtuelle interactive dans le navigateur : déplacez-vous librement dans un lieu numérisé en 3D, sans casque ni installation.",
         techStack: ['/textures/gallery/jslogo.webp', '/textures/gallery/htmllogo.webp', '/textures/gallery/csslogo.webp', '/textures/gallery/firebaselogo.webp']
     },
     {
-        id: 'young',
-        title: 'YOUNG MULTI',
+        id: 'showroom-3d',
+        title: 'SHOWROOM 3D',
         front: '/textures/gallery/youngmultiprzod.webp',
         painted: '/textures/gallery/youngmultiprzod_painted.webp',
-        url: 'https://young-multi-strona.netlify.app',
-        description: 'A sleek, modern concept website dedicated to the Polish rapper and creator Young Multi. It serves as a promotional landing page designed to highlight his personal brand, music, and online presence.',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
+        description: "Showroom 3D temps réel pour présenter des produits sous tous les angles : matériaux réalistes, éclairage dynamique et fiches produit interactives.",
         techStack: ['/textures/gallery/reactlogo.webp', '/textures/gallery/tailwindlogo.webp', '/textures/gallery/htmllogo.webp', '/textures/gallery/netlifylogo.webp']
     },
     {
-        id: 'bio',
-        title: 'BIO',
+        id: 'experience-ar',
+        title: 'EXPÉRIENCE AR',
         front: '/textures/gallery/bioprzod.webp',
         painted: '/textures/gallery/bioprzod_painted.webp',
-        url: 'https://tomkingbio.netlify.app',
-        description: 'A fast, modern personal bio page serving as a central hub for my digital footprint. It showcases my latest coding projects, web development services, YouTube videos, and recommended music artists.',
+        url: 'https://hakkilo.africa', // TODO: vrai lien
+        description: "Expérience de réalité augmentée sur mobile : du contenu 3D superposé au monde réel pour des activations de marque et des démonstrations produit.",
         techStack: ['/textures/gallery/htmllogo.webp', '/textures/gallery/csslogo.webp', '/textures/gallery/jslogo.webp', '/textures/gallery/netlifylogo.webp']
     },
 ];

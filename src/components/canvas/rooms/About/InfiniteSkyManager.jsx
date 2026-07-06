@@ -389,7 +389,7 @@ const IntroMilestone = ({ z, scrollProgressRef }) => {
                 font="/fonts/CabinSketch-Regular.ttf"
                 fontStyle="italic"
             >
-                "Crafting digital experiences
+                « Des expériences immersives
             </Text>
 
             {/* Motto - Line 2 (spreads left) */}
@@ -403,7 +403,7 @@ const IntroMilestone = ({ z, scrollProgressRef }) => {
                 font="/fonts/CabinSketch-Regular.ttf"
                 fontStyle="italic"
             >
-                that push creative boundaries"
+                qui repoussent le réel »
             </Text>
         </group>
     );
@@ -416,13 +416,8 @@ const AWARDS_DATA = {
     featured: {
         id: 'award-featured',
         layout: 'certificate_grid',
-        title: 'Featured Projects Collection',
-        items: [
-            { label: 'Featured - Awwwards', date: 'May 2025', image: '/textures/about/FEATURED.webp', url: 'https://awwwards.com' },
-            { label: 'Featured - CSS Design Awards', date: 'June 2025', image: '/textures/about/FEATURED.webp', url: 'https://cssdesignawards.com' },
-            { label: 'Featured - The FWA', date: 'July 2025', image: '/textures/about/FEATURED.webp', url: 'https://thefwa.com' },
-            { label: 'Featured - Behance', date: 'August 2025', image: '/textures/about/FEATURED.webp', url: 'https://behance.net' },
-        ],
+        title: 'Sélections & mentions',
+        items: [], // TODO: références réelles Hakkilo XR (certificats du template = auteur d'origine, purgés)
         platformConfig: {
             label: 'HONOR',
             color: '#1a1a1a',
@@ -432,13 +427,8 @@ const AWARDS_DATA = {
     sotd: {
         id: 'award-sotd',
         layout: 'certificate_grid',
-        title: 'Site of the Day Awards',
-        items: [
-            { label: 'SOTD - GSAP', date: 'February 13, 2026', image: '/textures/about/SOTDAYYOUNGMULTIGSAP.webp', url: 'https://www.linkedin.com/posts/greensock_site-of-the-day-young-multi-this-immersive-activity-7427567524940017664-zU2n?utm_source=share&utm_medium=member_desktop&rcm=ACoAAE3TV6UBqXoaJXUN5-1s3ij6SQJwTRAcbCM' },
-            { label: 'SOTD - CSS Winner', date: 'January 24, 2026', image: '/textures/about/SOTDAYYOUNGMULTICSSWINNER.webp', url: 'https://www.csswinner.com/details/young-multi-official-experience/19045' },
-            { label: 'SOTD - Orpetron', date: 'January 29, 2026', image: '/textures/about/SOTDAYYOUNGMULTIORPETRON.webp', url: 'https://orpetron.com/sites/young-multi/' },
-            { label: 'SOTD - Design Nominess', date: 'February 17, 2026', image: '/textures/about/SOTDAYYOUNGMULTIDESIGNNOMINESS.webp', url: 'https://www.designnominees.com/sites/young-multi' }
-        ],
+        title: 'Distinctions',
+        items: [], // TODO: références réelles Hakkilo XR (awards du template = auteur d'origine, purgés)
         platformConfig: {
             label: 'AWARD',
             color: '#1a1a1a',
@@ -448,7 +438,7 @@ const AWARDS_DATA = {
     sotm: {
         id: 'award-sotm',
         layout: 'certificate_grid',
-        title: 'Site of the Month Awards',
+        title: 'Récompenses du mois',
         items: [],
         platformConfig: {
             label: 'AWARD',
@@ -459,7 +449,7 @@ const AWARDS_DATA = {
     soty: {
         id: 'award-soty',
         layout: 'certificate_grid',
-        title: 'Site of the Year Awards',
+        title: "Récompenses de l'année",
         items: [],
         platformConfig: {
             label: 'PRESTIGE',
@@ -910,7 +900,7 @@ const JourneyMilestone = ({ z, scrollProgressRef }) => {
                 anchorY="middle"
                 font="/fonts/CabinSketch-Regular.ttf"
             >
-                My path so far...
+                Notre parcours...
             </Text>
 
             {/* === UO ISLAND (Left) === */}
@@ -1406,7 +1396,7 @@ const SkillsMilestone = ({ z, scrollProgressRef }) => {
                 anchorY="middle"
                 font="/fonts/CabinSketch-Regular.ttf"
             >
-                Technologies I love working with
+                Les technologies de nos expériences
             </Text>
 
             {/* === FLOATING BALLOONS === */}

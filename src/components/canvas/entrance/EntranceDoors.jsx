@@ -298,7 +298,7 @@ const EntranceDoors = ({
             ease: 'power2.out'
         }, 0.1);
 
-        // Camera flies through - STOP CLOSER to avatar/ITOM
+        // Camera flies through - STOP CLOSER to avatar/hero text
         tl.to(camera.position, {
             z: 11,  // Closer stop point (was 11)
             y: 0.2, // Match hook's base Y position

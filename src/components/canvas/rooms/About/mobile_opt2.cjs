@@ -1,5 +1,6 @@
 const fs = require('fs');
-const FILE_PATH = 'c:/Users/tomsz/Desktop/portfolio/portfolio-itom/src/components/canvas/rooms/About/InfiniteSkyManager.jsx';
+const path = require('path');
+const FILE_PATH = path.join(__dirname, 'InfiniteSkyManager.jsx');
 let content = fs.readFileSync(FILE_PATH, 'utf8');
 
 content = content.replace(

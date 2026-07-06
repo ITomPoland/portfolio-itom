@@ -22,7 +22,7 @@ export const AchievementsProvider = ({ children }) => {
     // Load completed achievements from local storage
     const [completed, setCompleted] = useState(() => {
         try {
-            const saved = localStorage.getItem('itom_achievements');
+            const saved = localStorage.getItem('hakkilo_achievements');
             if (saved) {
                 const parsed = JSON.parse(saved);
                 // Wrzucamy do pule, ale ignorujemy 'corridor_enter' żeby tooltip wejściowy zawsze się pojawiał
@@ -96,7 +96,7 @@ export const AchievementsProvider = ({ children }) => {
     // Save to localStorage when completed changes
     useEffect(() => {
         const toSave = completed.filter(id => id !== 'corridor_enter');
-        localStorage.setItem('itom_achievements', JSON.stringify(toSave));
+        localStorage.setItem('hakkilo_achievements', JSON.stringify(toSave));
     }, [completed]);
 
     const showTutorial = useCallback((id) => {
@@ -119,7 +119,7 @@ export const AchievementsProvider = ({ children }) => {
                 const updated = [...prev, id];
                 // Save locally excluding corridor_enter
                 const toSave = updated.filter(item => item !== 'corridor_enter');
-                localStorage.setItem('itom_achievements', JSON.stringify(toSave));
+                localStorage.setItem('hakkilo_achievements', JSON.stringify(toSave));
                 return updated;
             });
 

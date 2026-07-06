@@ -146,8 +146,10 @@ const SmoothButton = ({ texture, onClick, position, size, text, fontPath }) => {
     );
 };
 
-// Web3Forms API Key
-const WEB3FORMS_KEY = '2ceaee50-a31e-4936-98fc-ca9648b21cdd';
+// Web3Forms API key — TODO: créer la clé Hakkilo XR (web3forms.com) et la fournir via .env
+// (VITE_WEB3FORMS_KEY). L'ancienne clé en dur appartenait à l'auteur du template : les messages
+// du formulaire partaient dans SA boîte mail.
+const WEB3FORMS_KEY = import.meta.env.VITE_WEB3FORMS_KEY || '';
 
 const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
     const groupRef = useRef();
@@ -231,6 +233,12 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
             return;
         }
 
+        if (!WEB3FORMS_KEY) {
+            // No key configured yet — fail visibly instead of posting to a third party
+            setSubmitStatus('error');
+            return;
+        }
+
         setIsSubmitting(true);
         setErrors({});
 
@@ -243,7 +251,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                 },
                 body: JSON.stringify({
                     access_key: WEB3FORMS_KEY,
-                    from_name: 'Portfolio Contact',
+                    from_name: 'Hakkilo XR — Contact',
                     email: email,
                     subject: subject,
                     message: message

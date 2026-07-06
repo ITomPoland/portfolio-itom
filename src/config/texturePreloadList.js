@@ -191,10 +191,6 @@ export const ABOUT_TEXTURES = [
     '/textures/about/button.webp',
     '/textures/about/button_painted.webp',
     // Award images (for overlay)
-    '/textures/about/SOTDAYYOUNGMULTICSSWINNER.webp',
-    '/textures/about/SOTDAYYOUNGMULTIGSAP.webp',
-    '/textures/about/SOTDAYYOUNGMULTIORPETRON.webp',
-    '/textures/about/SOTDAYYOUNGMULTIDESIGNNOMINESS.webp',
     // Journey islands
     '/textures/about/uowyspa.webp',
     '/textures/about/freelancewyspa.webp',

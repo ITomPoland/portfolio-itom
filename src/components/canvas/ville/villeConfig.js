@@ -30,13 +30,57 @@ export const VILLE_PITCH_CLAMP = 1.2;       // rad
 // world-space, straight from the prototype scene. The door trigger mesh is built by
 // VilleBuildings (agy), which calls `onDoorEnter(roomId, id)` on click.
 export const VILLE_BUILDINGS = [
-    { id: 'hall',     position: [0, 0, 0],     rotationY: 0,               roomId: null,      teaser: 'hall',     label: 'HAKKILO XR',    collider: 7 },
-    { id: 'studio',   position: [-26, 0, -26], rotationY: Math.PI * 0.75,  roomId: 'studio',  label: 'LE STUDIO',                        collider: 8 },
-    { id: 'presa',    position: [26, 0, -26],  rotationY: -Math.PI * 0.75, roomId: 'about',   label: 'PRÉSENTATION',                     collider: 7 },
-    { id: 'galerie',  position: [-26, 0, 26],  rotationY: Math.PI * 1.25,  roomId: 'gallery', label: 'LA GALERIE',                       collider: 8.5 },
-    { id: 'contact',  position: [26, 0, 26],   rotationY: Math.PI * 0.25,  roomId: 'contact', label: 'CONTACT',                          collider: 5.5 },
-    { id: 'academie', position: [0, 0, -44],   rotationY: 0,               roomId: null,      teaser: 'academie', label: "L'ACADÉMIE",   collider: 9 },
+    {
+        id: 'hall', position: [0, 0, 0], rotationY: 0, roomId: null, teaser: 'hall', label: 'HAKKILO XR', collider: 7,
+        // The tour circles the plaza at ~22 m from the hall → needs a wider trigger than default.
+        infoRadius: 24,
+        info: {
+            title: 'Hall Hakkilo XR',
+            body: "Bienvenue au cœur de notre campus virtuel. Ce hall central incarne Hakkilo XR, studio dédié aux expériences de réalité étendue. Laissez-vous guider : chaque bâtiment de la place vous présente une facette de notre activité.",
+        },
+    },
+    {
+        id: 'studio', position: [-26, 0, -26], rotationY: Math.PI * 0.75, roomId: 'studio', label: 'LE STUDIO', collider: 8,
+        info: {
+            title: 'Le Studio — Boutique & Exposition',
+            body: "Notre vitrine matérielle : casques, lunettes, contrôleurs et outils de capture que nous utilisons au quotidien. Entrez pour manipuler chaque produit en 3D et demander une démonstration.",
+        },
+    },
+    {
+        id: 'presa', position: [26, 0, -26], rotationY: -Math.PI * 0.75, roomId: 'about', label: 'PRÉSENTATION', collider: 7,
+        info: {
+            title: 'Présentation',
+            body: "Qui se cache derrière Hakkilo XR ? Ce pavillon raconte notre équipe, notre démarche et notre vision de la réalité étendue au service des entreprises. Entrez pour faire connaissance.",
+        },
+    },
+    {
+        id: 'galerie', position: [-26, 0, 26], rotationY: Math.PI * 1.25, roomId: 'gallery', label: 'LA GALERIE', collider: 8.5,
+        info: {
+            title: 'La Galerie',
+            body: "Notre espace d'exposition : projets clients, prototypes et expériences immersives réalisés par le studio. Entrez pour parcourir nos travaux.",
+        },
+    },
+    {
+        id: 'contact', position: [26, 0, 26], rotationY: Math.PI * 0.25, roomId: 'contact', label: 'CONTACT', collider: 5.5,
+        info: {
+            title: 'Contact',
+            body: "Un projet, une question, l'envie d'une démonstration ? Ce bureau vous accueille. Entrez pour nous écrire — nous répondons rapidement.",
+        },
+    },
+    {
+        id: 'academie', position: [0, 0, -44], rotationY: 0, roomId: null, teaser: 'academie', label: "L'ACADÉMIE", collider: 9,
+        info: {
+            title: "L'Académie",
+            body: "Notre futur espace de formation : ateliers pratiques et parcours d'initiation à la réalité étendue. Le bâtiment ouvre prochainement — la visite continue pendant les travaux.",
+        },
+    },
 ];
+
+// Guided-tour info cards: a card pops once per pass when the visitor comes within
+// `infoRadius ?? VILLE_INFO_RADIUS` metres of a building, and re-arms (may pop again)
+// only after they retreat beyond radius + VILLE_INFO_REARM (hysteresis, no flicker).
+export const VILLE_INFO_RADIUS = 16;
+export const VILLE_INFO_REARM = 6;
 
 // Day/night — night when local hour ≥ 19 or < 7 (prototype `isNightNow`). `nightAmount` eases
 // toward this target each frame at rate `dt * VILLE_NIGHT_EASE`.

@@ -12,6 +12,13 @@ import SignSystem from './entrance/SignSystem';
 import { useScene } from '../../context/SceneContext';
 import { VILLE_MODE } from './ville/villeConfig';
 import MiniVille from './ville/MiniVille';
+import { Perf } from 'r3f-perf';
+
+// Dev-only perf HUD (fable/007): `npm run dev` then add `?perf` to the URL. The DEV guard
+// tree-shakes it out of production builds.
+const SHOW_PERF = import.meta.env.DEV
+    && typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).has('perf');
 
 // Positioning:
 // - Segment -1's SegmentDoors are at Z=15
@@ -88,6 +95,8 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
                 shadow-mapSize={[1024, 1024]}
             /> */}
             {/* <directionalLight position={[-5, 8, -10]} intensity={0.4} color="#ffffff" /> */}
+
+            {SHOW_PERF && <Perf position="top-left" deepAnalyze />}
 
             {/* === MINI VILLE (open-city exterior — replaces the corridor when VILLE_MODE) === */}
             {VILLE_MODE && <MiniVille />}

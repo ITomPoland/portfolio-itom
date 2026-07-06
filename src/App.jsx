@@ -15,13 +15,12 @@ import VilleNavToggle from './components/ui/VilleNavToggle';
 import { VILLE_MODE } from './components/canvas/ville/villeConfig';
 import GlobalOverlay from './components/ui/GlobalOverlay';
 import ScreenReaderOverlay from './components/ui/ScreenReaderOverlay';
-import posthog from 'posthog-js';
+import ConsentBanner from './components/ui/ConsentBanner';
+import { initAnalytics } from './utils/analytics';
 
-// Initialize PostHog
-posthog.init(import.meta.env.VITE_POSTHOG_KEY, {
-  api_host: import.meta.env.VITE_POSTHOG_HOST,
-  person_profiles: 'identified_only', // or 'always' to create profiles for anonymous users as well
-});
+// Initialize PostHog opted-OUT by default (RGPD/CNIL). No capture / no analytics
+// cookie until the user accepts via <ConsentBanner />. See utils/analytics.js.
+initAnalytics();
 
 // Lazy load the heavy 3D experience
 const Experience = lazy(() => import('./components/canvas/Experience'));
@@ -188,6 +187,9 @@ function AppContent() {
               <ScreenReaderOverlay />
             </>
           )}
+
+          {/* RGPD/CNIL analytics consent — shown once until answered */}
+          <ConsentBanner />
 
           {/* 2D Preloader */}
           <Preloader

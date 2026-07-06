@@ -1,0 +1,75 @@
+// ConsentBanner — minimal/neutral RGPD gate. Restylable by Claude Design (§5).
+@use 'variables' as *;
+
+.consent-banner {
+    position: fixed;
+    left: 50%;
+    bottom: $spacing-sm;
+    transform: translateX(-50%);
+    z-index: 10000; // above all UI — legal gate must be reachable
+
+    width: calc(100% - #{$spacing-md});
+    max-width: 560px;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+    padding: $spacing-sm;
+
+    background: rgba($color-black, 0.92);
+    color: $color-white;
+    border: 1px solid rgba($color-white, 0.15);
+    border-radius: 12px;
+    font-family: $font-primary;
+    pointer-events: auto;
+
+    &__text {
+        margin: 0;
+        font-size: 0.85rem;
+        line-height: 1.45;
+    }
+
+    &__actions {
+        display: flex;
+        gap: $spacing-xs;
+        justify-content: flex-end;
+    }
+
+    &__btn {
+        cursor: pointer;
+        padding: 0.5rem 1.1rem;
+        border-radius: 8px;
+        font-family: $font-primary;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: 1px solid transparent;
+        transition: $transition-fast;
+
+        &--accept {
+            background: $color-neon-green;
+            color: $color-black;
+
+            &:hover { filter: brightness(1.1); }
+        }
+
+        &--decline {
+            background: transparent;
+            color: $color-white;
+            border-color: rgba($color-white, 0.3);
+
+            &:hover { background: rgba($color-white, 0.1); }
+        }
+    }
+}
+
+// On the narrowest screens, stack the buttons full-width (mobile-first).
+@media (max-width: $breakpoint-mobile) {
+    .consent-banner__actions {
+        flex-direction: column-reverse;
+    }
+
+    .consent-banner__btn {
+        width: 100%;
+    }
+}

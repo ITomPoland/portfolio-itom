@@ -46,6 +46,20 @@ export const villeIsNightNow = () => {
 };
 export const VILLE_NIGHT_EASE = 2.2;
 
+// Theme override (demo toggle, prototype `themePref`): 'auto' follows the local clock,
+// 'jour'/'nuit' force the cycle. Persisted under the prototype's own localStorage key.
+export const VILLE_THEME_STORAGE_KEY = 'hakkilo-ville-theme';
+export const getStoredVilleTheme = () => {
+    try {
+        const t = localStorage.getItem(VILLE_THEME_STORAGE_KEY);
+        return t === 'jour' || t === 'nuit' ? t : 'auto';
+    } catch {
+        return 'auto'; // storage unavailable (private mode) → clock-driven
+    }
+};
+export const villeNightTargetFor = (theme) =>
+    theme === 'nuit' ? 1 : theme === 'jour' ? 0 : (villeIsNightNow() ? 1 : 0);
+
 // Camera far plane the ville needs (mountains at r≈215, stars at r≈380). Corridor uses 150;
 // MiniVille raises it on mount and restores it on unmount so App.jsx stays generic.
 export const VILLE_CAMERA_FAR = 600;

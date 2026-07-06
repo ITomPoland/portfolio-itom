@@ -8,6 +8,7 @@ import VilleGround from './VilleGround';
 import VilleBuildings from './VilleBuildings';
 import VilleDecor from './VilleDecor';
 import VilleScenery from './VilleScenery';
+import VilleLife from './VilleLife';
 import RootErrorBoundary from '../../dom/RootErrorBoundary';
 import {
     VILLE_BUILDINGS,
@@ -16,7 +17,7 @@ import {
     VILLE_FOG_NIGHT,
     VILLE_FOG_NEAR,
     VILLE_FOG_FAR,
-    villeIsNightNow,
+    villeNightTargetFor,
     VILLE_NIGHT_EASE,
 } from './villeConfig';
 
@@ -40,10 +41,10 @@ const NIGHT_SUN = new THREE.Color('#39508f');
  */
 export default function MiniVille() {
     const { scene, camera } = useThree();
-    const { markEntered, teleportTo, isTeleporting, isInRoom, villeNavMode } = useScene();
+    const { markEntered, teleportTo, isTeleporting, isInRoom, villeNavMode, villeTheme } = useScene();
 
     const textures = useMemo(() => makeVilleTextures(), []);
-    const nightRef = useRef(villeIsNightNow() ? 1 : 0);
+    const nightRef = useRef(villeNightTargetFor(villeTheme));
     const collidersRef = useRef([]);
     const sunRef = useRef();
     const hemiRef = useRef();
@@ -73,9 +74,9 @@ export default function MiniVille() {
         };
     }, [camera, scene, markEntered]);
 
-    // Day/night easing → sky / fog / sun / hemi.
+    // Day/night easing → sky / fog / sun / hemi. Target = theme override or local clock.
     useFrame((_, delta) => {
-        const target = villeIsNightNow() ? 1 : 0;
+        const target = villeNightTargetFor(villeTheme);
         const n = nightRef.current + (target - nightRef.current) * Math.min(1, delta * VILLE_NIGHT_EASE);
         nightRef.current = n;
 
@@ -112,6 +113,11 @@ export default function MiniVille() {
                 <Suspense fallback={null}>
                     <VilleDecor nightRef={nightRef} />
                 </Suspense>
+            </RootErrorBoundary>
+
+            {/* Living ambiance: wandering bird + companion drone (standalone prototype port) */}
+            <RootErrorBoundary label="VilleLife" fallback={null}>
+                <VilleLife nightRef={nightRef} />
             </RootErrorBoundary>
 
             {/* Detailed hero buildings + clickable doors (agy 016) */}

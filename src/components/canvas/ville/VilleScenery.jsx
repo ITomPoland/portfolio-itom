@@ -13,6 +13,8 @@ export default function VilleScenery({ textures, nightRef }) {
     const matMontRef2 = useRef();
     const skyMatRef = useRef();
     const starMatRef = useRef();
+    const moonMatRef = useRef();
+    const moonHaloMatRef = useRef();
 
     // 1. Color constants for mountains Day-Night interpolation
     const colJourMont1 = useMemo(() => new THREE.Color(0x8896a8), []);
@@ -210,6 +212,11 @@ export default function VilleScenery({ textures, nightRef }) {
             const starsOpacity = k > 0.35 ? ((k - 0.35) / 0.65) * 1.4 : 0;
             starMatRef.current.opacity = starsOpacity;
         }
+
+        // Moon fades in slightly before the stars
+        const moonK = k > 0.25 ? (k - 0.25) / 0.75 : 0;
+        if (moonMatRef.current) moonMatRef.current.opacity = moonK;
+        if (moonHaloMatRef.current) moonHaloMatRef.current.opacity = moonK * 0.22;
     });
 
     return (
@@ -280,8 +287,37 @@ export default function VilleScenery({ textures, nightRef }) {
                     sizeAttenuation={false}
                     transparent
                     opacity={0}
+                    fog={false}
                 />
             </points>
+
+            {/* Moon — night-only, opposite the sun. fog=false: it sits at ~314 m, far beyond
+                the 210 m fog cutoff, so fogged it would vanish into the sky colour (same
+                reason the stars material disables fog). */}
+            <group position={[-170, 240, -110]}>
+                <mesh>
+                    <sphereGeometry args={[16, 24, 18]} />
+                    <meshBasicMaterial
+                        ref={moonMatRef}
+                        color="#e9edf9"
+                        transparent
+                        opacity={0}
+                        fog={false}
+                    />
+                </mesh>
+                <mesh>
+                    <sphereGeometry args={[22, 24, 18]} />
+                    <meshBasicMaterial
+                        ref={moonHaloMatRef}
+                        color="#aebdf2"
+                        transparent
+                        opacity={0}
+                        fog={false}
+                        blending={THREE.AdditiveBlending}
+                        depthWrite={false}
+                    />
+                </mesh>
+            </group>
         </group>
     );
 }

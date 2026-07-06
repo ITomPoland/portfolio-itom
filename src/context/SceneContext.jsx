@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import { VILLE_THEME_STORAGE_KEY, getStoredVilleTheme } from '../components/canvas/ville/villeConfig';
 
 const SceneContext = createContext(null);
 
@@ -16,6 +17,7 @@ export const SceneProvider = ({ children }) => {
     const [exitRequested, setExitRequested] = useState(false); // Signal to request exit from room
     const [overlayContent, setOverlayContent] = useState(null); // Content for overlay (Studio monitor etc)
     const [villeNavMode, setVilleNavMode] = useState('guide'); // 'guide' (scroll tour, default) | 'libre' (free walk)
+    const [villeTheme, setVilleTheme] = useState(getStoredVilleTheme); // 'auto' (clock) | 'jour' | 'nuit'
 
     // Teleportation states
     const [teleportTarget, setTeleportTarget] = useState(null); // Room ID to teleport to
@@ -70,6 +72,18 @@ export const SceneProvider = ({ children }) => {
 
     const toggleVilleNavMode = useCallback(() => {
         setVilleNavMode((m) => (m === 'guide' ? 'libre' : 'guide'));
+    }, []);
+
+    const cycleVilleTheme = useCallback(() => {
+        setVilleTheme((t) => {
+            const next = t === 'auto' ? 'jour' : t === 'jour' ? 'nuit' : 'auto';
+            try {
+                localStorage.setItem(VILLE_THEME_STORAGE_KEY, next);
+            } catch {
+                // storage unavailable — theme still applies for this session
+            }
+            return next;
+        });
     }, []);
 
     // Teleportation functions
@@ -151,6 +165,8 @@ export const SceneProvider = ({ children }) => {
         villeNavMode,
         setVilleNavMode,
         toggleVilleNavMode,
+        villeTheme,
+        cycleVilleTheme,
         isInRoom: currentRoom !== null,
         // Teleportation
         teleportTarget,
@@ -180,6 +196,8 @@ export const SceneProvider = ({ children }) => {
         villeNavMode,
         setVilleNavMode,
         toggleVilleNavMode,
+        villeTheme,
+        cycleVilleTheme,
         // Teleportation dependencies
         teleportTarget,
         isTeleporting,

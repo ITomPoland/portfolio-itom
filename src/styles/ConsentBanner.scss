@@ -4,7 +4,8 @@
 .consent-banner {
     position: fixed;
     left: 50%;
-    bottom: $spacing-sm;
+    // safe-area aware: never sits under the iOS home indicator
+    bottom: calc(max(#{$spacing-sm}, env(safe-area-inset-bottom)));
     transform: translateX(-50%);
     z-index: 10000; // above all UI — legal gate must be reachable
 
@@ -38,6 +39,7 @@
 
     &__btn {
         cursor: pointer;
+        min-height: 44px; // mobile tap-target floor
         padding: 0.5rem 1.1rem;
         border-radius: 8px;
         font-family: $font-primary;

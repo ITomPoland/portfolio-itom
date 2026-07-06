@@ -1,8 +1,54 @@
+# Security headers (Cloudflare Pages). Every CSP exception below is justified by a real,
+# grep-verified usage — do not add origins "just in case".
+#
+# CSP inventory (fable/004):
+#   script-src 'self'            — all JS is bundled (posthog-js via npm; no remote scripts,
+#                                  session recording & surveys disabled in analytics.js).
+#     'wasm-unsafe-eval'         — drei/useGLTF ships the meshopt decoder, which compiles its
+#                                  bundled WASM at startup (verified: script-src "wasm-eval"
+#                                  violation from the Experience chunk). JS eval stays blocked.
+#     blob:                      — troika-three-text (drei <Text>) boots its layout worker via
+#                                  importScripts(blob:) INSIDE the worker; troika swallows the
+#                                  CSP error and 3D text silently breaks without it. Low added
+#                                  risk: forging a blob URL already requires script execution
+#                                  (unlike data:, which stays blocked).
+#   style-src  'unsafe-inline'   — required by the critical inline <style> in index.html
+#                                  (SEO/a11y block) and runtime <style> tags injected by
+#                                  three/drei helpers. Google Fonts CSS is loaded from
+#                                  fonts.googleapis.com (index.html).
+#   font-src   fonts.gstatic.com — woff files referenced by the Google Fonts CSS.
+#   connect-src:
+#     api.web3forms.com          — contact form POST (MessagePaper.jsx).
+#     eu.posthog.com + eu.i.posthog.com — analytics ingestion, opt-in only (RGPD gate in
+#                                  utils/analytics.js; the JS SDK rewrites eu.posthog.com
+#                                  to eu.i.posthog.com, both must be allowed).
+#     fonts.gstatic.com          — troika-three-text fetches the 3D-text woff itself
+#                                  (FONT_URL in App.jsx / EntranceDoors.jsx).
+#     blob:                      — GLTFLoader loads .glb embedded textures through
+#                                  ImageBitmapLoader, which fetch()es blob object-URLs
+#                                  (verified locally: without it every GLB texture fails).
+#   img-src    data: blob:       — 1px data-GIF placeholder textures (Door/DoorSection/
+#                                  EntranceDoors/GlobalOverlay) + GLTFLoader object-URLs for
+#                                  textures embedded in .glb binaries.
+#   worker-src 'self' blob:      — troika-three-text runs its font layout in a Worker built
+#                                  from a Blob URL.
+#   media-src  'self'            — local mp3 (AudioManager).
+#   object-src 'none', base-uri 'self', form-action 'self', frame-ancestors 'none' — nothing
+#   legitimate uses plugins, <base>, cross-origin form posts or framing (matches X-Frame-Options).
+#
+# NOT whitelisted on purpose (add only when the feature ships):
+#   - PostHog assets host (eu-assets.i.posthog.com): only needed if session recording /
+#     surveys / toolbar get enabled — they are explicitly disabled today.
+#   - Any external GLB/CDN storage: product models are same-origin for now.
+
 /*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' blob: https://api.web3forms.com https://eu.posthog.com https://eu.i.posthog.com https://fonts.gstatic.com; media-src 'self'; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Cross-Origin-Opener-Policy: same-origin
 
 # Cache static assets for 1 year (Performance & SEO)
 /*.js

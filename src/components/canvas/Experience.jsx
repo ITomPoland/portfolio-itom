@@ -8,6 +8,7 @@ import TeleportRoom from './corridor/TeleportRoom';
 import RoomWarmup from './corridor/RoomWarmup';
 import PostProcessing from './PostProcessing';
 import useInfiniteCamera from '../../hooks/useInfiniteCamera';
+import usePortraitFov from '../../hooks/usePortraitFov';
 import SignSystem from './entrance/SignSystem';
 import { useScene } from '../../context/SceneContext';
 import { VILLE_MODE } from './ville/villeConfig';
@@ -33,6 +34,10 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
     const { hasEntered, markEntered, enterRoom, isTeleporting, isInRoom, pendingDoorClick } = useScene();
 
     const { camera } = useThree();
+
+    // Mobile-first: widen the vertical FOV in portrait (ville, entrance text, corridor).
+    // Lives OUTSIDE useInfiniteCamera (invariant) — fov is orthogonal to its position work.
+    usePortraitFov();
 
     // Camera control - both scroll and parallax only work after entering
     // Disable during teleporting to prevent scroll interference

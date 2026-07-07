@@ -35,7 +35,8 @@ export default function VilleDoorPrompt() {
                 style={btnStyle}
                 aria-label={`Entrer dans ${villeNearDoor.label}`}
             >
-                <span style={keyStyle}>⏎</span> Entrer — {villeNearDoor.label}
+                <span style={keyStyle}>⏎</span>
+                <span style={labelStyle}>Entrer — {villeNearDoor.label}</span>
             </button>
         </div>
     );
@@ -44,10 +45,12 @@ export default function VilleDoorPrompt() {
 const wrapStyle = {
     position: 'fixed',
     left: '50%',
-    // sits above the VilleNavToggle + hint block
-    bottom: 'calc(max(1rem, env(safe-area-inset-bottom)) + 5.5rem)',
+    // clears BOTH the bottom-centre VilleNavToggle block and the bottom-right
+    // VilleThemeToggle row (+5.5rem) so nothing collides on 320px-wide screens
+    bottom: 'calc(max(1rem, env(safe-area-inset-bottom)) + 9rem)',
     transform: 'translateX(-50%)',
     zIndex: 61,
+    maxWidth: '92vw',
     pointerEvents: 'none',
 };
 
@@ -68,6 +71,13 @@ const btnStyle = {
     letterSpacing: '0.01em',
     cursor: 'pointer',
     whiteSpace: 'nowrap',
+    maxWidth: '100%',
+};
+
+const labelStyle = {
+    // long building labels ellipsize instead of pushing past 320px-wide screens
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
 };
 
 const keyStyle = {

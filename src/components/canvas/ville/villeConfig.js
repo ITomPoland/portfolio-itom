@@ -108,6 +108,19 @@ export const villeNightTargetFor = (theme) =>
 // MiniVille raises it on mount and restores it on unmount so App.jsx stays generic.
 export const VILLE_CAMERA_FAR = 600;
 
+// Portrait framing (mobile-first): below aspect 1 the vertical FOV widens so a phone held
+// upright keeps the horizontal field a landscape viewer gets (city breadth, HAKKILO XR
+// entrance text), clamped before wide-angle distortion kicks in. Single source of truth —
+// applied by usePortraitFov at the Experience root, reactive to resize/rotation.
+export const CAMERA_BASE_FOV = 60; // keep in sync with the <Canvas camera> fov in App.jsx
+export const CAMERA_PORTRAIT_MAX_FOV = 92;
+export const portraitFovFor = (aspect) => {
+    if (!(aspect > 0) || aspect >= 1) return CAMERA_BASE_FOV;
+    const halfBase = (CAMERA_BASE_FOV * Math.PI) / 360;
+    const fov = (Math.atan(Math.tan(halfBase) / aspect) * 360) / Math.PI;
+    return Math.min(fov, CAMERA_PORTRAIT_MAX_FOV);
+};
+
 // Fog (prototype): day #BFD9F2 near 70 / far 210, lerping to night #0D1220.
 export const VILLE_FOG_DAY = '#BFD9F2';
 export const VILLE_FOG_NIGHT = '#0D1220';

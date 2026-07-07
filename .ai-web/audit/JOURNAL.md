@@ -1,5 +1,8 @@
 # JOURNAL — Audit sécurité final (portfolio-itom)
 
+**✅ AUDIT TERMINÉ (2026-07-07)** — les 6 passes sont cochées, synthèse dans `FINDINGS.md`,
+PR ouverte vers `feature/mini-ville`. Commit final P6 : `f4b9177`.
+
 Branche de travail : `claude/audit-secu-finale-i0yidy` (depuis `feature/mini-ville`).
 Protocole : après chaque faille trouvée / corrigée → mise à jour de ce journal + commit + push immédiat.
 Une passe terminée = checkbox cochée + push (même si RAS).

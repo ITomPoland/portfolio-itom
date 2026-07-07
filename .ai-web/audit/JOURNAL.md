@@ -10,7 +10,7 @@ Une passe terminée = checkbox cochée + push (même si RAS).
 - [x] **P2 — Secrets & fuites** : scan code + historique git, `.env` commités, sourcemaps prod, clés en dur (dont trace résiduelle de la clé Web3Forms du template). → 3 findings d'historique (F6–F8), documentés (réécriture d'historique = décision Engineering Manager).
 - [x] **P3 — Dépendances & supply chain** : `npm audit`, CVE three/react/vite, scripts d'install suspects, dépendances fantômes. Bumps mineurs/patch uniquement. → F9 corrigé (dépendances fantômes retirées), majors documentés.
 - [x] **P4 — Headers & CSP** : complétude CSP (`frame-ancestors`, `object-src`, `base-uri`, `form-action`), `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`. Cible Cloudflare Pages (`_headers`). → F10 corrigé (Permissions-Policy étendue), CSP validée dynamiquement sous Chromium : 0 violation.
-- [ ] **P5 — CI/workflows GitHub** : `permissions:` minimal, `pull_request_target`, épinglage des actions, secrets dans les logs.
+- [x] **P5 — CI/workflows GitHub** : `permissions:` minimal, `pull_request_target`, épinglage des actions, secrets dans les logs. → F11 corrigé (actions épinglées par SHA + dependabot github-actions).
 - [ ] **P6 — Logique client abusable** : `postMessage` sans vérif d'origine, `window.open` sans `noopener`, open redirects, localStorage/consentement, fetch d'assets externes, prototype pollution.
 
 ## Findings
@@ -48,3 +48,10 @@ Commit fix P3 : `6085d50`.
 - **RAS P4** : CSP complète et justifiée ligne à ligne (`frame-ancestors 'none'` ✓, `object-src 'none'` ✓, `base-uri 'self'` ✓, `default-src 'self'`, pas de `unsafe-inline`/`unsafe-eval` script) ; `X-Content-Type-Options: nosniff` ✓, `Referrer-Policy: strict-origin-when-cross-origin` ✓, `HSTS` ✓, `X-Frame-Options: DENY` ✓, `COOP: same-origin` ✓ ; cache immutable uniquement sur assets hashés (HTML non concerné).
 - **Validation dynamique (nouveau)** : `dist/` servi localement avec les headers réels de `_headers`, chargé dans Chromium headless (WebGL SwiftShader) : scène 3D démarrée, textures GLB via `blob:` et worker troika fonctionnels, **0 violation CSP** (event `securitypolicyviolation` + console), seule requête externe = fonts.googleapis.com (autorisée). La Permissions-Policy étendue est acceptée sans warning.
 - **Recommandation (non appliquée, décision client)** : candidater à la liste HSTS preload (`preload` + hstspreload.org) une fois le domaine définitif confirmé.
+
+Commit fix P4 : `81fec31`.
+
+### P5 — CI/workflows GitHub
+
+- **F11 — Actions référencées par tag mutable** — `.github/workflows/ci.yml` utilisait `actions/checkout@v4` et `actions/setup-node@v4` : un tag peut être déplacé (compromission du repo d'action = exécution arbitraire dans la CI). Gravité : **faible** (actions officielles GitHub, permissions read-only, aucun secret dans le workflow) mais exigée par la passe. **CORRIGÉ** : épinglage aux SHAs complets vérifiés par `git ls-remote` (`checkout@34e11487…` = v4.3.1, `setup-node@49933ea5…` = v4.4.0) + ajout de l'écosystème `github-actions` à `dependabot.yml` pour maintenir les pins. YAML validé.
+- **RAS P5** : un seul workflow (`ci.yml`) ; `permissions: contents: read` top-level minimal ✓ ; déclencheurs `push` (2 branches longues) + `pull_request` — AUCUN `pull_request_target` ✓ ; aucun secret consommé (build volontairement sans clé) donc rien d'exposable aux logs ✓ ; pas d'`echo` de variables sensibles ; `concurrency` + `timeout-minutes` sains ; dependabot npm hebdo déjà en place.

@@ -177,10 +177,10 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
     // Form validation
     const validateForm = () => {
         const newErrors = {};
-        if (!email.trim()) newErrors.email = 'Email required';
-        else if (!isValidEmail(email)) newErrors.email = 'Invalid email format';
-        if (!subject.trim()) newErrors.subject = 'Subject required';
-        if (!message.trim()) newErrors.message = 'Message required';
+        if (!email.trim()) newErrors.email = 'E-mail requis';
+        else if (!isValidEmail(email)) newErrors.email = 'Format d’e-mail invalide';
+        if (!subject.trim()) newErrors.subject = 'Sujet requis';
+        if (!message.trim()) newErrors.message = 'Message requis';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -355,8 +355,8 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
             {/* Hidden HTML inputs */}
             <Html position={[0, 0, 0]} style={{ position: 'fixed', left: '-9999px', top: '-9999px', opacity: 0, pointerEvents: 'none' }}>
                 <textarea ref={hiddenInputRef} value={message} onChange={handleMessageInput} onBlur={handleBlur} aria-label="Message" style={{ pointerEvents: 'auto' }} />
-                <input ref={emailInputRef} type="email" value={email} onChange={handleEmailInput} onBlur={handleBlur} aria-label="Email" style={{ pointerEvents: 'auto' }} />
-                <input ref={subjectInputRef} type="text" value={subject} onChange={handleSubjectInput} onBlur={handleBlur} aria-label="Subject" style={{ pointerEvents: 'auto' }} />
+                <input ref={emailInputRef} type="email" value={email} onChange={handleEmailInput} onBlur={handleBlur} aria-label="E-mail" style={{ pointerEvents: 'auto' }} />
+                <input ref={subjectInputRef} type="text" value={subject} onChange={handleSubjectInput} onBlur={handleBlur} aria-label="Sujet" style={{ pointerEvents: 'auto' }} />
             </Html>
 
             {/* Main Paper Mesh - FRONT (with texture) */}
@@ -386,7 +386,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                 <InteractiveTextField
                     isActive={activeField === 'email'}
                     value={email}
-                    placeholder="email..."
+                    placeholder="e-mail…"
                     cursor={cursorVisible ? '|' : ' '}
                     onClick={() => { setActiveField('email'); setTimeout(() => emailInputRef.current?.focus(), 10); }}
                     // Layout
@@ -404,7 +404,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                 <InteractiveTextField
                     isActive={activeField === 'subject'}
                     value={subject}
-                    placeholder="subject..."
+                    placeholder="sujet…"
                     cursor={cursorVisible ? '|' : ' '}
                     onClick={() => { setActiveField('subject'); setTimeout(() => subjectInputRef.current?.focus(), 10); }}
                     // Layout
@@ -422,7 +422,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                 <InteractiveTextField
                     isActive={activeField === 'message'}
                     value={formattedMessage}
-                    placeholder="message..."
+                    placeholder="message…"
                     cursor={cursorVisible ? '|' : ' '}
                     onClick={() => { setActiveField('message'); setTimeout(() => hiddenInputRef.current?.focus(), 10); }}
                     // Layout
@@ -445,7 +445,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                     onClick={handleButtonClick}
                     position={[0, 0.005, 0.68]}
                     size={[0.5, 0.13]}
-                    text={isSubmitting ? 'SENDING...' : 'SEND'}
+                    text={isSubmitting ? 'ENVOI…' : 'ENVOYER'}
                     fontPath={FONT_PATH}
                 />
 
@@ -460,7 +460,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                         anchorX="center"
                         anchorY="middle"
                     >
-                        {errors.email || errors.subject || errors.message || 'Please fill all fields'}
+                        {errors.email || errors.subject || errors.message || 'Veuillez remplir tous les champs'}
                     </Text>
                 )}
 
@@ -475,7 +475,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                         anchorX="center"
                         anchorY="middle"
                     >
-                        Message sent! ✓
+                        Message envoyé ! ✓
                     </Text>
                 )}
 
@@ -490,7 +490,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                         anchorX="center"
                         anchorY="middle"
                     >
-                        Failed to send. Try again.
+                        Échec de l’envoi. Réessayez.
                     </Text>
                 )}
             </>

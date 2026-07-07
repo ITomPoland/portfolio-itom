@@ -51,7 +51,7 @@ const GlobalOverlay = () => {
     // DUMMY RENDER MOCK - Pre-render the heaviest layout (certificate_grid) invisibly 
     // to calculate CSS layout costs on page load, NOT on first click.
     const dummyGridContent = {
-        title: 'Loading...',
+        title: 'Chargement…',
         layout: 'certificate_grid',
         items: [
             { label: '', date: '', image: '' },
@@ -398,7 +398,7 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                         <button
                             onClick={onClose}
                             className="studio-close-btn"
-                            aria-label="Close"
+                            aria-label="Fermer"
                         >
                             <svg viewBox="0 0 24 24">
                                 <path d="M18 6L6 18M6 6l12 12" />
@@ -538,7 +538,7 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                                     rel="noopener noreferrer"
                                     className="studio-action-button"
                                 >
-                                    {content.ctaLabel || 'Open Link ↗'}
+                                    {content.ctaLabel || 'Ouvrir le lien ↗'}
                                 </a>
                             </div>
                         </>

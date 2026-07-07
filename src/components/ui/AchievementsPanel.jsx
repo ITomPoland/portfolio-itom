@@ -9,11 +9,11 @@ const AchievementsPanel = ({ isOpen, onClose }) => {
         <div className={`achievements-panel ${isOpen ? 'open' : ''}`} inert={!isOpen ? true : undefined}>
             <div className="achievements-card">
                 <div className="achievements-header">
-                    <h3>ACHIEVEMENTS</h3>
+                    <h3>SUCCÈS</h3>
                     <button
                         className="close-btn"
                         onClick={onClose}
-                        aria-label="Close achievements"
+                        aria-label="Fermer les succès"
                     >
                         <svg viewBox="0 0 24 24">
                             <path d="M18 6L6 18M6 6l12 12" />
@@ -49,7 +49,7 @@ const AchievementsPanel = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="achievements-footer">
-                    <span>{completed.length} / {Object.keys(ACHIEVEMENTS).length} EXPLORED</span>
+                    <span>{completed.length} / {Object.keys(ACHIEVEMENTS).length} EXPLORÉS</span>
                 </div>
             </div>
         </div>

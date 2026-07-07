@@ -24,7 +24,7 @@ export default function ConsentBanner() {
   return (
     <div
       className="consent-banner"
-      role="dialog"
+      role="region"
       aria-live="polite"
       aria-label="Consentement à la mesure d'audience"
     >

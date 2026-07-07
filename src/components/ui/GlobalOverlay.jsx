@@ -121,6 +121,16 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
     const [scrollThumbTop, setScrollThumbTop] = useState(0);
     const [showScrollbar, setShowScrollbar] = useState(false);
 
+    // Accessibility & Focus Management Refs
+    const cardRef = useRef(null);
+    const closeButtonRef = useRef(null);
+    const lastFocusedElement = useRef(null);
+
+    // Media query check for prefers-reduced-motion
+    const prefersReducedMotion = typeof window !== 'undefined'
+        ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        : false;
+
     // Update thumb position based on scroll
     const updateThumbPosition = useCallback(() => {
         const el = scrollContainerRef.current;
@@ -223,10 +233,77 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
         }
     };
 
+    // Focus management when modal opens/closes
+    useEffect(() => {
+        if (isOpen) {
+            lastFocusedElement.current = document.activeElement;
+            // Focus the close button after a small timeout to let the dialog animate in
+            const timer = setTimeout(() => {
+                closeButtonRef.current?.focus();
+            }, 100);
+            return () => clearTimeout(timer);
+        } else {
+            // Restore focus when closed
+            if (lastFocusedElement.current) {
+                lastFocusedElement.current.focus();
+            }
+        }
+    }, [isOpen]);
+
+    // Handle accessibility key events (Escape to close, Tab to trap focus)
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const getFocusableElements = (container) => {
+            if (!container) return [];
+            return Array.from(
+                container.querySelectorAll(
+                    'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex="0"]'
+                )
+            );
+        };
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                onClose();
+                return;
+            }
+
+            if (e.key === 'Tab') {
+                const focusable = getFocusableElements(cardRef.current);
+                if (focusable.length === 0) {
+                    e.preventDefault();
+                    return;
+                }
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+
+                if (e.shiftKey) {
+                    if (document.activeElement === first) {
+                        last.focus();
+                        e.preventDefault();
+                    }
+                } else {
+                    if (document.activeElement === last) {
+                        first.focus();
+                        e.preventDefault();
+                    }
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, onClose]);
+
     // --- STYLES & ANIMATION CONFIG ---
     // Spring ease for that "pop" effect
-    const transitionSpring = 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.8s ease';
-    const transitionContent = 'all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)';
+    const transitionSpring = prefersReducedMotion 
+        ? 'opacity 0.15s ease' 
+        : 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.8s ease';
+    const transitionContent = prefersReducedMotion 
+        ? 'opacity 0.15s ease' 
+        : 'all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)';
 
     // --- KONFIGURACJA STYLU KARTKI (POZYCJA) ---
     // Używamy % lub vw/vh dla fluid-responsywności.
@@ -236,7 +313,9 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
         maxHeight: '60vh',
         bottom: '10rem', // <--- FLUID: WPROWADZONE PRZEZ UZYTKOWNIKA
         left: '50%',
-        transform: isOpen ? 'translate(-50%, 0) rotate(-1deg)' : 'translate(-50%, 120%) rotate(10deg)',
+        transform: isOpen 
+            ? 'translate(-50%, 0) rotate(-1deg)' 
+            : (prefersReducedMotion ? 'translate(-50%, 0)' : 'translate(-50%, 120%) rotate(10deg)'),
         opacity: isOpen ? 1 : 0,
         color: '#1a1a1a',
     } : {
@@ -244,7 +323,9 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
         width: 'clamp(280px, 30vw, 450px)', // <--- FLUID
         right: 'clamp(2rem, 12vw, 20rem)', // <--- FLUID: scales with viewport
         top: '50%',
-        transform: isOpen ? 'translateY(-50%) rotate(1deg)' : 'translate(150%, -50%) rotate(15deg)',
+        transform: isOpen 
+            ? 'translateY(-50%) rotate(1deg)' 
+            : (prefersReducedMotion ? 'translateY(-50%)' : 'translate(150%, -50%) rotate(15deg)'),
         opacity: isOpen ? 1 : 0,
         color: '#1a1a1a',
     };
@@ -252,9 +333,9 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
     // Staggered animation helper (delays based on index)
     const getStaggerStyle = (delay) => ({
         opacity: isOpen ? 1 : 0,
-        transform: isOpen ? 'translateY(0)' : 'translateY(20px)',
+        transform: isOpen ? 'translateY(0)' : (prefersReducedMotion ? 'translateY(0)' : 'translateY(20px)'),
         transition: transitionContent,
-        transitionDelay: isOpen ? `${delay}ms` : '0ms',
+        transitionDelay: isOpen ? (prefersReducedMotion ? '0ms' : `${delay}ms`) : '0ms',
     });
 
     // --- KONFIGURACJA MASKI (SPOTLIGHT - CZARNA DZIURA) ---
@@ -322,6 +403,10 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                 }}
             >
                 <div
+                    ref={cardRef}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="overlay-title"
                     style={{
                         position: 'absolute',
                         padding: isMobile ? '1.5rem' : '2.5rem',
@@ -342,7 +427,9 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                             top: '50%',
                             right: 'auto',
                             bottom: 'auto',
-                            transform: isOpen ? 'translate(-50%, -50%)' : 'translate(-50%, 100%)',
+                            transform: isOpen 
+                                ? 'translate(-50%, -50%)' 
+                                : (prefersReducedMotion ? 'translate(-50%, -50%)' : 'translate(-50%, 100%)'),
                         } : {})
                     }}
                     className="studio-paper-card"
@@ -405,7 +492,7 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                             }}>
                                 {label}
                             </span>
-                            <h2 style={{
+                            <h2 id="overlay-title" style={{
                                 fontSize: '1.8rem',
                                 margin: 0,
                                 lineHeight: 1.1,
@@ -417,6 +504,7 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                         </div>
 
                         <button
+                            ref={closeButtonRef}
                             onClick={onClose}
                             className="studio-close-btn"
                             aria-label="Fermer"

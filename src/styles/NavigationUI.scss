@@ -318,6 +318,12 @@
         margin: 0;
         outline: none;
         appearance: none;
+
+        &:focus-visible {
+            outline: 2px dashed #1a1a1a;
+            outline-offset: -2px;
+            background: rgba(0, 0, 0, 0.05);
+        }
         font: inherit;
         color: inherit;
     }
@@ -588,6 +594,11 @@
                 border-radius: 2px;
                 outline: none;
                 cursor: pointer;
+
+                &:focus-visible {
+                    outline: 2px solid #1a1a1a;
+                    outline-offset: 4px;
+                }
 
                 &::-webkit-slider-thumb {
                     appearance: none;

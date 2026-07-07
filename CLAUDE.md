@@ -54,3 +54,29 @@ nouvelle** sans raison forte ; devDependencies outillage/test OK si la tâche le
 - Pas de vérification visuelle possible depuis le web : s'en tenir aux critères testables de la
   tâche, et lister dans la description de PR ce qui nécessite une QA visuelle humaine.
 - Description de PR : ce qui a été fait, comment c'est vérifié, ce qui reste/risques. En français.
+
+### Protocole RELAIS (dernière itération — OBLIGATOIRE)
+Le backlog est découpé en **Sessions A→F** (2-3 tâches chacune, voir `.ai-web/tasks/README.md`).
+Une discussion = UNE session, jamais plus :
+1. Lire `.ai-web/NEXT.md` pour savoir quelle session prendre (sauf consigne explicite).
+2. Faire les tâches de la session (une branche + une PR par tâche, comme d'habitude).
+3. **Avant de finir** : mettre à jour `.ai-web/NEXT.md` (committé dans la DERNIÈRE PR) — tâches
+   faites + numéros de PR, session suivante, et la commande exacte à coller.
+4. **Dernière ligne de la réponse à l'utilisateur, toujours** :
+   « ✋ Session X terminée — ouvre une NOUVELLE session sur ce dépôt et colle :
+   "Lis CLAUDE.md puis exécute la Session Y de .ai-web/tasks/README.md" ».
+Ne jamais entamer la session suivante dans la même discussion, même s'il reste du temps.
+
+## 5. Architecture backend — DÉCIDÉE (2026-07-07, Engineering Manager)
+
+Le front reste **statique sur Cloudflare Pages**. Le backend est **Cloudflare-natif** :
+- **Pages Functions** (répertoire `functions/`) pour l'API — même dépôt, même déploiement.
+- **D1** (SQLite managé) pour le catalogue/stock — binding `PRODUCTS_DB`.
+- **Stripe Checkout HÉBERGÉ** pour le paiement : redirection pleine page vers Stripe, JAMAIS de
+  stripe.js embarqué ni de donnée carte sur notre origine (la CSP stricte de `public/_headers`
+  reste intacte). Webhook signé pour la confirmation.
+- **Admin** : route `/admin` (lazy) + API protégée par `Authorization: Bearer` (secret
+  `ADMIN_TOKEN` en variable d'environnement Cloudflare — JAMAIS committé).
+Pourquoi : zéro nouveau fournisseur (Supabase écarté — doute client), surface d'audit minimale,
+gratuit à cette échelle, réversible (SQLite exportable). Le front doit TOUJOURS retomber sur les
+données statiques (`productData.js`) si l'API est absente (dev local sans wrangler, panne).

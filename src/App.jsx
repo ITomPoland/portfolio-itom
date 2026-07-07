@@ -79,6 +79,22 @@ if (isLowEnd) {
   filteredLoader.forEach(path => useLoader.preload(TextureLoader, path));
 }
 
+// WebGL preflight: with failIfMajorPerformanceCaveat the context creation FAILS
+// silently on software-rendered browsers (GPU blocklisted / broken driver) and the
+// app would hang behind the preloader forever. Probe once so we can degrade instead.
+const detectWebGLSupport = () => {
+  try {
+    const probe = document.createElement('canvas');
+    const strict = { failIfMajorPerformanceCaveat: true };
+    if (probe.getContext('webgl2', strict) || probe.getContext('webgl', strict)) return 'hardware';
+    if (probe.getContext('webgl2') || probe.getContext('webgl')) return 'software';
+    return 'none';
+  } catch {
+    return 'none';
+  }
+};
+const WEBGL_SUPPORT = detectWebGLSupport();
+
 const FONT_URL = 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff';
 
 // Helper component to handle global audio enable on interaction
@@ -133,6 +149,25 @@ function AppContent() {
     });
   }, []);
 
+  // No WebGL at all: a clear message beats an eternal loading screen.
+  if (WEBGL_SUPPORT === 'none') {
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', gap: '12px',
+        background: '#fafafa', color: '#111', textAlign: 'center',
+        padding: '24px', fontFamily: 'Inter, sans-serif'
+      }}>
+        <h1 style={{ fontSize: '1.4rem', margin: 0 }}>Hakkilo XR</h1>
+        <p style={{ maxWidth: '32rem', margin: 0 }}>
+          Ce site est une expérience 3D et ton navigateur ne permet pas d&apos;afficher
+          la 3D (WebGL désactivé ou indisponible). Essaie un autre navigateur, ou
+          réactive l&apos;accélération matérielle dans les réglages.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <AudioProvider>
       <SceneProvider>
@@ -152,7 +187,10 @@ function AppContent() {
                 alpha: false,
                 powerPreference: settings.powerPreference,
                 localClippingEnabled: true,
-                failIfMajorPerformanceCaveat: true
+                // Only refuse software rendering when hardware WebGL exists —
+                // otherwise accept the slow context (PerformanceMonitor will
+                // downgrade the tier) instead of hanging at the preloader.
+                failIfMajorPerformanceCaveat: WEBGL_SUPPORT === 'hardware'
               }}
               dpr={settings.dpr}
               shadows={settings.shadows}

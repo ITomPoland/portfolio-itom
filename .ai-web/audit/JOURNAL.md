@@ -7,7 +7,7 @@ Une passe terminée = checkbox cochée + push (même si RAS).
 ## Passes
 
 - [x] **P1 — Injection/XSS** : `dangerouslySetInnerHTML`, `innerHTML`, `eval`/`new Function`, réflexion de paramètres d'URL, contenu utilisateur dans le DOM ou textures/sprites Three.js. Focus formulaire contact `MessagePaper.jsx` (validation, web3forms, honeypot, messages d'erreur). → 5 findings (F1–F5), tous corrigés.
-- [ ] **P2 — Secrets & fuites** : scan code + historique git, `.env` commités, sourcemaps prod, clés en dur (dont trace résiduelle de la clé Web3Forms du template).
+- [x] **P2 — Secrets & fuites** : scan code + historique git, `.env` commités, sourcemaps prod, clés en dur (dont trace résiduelle de la clé Web3Forms du template). → 3 findings d'historique (F6–F8), documentés (réécriture d'historique = décision Engineering Manager).
 - [ ] **P3 — Dépendances & supply chain** : `npm audit`, CVE three/react/vite, scripts d'install suspects, dépendances fantômes. Bumps mineurs/patch uniquement.
 - [ ] **P4 — Headers & CSP** : complétude CSP (`frame-ancestors`, `object-src`, `base-uri`, `form-action`), `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`. Cible Cloudflare Pages (`_headers`).
 - [ ] **P5 — CI/workflows GitHub** : `permissions:` minimal, `pull_request_target`, épinglage des actions, secrets dans les logs.
@@ -24,4 +24,11 @@ Une passe terminée = checkbox cochée + push (même si RAS).
 - **F5 — Sujet transmis tel quel vers l'en-tête du mail** — `MessagePaper.jsx`. Gravité : **faible** (défense en profondeur : input single-line, mais rien ne garantissait l'absence de `\r\n` côté état). **CORRIGÉ** : strip `[\r\n]` + trim des trois champs avant envoi.
 - **RAS P1** : aucun `dangerouslySetInnerHTML`/`innerHTML`/`eval`/`new Function` dans `src/` ; `?perf` lu en booléen via `URLSearchParams.has()` (pas de réflexion) ; pas de react-router (aucun segment d'URL rendu) ; messages d'erreur du formulaire = chaînes statiques françaises (pas de réflexion d'input) ; saisies rendues via troika `<Text>` (glyphes WebGL, pas d'interprétation HTML) ; `index.html` sans script dynamique (JSON-LD statique).
 
-Vérification : `npm run build` OK, 49/49 tests verts.
+Vérification : `npm run build` OK, 49/49 tests verts. Commit fixes P1 : `6eed45c`.
+
+### P2 — Secrets & fuites
+
+- **F6 — Clé Web3Forms de l'auteur du template toujours dans l'historique git** — introduite par `2a4d11a` (`const WEB3FORMS_KEY = '2ceaee50-a31e-4936-98fc-ca9648b21cdd'`), retirée de l'arbre par `188f2a1` mais extractible via `git log -S`. Gravité : **faible** (la clé appartient à l'auteur original et est déjà publique dans SON repo de template ; l'abus possible = spam de SA boîte mail, pas de celle d'Hakkilo). **NON CORRIGÉ (documenté)** : le seul vrai fix est une réécriture d'historique (`git filter-repo`) + force-push de toutes les branches — opération destructive à décider par l'Engineering Manager, faible bénéfice ici. Alternative zéro-risque : signaler la clé à l'auteur/Web3Forms pour révocation.
+- **F7 — Clé publique PostHog de l'auteur dans l'historique** — `phc_WHnLrkRaCRM9jr9EfbjhC09me4DY0vH5Yx2K4rshkdQ`, introduite par `37a2ebd`, retirée de l'arbre par `d72303e`. Gravité : **info** (token public par design, projet PostHog de l'auteur). Même remède que F6 si souhaité.
+- **F8 — Tokens `google-site-verification` de l'auteur dans l'historique** — retirés de l'arbre par `d72303e`. Gravité : **info** (inexploitables dès lors qu'ils ne sont plus servis sur le domaine).
+- **RAS P2** : aucun `.env` commité (seul `.env.example`, valeurs vides, `.gitignore` correct avec `.env`/`.env.*`) ; aucune clé en dur dans l'arbre actuel (scan motifs + entropie) ; pas de sourcemaps en build prod (`vite.config.js` sans `build.sourcemap`, aucun `.map` dans `dist/`) ; pas d'emails tiers dans les diffs ; `tmp/` (rapports d'audit assets) sans secret ; `robots.txt`/`sitemap.xml` propres ; le bundle ne référence que `VITE_WEB3FORMS_KEY`/`VITE_POSTHOG_KEY` via env. Note : `server.host: true` (vite dev) expose le serveur de dev sur le LAN — assumé/documenté, sans impact prod.

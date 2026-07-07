@@ -57,12 +57,29 @@ const RoomWarmup = ({ onWarmupComplete, isLowTier }) => {
             // Force compile all shaders in the scene (including warm-up rooms)
             // Use 2026 compileAsync to avoid blocking the main thread!
             if (gl.compileAsync) {
+                // Some drivers (seen: Mesa/Iris + KHR_parallel_shader_compile) never
+                // report compile completion, so the promise would hang the preloader
+                // at 90% forever with zero errors. Warmup is an optimization, not a
+                // requirement: give it 8s, then ship the scene and let shaders
+                // compile lazily on first use.
+                let settled = false;
+                const finishOnce = () => {
+                    if (settled) return;
+                    settled = true;
+                    finishWarmup();
+                };
+                setTimeout(() => {
+                    if (!settled) {
+                        console.warn('[RoomWarmup] compileAsync did not settle within 8s (driver issue?) — continuing without warmup');
+                        finishOnce();
+                    }
+                }, 8000);
                 gl.compileAsync(scene, camera, scene)
-                    .then(finishWarmup)
+                    .then(finishOnce)
                     .catch((err) => {
                         console.error('Async compilation failed, falling back to sync', err);
-                        gl.compile(scene, camera);
-                        finishWarmup();
+                        if (!settled) gl.compile(scene, camera);
+                        finishOnce();
                     });
             } else {
                 gl.compile(scene, camera);

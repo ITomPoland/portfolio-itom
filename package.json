@@ -12,22 +12,19 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@gsap/react": "^2.1.2",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",
     "@react-three/postprocessing": "^3.0.4",
-    "@types/three": "^0.182.0",
     "gsap": "^3.14.2",
     "posthog-js": "^1.360.0",
     "r3f-perf": "^7.2.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-router-dom": "^7.11.0",
-    "three": "^0.182.0",
-    "vara": "^1.4.1"
+    "three": "^0.182.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/three": "^0.182.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.5",

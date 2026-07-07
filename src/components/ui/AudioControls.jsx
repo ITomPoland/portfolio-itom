@@ -40,7 +40,7 @@ const AudioControls = () => {
             <button
                 className="mute-btn"
                 onClick={toggleMute}
-                aria-label={isMuted ? "Unmute" : "Mute"}
+                aria-label={isMuted ? "Activer le son" : "Couper le son"}
             >
                 {isMuted || globalVolume === 0 ? <SoundOffIcon /> : <SoundOnIcon />}
             </button>

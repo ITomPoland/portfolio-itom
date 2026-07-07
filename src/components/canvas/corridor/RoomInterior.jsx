@@ -20,10 +20,10 @@ const ROOM_CONFIG = {
 };
 
 const SUBTITLES = {
-    'THE GALLERY': 'Explore my creative projects',
-    'THE STUDIO': 'Watch behind the scenes',
-    'DEV DIARY': 'My development journey',
-    "LET'S CONNECT": 'Get in touch with me'
+    'THE GALLERY': 'Explorez nos projets créatifs',
+    'THE STUDIO': 'Découvrez notre boutique',
+    'DEV DIARY': 'Notre parcours créatif',
+    "LET'S CONNECT": 'Prenons contact'
 };
 
 // Naturalny kafelek listwy: 1582x94px przy wysokości 0.15 → ~2.524 units szerokości

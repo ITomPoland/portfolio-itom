@@ -5,12 +5,12 @@ import posthog from 'posthog-js';
 const AchievementsContext = createContext();
 
 export const ACHIEVEMENTS = {
-    corridor_enter: { id: 'corridor_enter', label: 'Click a door to enter', title: 'Explorer' },
-    corridor_explore: { id: 'corridor_explore', label: 'Scroll to explore the corridor', title: 'Wanderer' },
-    about_fly: { id: 'about_fly', label: 'Scroll to fly through my story', title: 'Sky Walker' },
-    studio_interact: { id: 'studio_interact', label: 'Drag to rotate and browse', title: 'Director' },
-    gallery_inspect: { id: 'gallery_inspect', label: 'Click project to inspect', title: 'Art Critic' },
-    contact_choose: { id: 'contact_choose', label: 'Find a contact method', title: 'Sociable' }
+    corridor_enter: { id: 'corridor_enter', label: 'Cliquez une porte pour entrer', title: 'Explorateur' },
+    corridor_explore: { id: 'corridor_explore', label: 'Faites défiler pour explorer le couloir', title: 'Promeneur' },
+    about_fly: { id: 'about_fly', label: 'Faites défiler pour parcourir notre univers', title: 'Marcheur du ciel' },
+    studio_interact: { id: 'studio_interact', label: 'Glissez pour pivoter et parcourir', title: 'Directeur' },
+    gallery_inspect: { id: 'gallery_inspect', label: 'Cliquez un projet pour l’inspecter', title: 'Critique d’art' },
+    contact_choose: { id: 'contact_choose', label: 'Trouvez un moyen de nous contacter', title: 'Sociable' }
 };
 
 export const AchievementsProvider = ({ children }) => {

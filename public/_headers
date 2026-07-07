@@ -35,6 +35,13 @@
 #   media-src  'self'            — local mp3 (AudioManager).
 #   object-src 'none', base-uri 'self', form-action 'self', frame-ancestors 'none' — nothing
 #   legitimate uses plugins, <base>, cross-origin form posts or framing (matches X-Frame-Options).
+#   form-action stays 'self' (NOT api.web3forms.com): the contact form submits via fetch()
+#   (governed by connect-src); no native <form> exists, so widening form-action would only
+#   open a cross-origin exfil path for injected <form> markup.
+#
+# Permissions-Policy (audit 2026-07): deviceorientation drives the mobile parallax/camera
+# (useParallax.js, useInfiniteCamera.js) and needs accelerometer+gyroscope for self — do not
+# block them. Everything else is denied; re-allow xr-spatial-tracking only if WebXR ships.
 #
 # NOT whitelisted on purpose (add only when the feature ships):
 #   - PostHog assets host (eu-assets.i.posthog.com): only needed if session recording /
@@ -47,7 +54,7 @@
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), midi=(), serial=(), bluetooth=(), display-capture=(), magnetometer=(), xr-spatial-tracking=(), browsing-topics=(), accelerometer=(self), gyroscope=(self)
   Cross-Origin-Opener-Policy: same-origin
 
 # Cache static assets for 1 year (Performance & SEO)

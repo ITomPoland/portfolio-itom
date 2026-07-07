@@ -1,8 +1,9 @@
-import React, { useMemo, useRef, useEffect, Suspense } from 'react';
+import React, { useMemo, useRef, useEffect, useLayoutEffect, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { makeVilleTextures } from './villeTextures';
+import { usePerformance, TIERS } from '../../../context/PerformanceContext';
 
 /**
  * ErrorBoundary for GLB loading fallbacks
@@ -147,55 +148,92 @@ function CafeSpot({ x, z, variant, texBois }) {
 }
 
 /**
- * Procedural low-poly tree builder
+ * Instanced low-poly trees (perf fable/007). The old per-tree component created 8 meshes
+ * × 17 trees = 136 draw calls, 136 geometries and 136 materials (inline JSX args). Same
+ * exact transforms, now composed into 4 InstancedMesh (trunks / branches / 2 leaf tints):
+ * geometry args are UNIT values from the original blueprint, per-tree scale `s` and the
+ * per-part offsets (which were all ×s) are carried by the instance matrix instead.
  */
-function ProceduralTree({ x, z, scale, rotationY }) {
-    const s = scale;
+const TREE_BRANCHES = [
+    { pos: [0.3, 2.5, 0.1], rot: [0, 0, -0.7] },
+    { pos: [-0.32, 2.3, -0.1], rot: [0.2, 0, 0.8] },
+];
+const TREE_LOBES = [
+    { pos: [0, 3.6, 0], rot: [1.2, 2.4, 0], r: 1.5, dark: false },
+    { pos: [0.9, 3.1, 0.3], rot: [0.5, 1.8, 0], r: 1.0, dark: true },
+    { pos: [-0.85, 3.0, -0.2], rot: [2.1, 0.9, 0], r: 0.95, dark: true },
+    { pos: [0.2, 4.3, -0.4], rot: [1.7, 2.7, 0], r: 0.9, dark: false },
+    { pos: [-0.3, 3.3, 0.8], rot: [0.3, 1.2, 0], r: 0.85, dark: false },
+];
+
+function InstancedTrees({ trees }) {
+    const trunkRef = useRef();
+    const branchRef = useRef();
+    const lobesDarkRef = useRef();
+    const lobesLightRef = useRef();
+
+    const { trunkGeo, branchGeo, lobeGeo, woodMat, leafDarkMat, leafLightMat } = useMemo(() => ({
+        trunkGeo: new THREE.CylinderGeometry(0.16, 0.3, 2.6, 7),
+        branchGeo: new THREE.CylinderGeometry(0.07, 0.11, 1.3, 5),
+        lobeGeo: new THREE.IcosahedronGeometry(1, 1),
+        woodMat: new THREE.MeshStandardMaterial({ color: 0x5d4a33, roughness: 1 }),
+        leafDarkMat: new THREE.MeshStandardMaterial({ color: 0x3d5c38, roughness: 1, flatShading: true }),
+        leafLightMat: new THREE.MeshStandardMaterial({ color: 0x4a6b41, roughness: 1, flatShading: true }),
+    }), []);
+
+    useEffect(() => () => {
+        trunkGeo.dispose(); branchGeo.dispose(); lobeGeo.dispose();
+        woodMat.dispose(); leafDarkMat.dispose(); leafLightMat.dispose();
+    }, [trunkGeo, branchGeo, lobeGeo, woodMat, leafDarkMat, leafLightMat]);
+
+    useLayoutEffect(() => {
+        const treeM = new THREE.Matrix4();
+        const partM = new THREE.Matrix4();
+        const q = new THREE.Quaternion();
+        const e = new THREE.Euler();
+        const v = new THREE.Vector3();
+        const sv = new THREE.Vector3();
+        let iTrunk = 0, iBranch = 0, iDark = 0, iLight = 0;
+
+        for (const t of trees) {
+            treeM.compose(
+                v.set(t.x, 0, t.z),
+                q.setFromEuler(e.set(0, t.rotationY, 0)),
+                sv.set(t.scale, t.scale, t.scale),
+            );
+            partM.compose(v.set(0, 1.3, 0), q.identity(), sv.set(1, 1, 1)).premultiply(treeM);
+            trunkRef.current.setMatrixAt(iTrunk++, partM);
+
+            for (const b of TREE_BRANCHES) {
+                partM.compose(
+                    v.set(b.pos[0], b.pos[1], b.pos[2]),
+                    q.setFromEuler(e.set(b.rot[0], b.rot[1], b.rot[2])),
+                    sv.set(1, 1, 1),
+                ).premultiply(treeM);
+                branchRef.current.setMatrixAt(iBranch++, partM);
+            }
+            for (const l of TREE_LOBES) {
+                partM.compose(
+                    v.set(l.pos[0], l.pos[1], l.pos[2]),
+                    q.setFromEuler(e.set(l.rot[0], l.rot[1], l.rot[2])),
+                    sv.set(l.r, l.r * 0.82, l.r),
+                ).premultiply(treeM);
+                if (l.dark) lobesDarkRef.current.setMatrixAt(iDark++, partM);
+                else lobesLightRef.current.setMatrixAt(iLight++, partM);
+            }
+        }
+        for (const ref of [trunkRef, branchRef, lobesDarkRef, lobesLightRef]) {
+            ref.current.instanceMatrix.needsUpdate = true;
+        }
+    }, [trees]);
+
+    const n = trees.length;
     return (
-        <group position={[x, 0, z]} rotation={[0, rotationY, 0]}>
-            {/* Trunk */}
-            <mesh position={[0, 1.3 * s, 0]} castShadow>
-                <cylinderGeometry args={[0.16 * s, 0.3 * s, 2.6 * s, 7]} />
-                <meshStandardMaterial color={0x5d4a33} roughness={1} />
-            </mesh>
-
-            {/* Branch 1 */}
-            <mesh position={[0.3 * s, 2.5 * s, 0.1 * s]} rotation-z={-0.7} castShadow>
-                <cylinderGeometry args={[0.07 * s, 0.11 * s, 1.3 * s, 5]} />
-                <meshStandardMaterial color={0x5d4a33} roughness={1} />
-            </mesh>
-
-            {/* Branch 2 */}
-            <mesh position={[-0.32 * s, 2.3 * s, -0.1 * s]} rotation-z={0.8} rotation-x={0.2} castShadow>
-                <cylinderGeometry args={[0.07 * s, 0.11 * s, 1.3 * s, 5]} />
-                <meshStandardMaterial color={0x5d4a33} roughness={1} />
-            </mesh>
-
-            {/* 5 Leaf Lobes */}
-            <mesh position={[0, 3.6 * s, 0]} rotation={[1.2, 2.4, 0]} scale-y={0.82} castShadow>
-                <icosahedronGeometry args={[1.5 * s, 1]} />
-                <meshStandardMaterial color={0x4a6b41} roughness={1} flatShading />
-            </mesh>
-
-            <mesh position={[0.9 * s, 3.1 * s, 0.3 * s]} rotation={[0.5, 1.8, 0]} scale-y={0.82} castShadow>
-                <icosahedronGeometry args={[1.0 * s, 1]} />
-                <meshStandardMaterial color={0x3d5c38} roughness={1} flatShading />
-            </mesh>
-
-            <mesh position={[-0.85 * s, 3.0 * s, -0.2 * s]} rotation={[2.1, 0.9, 0]} scale-y={0.82} castShadow>
-                <icosahedronGeometry args={[0.95 * s, 1]} />
-                <meshStandardMaterial color={0x3d5c38} roughness={1} flatShading />
-            </mesh>
-
-            <mesh position={[0.2 * s, 4.3 * s, -0.4 * s]} rotation={[1.7, 2.7, 0]} scale-y={0.82} castShadow>
-                <icosahedronGeometry args={[0.9 * s, 1]} />
-                <meshStandardMaterial color={0x4a6b41} roughness={1} flatShading />
-            </mesh>
-
-            <mesh position={[-0.3 * s, 3.3 * s, 0.8 * s]} rotation={[0.3, 1.2, 0]} scale-y={0.82} castShadow>
-                <icosahedronGeometry args={[0.85 * s, 1]} />
-                <meshStandardMaterial color={0x4a6b41} roughness={1} flatShading />
-            </mesh>
+        <group>
+            <instancedMesh ref={trunkRef} args={[trunkGeo, woodMat, n]} castShadow />
+            <instancedMesh ref={branchRef} args={[branchGeo, woodMat, n * 2]} castShadow />
+            <instancedMesh ref={lobesDarkRef} args={[lobeGeo, leafDarkMat, n * 2]} castShadow />
+            <instancedMesh ref={lobesLightRef} args={[lobeGeo, leafLightMat, n * 3]} castShadow />
         </group>
     );
 }
@@ -234,15 +272,11 @@ function PlazaLampModel({ x, z, lampHeadMat }) {
 /**
  * Low-poly simple street lamp for street grids
  */
-function SimplePole({ x, z, lampPoleMat, lampHeadMat }) {
+function SimplePole({ x, z, lampPoleMat, lampHeadMat, poleGeo, poleHeadGeo }) {
     return (
         <group>
-            <mesh position={[x, 2.3, z]} material={lampPoleMat}>
-                <cylinderGeometry args={[0.07, 0.1, 4.6, 6]} />
-            </mesh>
-            <mesh position={[x, 4.7, z]} material={lampHeadMat}>
-                <sphereGeometry args={[0.24, 10, 8]} />
-            </mesh>
+            <mesh position={[x, 2.3, z]} material={lampPoleMat} geometry={poleGeo} />
+            <mesh position={[x, 4.7, z]} material={lampHeadMat} geometry={poleHeadGeo} />
         </group>
     );
 }
@@ -261,19 +295,23 @@ const KENNEY_BUILDINGS = [
     { file: 'building-skyscraper-c.glb', position: [14,  0, 46], rotationY: Math.PI },
 ];
 
-export default function VilleDecor({ nightRef }) {
+export default function VilleDecor({ nightRef, textures: texturesProp }) {
     const lightsRef = useRef([]);
     const lampHeadMatRef = useRef();
+    const { tier } = usePerformance();
 
-    // Load procedural textures for tables
-    const textures = useMemo(() => makeVilleTextures(), []);
+    // Textures come from MiniVille (shared set). The fallback keeps the component
+    // standalone-safe but used to run unconditionally — a full duplicate ~12 MB set.
+    const textures = useMemo(() => texturesProp ?? makeVilleTextures(), [texturesProp]);
 
-    // 1. Lamp materials
-    const { lampPoleMat, lampHeadMat } = useMemo(() => {
-        const pole = new THREE.MeshStandardMaterial({ color: 0x2a2a2e, roughness: 0.5, metalness: 0.6 });
-        const head = new THREE.MeshStandardMaterial({ color: 0xfff2dc, emissive: 0xffd9a0, emissiveIntensity: 0.05, roughness: 0.4 });
-        return { lampPoleMat: pole, lampHeadMat: head };
-    }, []);
+    // 1. Lamp materials + shared pole geometries (perf: the 20 SimplePoles used to build
+    // their own cylinder+sphere each → 40 geometries for 2 shapes)
+    const { lampPoleMat, lampHeadMat, poleGeo, poleHeadGeo } = useMemo(() => ({
+        lampPoleMat: new THREE.MeshStandardMaterial({ color: 0x2a2a2e, roughness: 0.5, metalness: 0.6 }),
+        lampHeadMat: new THREE.MeshStandardMaterial({ color: 0xfff2dc, emissive: 0xffd9a0, emissiveIntensity: 0.05, roughness: 0.4 }),
+        poleGeo: new THREE.CylinderGeometry(0.07, 0.1, 4.6, 6),
+        poleHeadGeo: new THREE.SphereGeometry(0.24, 10, 8),
+    }), []);
 
     // Capture the lampHeadMat ref to update emissive intensity in useFrame
     useEffect(() => {
@@ -411,21 +449,13 @@ export default function VilleDecor({ nightRef }) {
                 </BuildingErrorBoundary>
             ))}
 
-            {/* 4. Procedural Trees */}
-            {trees.map((t, idx) => (
-                <ProceduralTree 
-                    key={idx} 
-                    x={t.x} 
-                    z={t.z} 
-                    scale={t.scale} 
-                    rotationY={t.rotationY} 
-                />
-            ))}
+            {/* 4. Low-poly trees — 4 instanced draws instead of 136 meshes (fable/007) */}
+            <InstancedTrees trees={trees} />
 
             {/* 5. Plaza Lamps (Using Detailed GLB model) */}
             {plazaLamps.map((spot, idx) => (
-                <BuildingErrorBoundary key={idx} fallback={<SimplePole x={spot[0]} z={spot[1]} lampPoleMat={lampPoleMat} lampHeadMat={lampHeadMat} />}>
-                    <Suspense fallback={<SimplePole x={spot[0]} z={spot[1]} lampPoleMat={lampPoleMat} lampHeadMat={lampHeadMat} />}>
+                <BuildingErrorBoundary key={idx} fallback={<SimplePole x={spot[0]} z={spot[1]} lampPoleMat={lampPoleMat} lampHeadMat={lampHeadMat} poleGeo={poleGeo} poleHeadGeo={poleHeadGeo} />}>
+                    <Suspense fallback={<SimplePole x={spot[0]} z={spot[1]} lampPoleMat={lampPoleMat} lampHeadMat={lampHeadMat} poleGeo={poleGeo} poleHeadGeo={poleHeadGeo} />}>
                         <PlazaLampModel x={spot[0]} z={spot[1]} lampHeadMat={lampHeadMat} />
                     </Suspense>
                 </BuildingErrorBoundary>
@@ -433,28 +463,29 @@ export default function VilleDecor({ nightRef }) {
 
             {/* 6. Street Lamps (Using low-poly SimplePole model for optimal performance) */}
             {streetLamps.map((spot, idx) => (
-                <SimplePole 
-                    key={idx} 
-                    x={spot[0]} 
-                    z={spot[1]} 
-                    lampPoleMat={lampPoleMat} 
-                    lampHeadMat={lampHeadMat} 
+                <SimplePole
+                    key={idx}
+                    x={spot[0]}
+                    z={spot[1]}
+                    lampPoleMat={lampPoleMat}
+                    lampHeadMat={lampHeadMat}
+                    poleGeo={poleGeo}
+                    poleHeadGeo={poleHeadGeo}
                 />
             ))}
 
-            {/* 7. Night PointLights (6 streetlights on the plaza) */}
-            {Array.from({ length: 6 }).map((_, idx) => {
-                const angle = (idx / 6) * Math.PI * 2;
+            {/* 7. Night PointLights — tier-aware count (fable/007). Forward rendering pays
+                every light in EVERY fragment shader, day included (intensity 0 still runs the
+                loop), so LOW gets 2 and MEDIUM 4. Count is fixed per tier — toggling lights
+                at runtime would change the shader program count and cause a compile hitch. */}
+            {Array.from({ length: tier === TIERS.LOW ? 2 : tier === TIERS.MEDIUM ? 4 : 6 }).map((_, idx, arr) => {
+                const angle = (idx / arr.length) * Math.PI * 2;
                 const x = Math.cos(angle) * 21;
                 const z = Math.sin(angle) * 21;
                 return (
-                    <pointLight 
-                        key={idx}
-                        ref={(el) => {
-                            if (el && !lightsRef.current.includes(el)) {
-                                lightsRef.current[idx] = el;
-                            }
-                        }}
+                    <pointLight
+                        key={`${arr.length}-${idx}`}
+                        ref={(el) => { lightsRef.current[idx] = el; }}
                         color="#ffd9a0"
                         position={[x, 4.6, z]}
                         distance={26}

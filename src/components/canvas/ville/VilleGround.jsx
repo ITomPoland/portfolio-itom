@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 
 /**
@@ -8,21 +8,34 @@ import * as THREE from 'three';
  */
 export default function VilleGround({ textures, nightRef }) {
     const _ = nightRef; // Signature consistency
+    const markingsRef = useRef();
 
+    // Lane markings — one InstancedMesh instead of 48 separate meshes (fable/007), same
+    // exact transforms (rotation-x -PI/2 then rotation-z, XYZ Euler like the JSX props).
+    const markings = useMemo(() => {
+        const list = [];
+        for (let i = 0; i < 12; i++) {
+            const offset = 24 + i * 6;
+            list.push(
+                { position: [0, 0.03, offset], rotationZ: 0 },
+                { position: [0, 0.03, -offset], rotationZ: 0 },
+                { position: [offset, 0.03, 0], rotationZ: Math.PI / 2 },
+                { position: [-offset, 0.03, 0], rotationZ: Math.PI / 2 },
+            );
+        }
+        return list;
+    }, []);
 
-    // Generate markings array to render declaratively
-    const markings = [];
-    for (let i = 0; i < 12; i++) {
-        const offset = 24 + i * 6;
-        markings.push(
-            // North/South lanes
-            { position: [0, 0.03, offset], rotationZ: 0 },
-            { position: [0, 0.03, -offset], rotationZ: 0 },
-            // East/West lanes
-            { position: [offset, 0.03, 0], rotationZ: Math.PI / 2 },
-            { position: [-offset, 0.03, 0], rotationZ: Math.PI / 2 }
-        );
-    }
+    useLayoutEffect(() => {
+        const tempObj = new THREE.Object3D();
+        markings.forEach((m, idx) => {
+            tempObj.position.set(m.position[0], m.position[1], m.position[2]);
+            tempObj.rotation.set(-Math.PI / 2, 0, m.rotationZ);
+            tempObj.updateMatrix();
+            markingsRef.current.setMatrixAt(idx, tempObj.matrix);
+        });
+        markingsRef.current.instanceMatrix.needsUpdate = true;
+    }, [markings]);
 
     return (
         <group>
@@ -82,18 +95,11 @@ export default function VilleGround({ textures, nightRef }) {
                 />
             </mesh>
 
-            {/* 5. Marquages plaza */}
-            {markings.map((m, idx) => (
-                <mesh 
-                    key={idx} 
-                    position={m.position} 
-                    rotation-x={-Math.PI / 2} 
-                    rotation-z={m.rotationZ}
-                >
-                    <planeGeometry args={[0.26, 2.2]} />
-                    <meshBasicMaterial color="#E09F3E" />
-                </mesh>
-            ))}
+            {/* 5. Marquages (48 instances, 1 draw call) */}
+            <instancedMesh ref={markingsRef} args={[null, null, markings.length]}>
+                <planeGeometry args={[0.26, 2.2]} />
+                <meshBasicMaterial color="#E09F3E" />
+            </instancedMesh>
         </group>
     );
 }

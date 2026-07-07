@@ -1,8 +1,15 @@
 import React, { useMemo, useRef, useLayoutEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { usePerformance, TIERS } from '../../../context/PerformanceContext';
 
 export default function VilleScenery({ textures, nightRef }) {
+    // Tier-aware densities (fable/007): LOW halves the decorative instances/particles and
+    // skips the additive moon halo. HIGH/MEDIUM keep the original look untouched.
+    const { tier } = usePerformance();
+    const isLow = tier === TIERS.LOW;
+    const grassCount = isLow ? 84 : 170;
+    const starCount = isLow ? 130 : 260;
     const imRef1 = useRef();
     const imRef2 = useRef();
     const montRef1 = useRef();
@@ -50,7 +57,7 @@ export default function VilleScenery({ textures, nightRef }) {
         }
         let placed = 0;
         let guard = 0;
-        const N = 170;
+        const N = grassCount;
         while (placed < N && guard++ < 10000) {
             const x = (random() - 0.5) * 100;
             const z = (random() - 0.5) * 100;
@@ -64,7 +71,7 @@ export default function VilleScenery({ textures, nightRef }) {
             placed++;
         }
         return positions;
-    }, []);
+    }, [grassCount]);
 
     // Mountains config
     const MOUNTAINS_CONFIG = useMemo(() => {
@@ -127,7 +134,7 @@ export default function VilleScenery({ textures, nightRef }) {
             return x - Math.floor(x);
         }
 
-        const n = 260;
+        const n = starCount;
         const arr = new Float32Array(n * 3);
         for (let i = 0; i < n; i++) {
             const a = random() * Math.PI * 2;
@@ -138,7 +145,7 @@ export default function VilleScenery({ textures, nightRef }) {
             arr[i * 3 + 2] = Math.sin(a) * Math.cos(e) * r;
         }
         return arr;
-    }, []);
+    }, [starCount]);
 
     // 4. Instanced Meshes matrix composition
     useLayoutEffect(() => {
@@ -222,7 +229,7 @@ export default function VilleScenery({ textures, nightRef }) {
     return (
         <group>
             {/* Grass Layers */}
-            <instancedMesh ref={imRef1} args={[gGeo, null, 170]}>
+            <instancedMesh key={`g1-${grassCount}`} ref={imRef1} args={[gGeo, null, grassCount]}>
                 <meshStandardMaterial
                     map={textures.texGrass}
                     transparent
@@ -232,7 +239,7 @@ export default function VilleScenery({ textures, nightRef }) {
                 />
             </instancedMesh>
 
-            <instancedMesh ref={imRef2} args={[gGeo, null, 170]}>
+            <instancedMesh key={`g2-${grassCount}`} ref={imRef2} args={[gGeo, null, grassCount]}>
                 <meshStandardMaterial
                     map={textures.texGrass}
                     transparent
@@ -273,7 +280,7 @@ export default function VilleScenery({ textures, nightRef }) {
             </instancedMesh>
 
             {/* Stars Particle System */}
-            <points frustumCulled={false}>
+            <points key={`stars-${starCount}`} frustumCulled={false}>
                 <bufferGeometry>
                     <bufferAttribute
                         attach="attributes-position"
@@ -305,18 +312,21 @@ export default function VilleScenery({ textures, nightRef }) {
                         fog={false}
                     />
                 </mesh>
-                <mesh>
-                    <sphereGeometry args={[22, 24, 18]} />
-                    <meshBasicMaterial
-                        ref={moonHaloMatRef}
-                        color="#aebdf2"
-                        transparent
-                        opacity={0}
-                        fog={false}
-                        blending={THREE.AdditiveBlending}
-                        depthWrite={false}
-                    />
-                </mesh>
+                {/* Additive halo: fullscreen-ish overdraw when the moon is up — skipped on LOW */}
+                {!isLow && (
+                    <mesh>
+                        <sphereGeometry args={[22, 24, 18]} />
+                        <meshBasicMaterial
+                            ref={moonHaloMatRef}
+                            color="#aebdf2"
+                            transparent
+                            opacity={0}
+                            fog={false}
+                            blending={THREE.AdditiveBlending}
+                            depthWrite={false}
+                        />
+                    </mesh>
+                )}
             </group>
         </group>
     );

@@ -182,10 +182,11 @@ export default function MiniVille() {
             {/* Ground: full terrain / plaza / streets / sidewalks / markings (agy 015) */}
             <VilleGround textures={textures} nightRef={nightRef} />
 
-            {/* Decor: surrounding buildings, trees, café, street lamps + night lights (agy 017) */}
+            {/* Decor: surrounding buildings, trees, café, street lamps + night lights (agy 017).
+                Shares THIS textures set — VilleDecor used to build a full duplicate. */}
             <RootErrorBoundary label="VilleDecor" fallback={null}>
                 <Suspense fallback={null}>
-                    <VilleDecor nightRef={nightRef} />
+                    <VilleDecor nightRef={nightRef} textures={textures} />
                 </Suspense>
             </RootErrorBoundary>
 

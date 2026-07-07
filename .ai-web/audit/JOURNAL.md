@@ -11,7 +11,7 @@ Une passe terminée = checkbox cochée + push (même si RAS).
 - [x] **P3 — Dépendances & supply chain** : `npm audit`, CVE three/react/vite, scripts d'install suspects, dépendances fantômes. Bumps mineurs/patch uniquement. → F9 corrigé (dépendances fantômes retirées), majors documentés.
 - [x] **P4 — Headers & CSP** : complétude CSP (`frame-ancestors`, `object-src`, `base-uri`, `form-action`), `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`. Cible Cloudflare Pages (`_headers`). → F10 corrigé (Permissions-Policy étendue), CSP validée dynamiquement sous Chromium : 0 violation.
 - [x] **P5 — CI/workflows GitHub** : `permissions:` minimal, `pull_request_target`, épinglage des actions, secrets dans les logs. → F11 corrigé (actions épinglées par SHA + dependabot github-actions).
-- [ ] **P6 — Logique client abusable** : `postMessage` sans vérif d'origine, `window.open` sans `noopener`, open redirects, localStorage/consentement, fetch d'assets externes, prototype pollution.
+- [x] **P6 — Logique client abusable** : `postMessage` sans vérif d'origine, `window.open` sans `noopener`, open redirects, localStorage/consentement, fetch d'assets externes, prototype pollution. → F12–F13 corrigés.
 
 ## Findings
 
@@ -55,3 +55,14 @@ Commit fix P4 : `81fec31`.
 
 - **F11 — Actions référencées par tag mutable** — `.github/workflows/ci.yml` utilisait `actions/checkout@v4` et `actions/setup-node@v4` : un tag peut être déplacé (compromission du repo d'action = exécution arbitraire dans la CI). Gravité : **faible** (actions officielles GitHub, permissions read-only, aucun secret dans le workflow) mais exigée par la passe. **CORRIGÉ** : épinglage aux SHAs complets vérifiés par `git ls-remote` (`checkout@34e11487…` = v4.3.1, `setup-node@49933ea5…` = v4.4.0) + ajout de l'écosystème `github-actions` à `dependabot.yml` pour maintenir les pins. YAML validé.
 - **RAS P5** : un seul workflow (`ci.yml`) ; `permissions: contents: read` top-level minimal ✓ ; déclencheurs `push` (2 branches longues) + `pull_request` — AUCUN `pull_request_target` ✓ ; aucun secret consommé (build volontairement sans clé) donc rien d'exposable aux logs ✓ ; pas d'`echo` de variables sensibles ; `concurrency` + `timeout-minutes` sains ; dependabot npm hebdo déjà en place.
+
+Commit fix P5 : `5be58bc`.
+
+### P6 — Logique client abusable
+
+- **F12 — 5 × `window.open(url, '_blank')` sans `noopener` ni contrôle de schéma** — `GalleryRoom.jsx` (~l.1180, `project.url` issu des données galerie) et `ContactRoom.jsx` ×4 (liens sociaux « TODO: vrai lien »). Gravité : **moyenne** (reverse tabnabbing ; schéma non filtré si les données deviennent dynamiques). **CORRIGÉ** : ajout de `src/utils/safeOpen.js` — repris À L'IDENTIQUE de la branche `web/03-safeopen` (PR en attente) pour que le double-merge soit trivial — et remplacement des 5 appels par `safeOpen(url)` (http/https only + `noopener,noreferrer`).
+  ⚠ **Note EM** : `web/03-safeopen` est PÉRIMÉE vis-à-vis de `feature/mini-ville` — la merger telle quelle re-angliciserait la copie française (MessagePaper, RoomInterior, AchievementsPanel). La protection safeOpen est désormais portée par la branche d'audit ; web/03 peut être abandonnée ou rebasée.
+- **F13 — Tableau d'achievements localStorage non validé** — `AchievementsContext.jsx` : `JSON.parse` puis usage direct (chaînes arbitraires persistées/re-comptées dans le panneau ; `ACHIEVEMENTS[id]` truthy pour `__proto__`/`constructor` via la chaîne de prototypes). Gravité : **faible** (auto-altération locale uniquement). **CORRIGÉ** : `Array.isArray` + filtre `typeof id === 'string' && Object.hasOwn(ACHIEVEMENTS, id)`.
+- **RAS P6** : aucun listener `postMessage`/`message` ; aucune écriture `location.*` (pas d'open redirect) ; consentement RGPD sain (`opt_out_capturing_by_default`, session recording off, opt-in explicite via ConsentBanner, clé via env — falsifier localStorage = s'auto-consentir, sans impact tiers) ; thème ville en whitelist stricte (`'jour'|'nuit'|'auto'`) ; `audio_muted` parsé par `=== 'true'` ; loaders GLB/textures exclusivement sur chemins statiques same-origin (CSP `img-src`/`connect-src` en filet) ; pas de deep-merge d'entrées externes (pas de vecteur prototype pollution) ; le seul `window.open` restant passe par `safeUrl` + noopener (GlobalOverlay, P1).
+
+Vérification P6 : `npm run build` OK, 49/49 tests verts.

@@ -9,6 +9,7 @@ import { useScene } from '../../../../context/SceneContext';
 import GalleryClouds from '../Gallery/GalleryClouds';
 import { useAchievements } from '../../../../context/AchievementsContext';
 import { useAudio } from '../../../../context/AudioManager';
+import { safeOpen } from '../../../../utils/safeOpen';
 
 // ============================================
 // ============================================
@@ -399,7 +400,7 @@ const ContactRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                 rotation={[0, 0.2, 0]}
                 texturePath="/textures/contact/beczka.webp"
                 label="LINKEDIN"
-                onClick={() => window.open('https://hakkilo.africa', '_blank')} // TODO: vrai lien
+                onClick={() => safeOpen('https://hakkilo.africa')} // TODO: vrai lien
                 paintOnBeforeCompile={onBeforeCompile}
                 paintUniforms={uniformsData}
             />
@@ -409,7 +410,7 @@ const ContactRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                 rotation={[0, 0.3, 0]}
                 texturePath="/textures/contact/beczka.webp"
                 label="GITHUB"
-                onClick={() => window.open('https://hakkilo.africa', '_blank')} // TODO: vrai lien
+                onClick={() => safeOpen('https://hakkilo.africa')} // TODO: vrai lien
                 paintOnBeforeCompile={onBeforeCompile}
                 paintUniforms={uniformsData}
             />
@@ -419,7 +420,7 @@ const ContactRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                 rotation={[0, -0.2, 0]}
                 texturePath="/textures/contact/beczka.webp"
                 label="FACEBOOK"
-                onClick={() => window.open('https://hakkilo.africa', '_blank')} // TODO: vrai lien
+                onClick={() => safeOpen('https://hakkilo.africa')} // TODO: vrai lien
                 paintOnBeforeCompile={onBeforeCompile}
                 paintUniforms={uniformsData}
             />
@@ -429,7 +430,7 @@ const ContactRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                 rotation={[0, -0.3, 0]}
                 texturePath="/textures/contact/beczka.webp"
                 label="INSTAGRAM"
-                onClick={() => window.open('https://hakkilo.africa', '_blank')} // TODO: vrai lien
+                onClick={() => safeOpen('https://hakkilo.africa')} // TODO: vrai lien
                 paintOnBeforeCompile={onBeforeCompile}
                 paintUniforms={uniformsData}
             />

@@ -25,8 +25,11 @@ export const AchievementsProvider = ({ children }) => {
             const saved = localStorage.getItem('hakkilo_achievements');
             if (saved) {
                 const parsed = JSON.parse(saved);
-                // Wrzucamy do pule, ale ignorujemy 'corridor_enter' żeby tooltip wejściowy zawsze się pojawiał
-                const filtered = parsed.filter(id => id !== 'corridor_enter');
+                // Only accept known achievement ids: localStorage is user-writable,
+                // arbitrary entries must not survive into state/analytics.
+                // 'corridor_enter' stays out so the entry tooltip always shows.
+                const filtered = (Array.isArray(parsed) ? parsed : [])
+                    .filter(id => typeof id === 'string' && Object.hasOwn(ACHIEVEMENTS, id) && id !== 'corridor_enter');
                 completedRef.current = [...filtered];
                 return filtered;
             }

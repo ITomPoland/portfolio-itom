@@ -19,6 +19,7 @@ export const SceneProvider = ({ children }) => {
     const [villeNavMode, setVilleNavMode] = useState('guide'); // 'guide' (scroll tour, default) | 'libre' (free walk)
     const [villeTheme, setVilleTheme] = useState(getStoredVilleTheme); // 'auto' (clock) | 'jour' | 'nuit'
     const [villeNearDoor, setVilleNearDoor] = useState(null); // VILLE_BUILDINGS entry when the visitor stands at an enterable door
+    const [villeInfoCard, setVilleInfoCard] = useState(null); // VILLE_BUILDINGS entry whose info card is shown (guided tour)
 
     // Teleportation states
     const [teleportTarget, setTeleportTarget] = useState(null); // Room ID to teleport to
@@ -170,6 +171,8 @@ export const SceneProvider = ({ children }) => {
         cycleVilleTheme,
         villeNearDoor,
         setVilleNearDoor,
+        villeInfoCard,
+        setVilleInfoCard,
         isInRoom: currentRoom !== null,
         // Teleportation
         teleportTarget,
@@ -203,6 +206,8 @@ export const SceneProvider = ({ children }) => {
         cycleVilleTheme,
         villeNearDoor,
         setVilleNearDoor,
+        villeInfoCard,
+        setVilleInfoCard,
         // Teleportation dependencies
         teleportTarget,
         isTeleporting,

@@ -19,6 +19,8 @@ import {
     VILLE_FOG_FAR,
     villeNightTargetFor,
     VILLE_NIGHT_EASE,
+    VILLE_INFO_RADIUS,
+    VILLE_INFO_REARM,
 } from './villeConfig';
 
 const DAY_SKY = new THREE.Color(VILLE_FOG_DAY);
@@ -41,7 +43,7 @@ const NIGHT_SUN = new THREE.Color('#39508f');
  */
 export default function MiniVille() {
     const { scene, camera } = useThree();
-    const { markEntered, teleportTo, isTeleporting, isInRoom, villeNavMode, villeTheme, setVilleNearDoor } = useScene();
+    const { markEntered, teleportTo, isTeleporting, isInRoom, villeNavMode, villeTheme, setVilleNearDoor, setVilleInfoCard } = useScene();
 
     const textures = useMemo(() => makeVilleTextures(), []);
     const nightRef = useRef(villeNightTargetFor(villeTheme));
@@ -50,6 +52,17 @@ export default function MiniVille() {
     const hemiRef = useRef();
     const doorsRef = useRef(new Map());     // building.id → { building, x, z } (world door pos)
     const nearDoorIdRef = useRef(null);     // last id pushed to context (avoid per-frame setState)
+    const infoArmedRef = useRef(new Map()); // building.id → false while its card already popped this pass
+    const infoActiveIdRef = useRef(null);   // building.id of the card currently pushed to context
+
+    // Info-card trigger zones, squared thresholds precomputed once (guided-tour pop-ups).
+    const infoZones = useMemo(() => VILLE_BUILDINGS
+        .filter((b) => b.info)
+        .map((b) => {
+            const r = b.infoRadius ?? VILLE_INFO_RADIUS;
+            const far = r + VILLE_INFO_REARM;
+            return { building: b, x: b.position[0], z: b.position[2], near2: r * r, far2: far * far };
+        }), []);
 
     // DoorMarkers publish their world position here (walk-in "Entrer" prompt).
     const registerDoor = useCallback((building, x, z) => {
@@ -111,6 +124,42 @@ export default function MiniVille() {
         if (nearId !== nearDoorIdRef.current) {
             nearDoorIdRef.current = nearId;
             setVilleNearDoor(nearest);
+        }
+
+        // Guided-tour info cards: pop the nearest ARMED building entering its radius, once per
+        // pass; a building re-arms only past radius + margin (hysteresis). Refs + setState on
+        // change only — same zero-allocation pattern as the door loop above.
+        const guiding = villeNavMode === 'guide' && !isTeleporting && !isInRoom;
+        let popZone = null;
+        let popD2 = Infinity;
+        let activeZone = null;
+        let activeD2 = 0;
+        for (const zone of infoZones) {
+            const dx = camera.position.x - zone.x;
+            const dz = camera.position.z - zone.z;
+            const d2 = dx * dx + dz * dz;
+            if (d2 > zone.far2) {
+                if (infoArmedRef.current.get(zone.building.id) === false) infoArmedRef.current.set(zone.building.id, true);
+            } else if (guiding && d2 < zone.near2 && d2 < popD2
+                && infoArmedRef.current.get(zone.building.id) !== false) {
+                popZone = zone;
+                popD2 = d2;
+            }
+            if (zone.building.id === infoActiveIdRef.current) {
+                activeZone = zone;
+                activeD2 = d2;
+            }
+        }
+        if (popZone) {
+            infoArmedRef.current.set(popZone.building.id, false);
+            if (infoActiveIdRef.current !== popZone.building.id) {
+                infoActiveIdRef.current = popZone.building.id;
+                setVilleInfoCard(popZone.building);
+            }
+        } else if (infoActiveIdRef.current && (!guiding || !activeZone || activeD2 > activeZone.far2)) {
+            // Self-close when leaving the zone / switching to free walk / entering a room.
+            infoActiveIdRef.current = null;
+            setVilleInfoCard(null);
         }
     });
 

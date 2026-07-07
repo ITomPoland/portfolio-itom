@@ -117,13 +117,22 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
                         />
                     )}
                     {!hasEntered && <SignSystem position={[0, 0, ENTRANCE_DOORS_Z]} />}
-                    <InfiniteCorridorManager
-                        onDoorEnter={handleDoorEnter}
-                        hideDoorsForSegments={hasEntered ? [] : [-1]}
-                        clipSegmentNeg1={!hasEntered}
-                        setCameraOverride={setCameraOverride}
-                    />
                 </>
+            )}
+
+            {/* Corridor machinery. Always mounted in corridor mode; in VILLE_MODE mounted ONLY
+                while teleporting / inside a room: DoorSection is the sole consumer of
+                pendingDoorClick and the only caller of signalRoomReady (paper re-open), so
+                without it the ville room-entry hung forever behind the closed paper (bug
+                fable/008). The city hides itself meanwhile — corridor and rooms share its
+                world coordinates. */}
+            {(!VILLE_MODE || isTeleporting || isInRoom) && (
+                <InfiniteCorridorManager
+                    onDoorEnter={handleDoorEnter}
+                    hideDoorsForSegments={hasEntered ? [] : [-1]}
+                    clipSegmentNeg1={!hasEntered}
+                    setCameraOverride={setCameraOverride}
+                />
             )}
 
             {/* === TELEPORT ROOM (renders room directly during teleportation) === */}

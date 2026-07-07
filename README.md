@@ -1,6 +1,9 @@
 # 🎨 Hakkilo XR | Vitrine 3D Immersive en Réalité Virtuelle
 
 <div align="center">
+  <a href="https://github.com/arispacco/portfolio-itom/actions/workflows/ci.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/arispacco/portfolio-itom/ci.yml?branch=feature%2Fmini-ville&style=for-the-badge&label=CI" alt="Statut CI" />
+  </a>
   <img src="https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react" alt="React" />
   <img src="https://img.shields.io/badge/Three.js-0.182-black?style=for-the-badge&logo=threedotjs" alt="Three.js" />
   <img src="https://img.shields.io/badge/R3F-9.4-purple?style=for-the-badge&logo=react" alt="React Three Fiber" />

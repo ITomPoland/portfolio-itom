@@ -239,8 +239,10 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
             return;
         }
 
-        // Honeypot rempli = bot : on simule un succès sans rien envoyer
-        if (botcheckRef.current?.checked || botcheckRef.current?.value) {
+        // Honeypot rempli = bot : on simule un succès sans rien envoyer.
+        // Only .checked is reliable: an unchecked checkbox still has value "on",
+        // so testing .value would fake success for every real visitor.
+        if (botcheckRef.current?.checked) {
             setSubmitStatus('success');
             return;
         }

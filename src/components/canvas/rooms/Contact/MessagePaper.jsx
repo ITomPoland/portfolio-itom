@@ -158,6 +158,9 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
     const hiddenInputRef = useRef();
     const emailInputRef = useRef();
     const subjectInputRef = useRef();
+    // Honeypot anti-spam : champ jamais rempli par un humain (hors écran, non focusable).
+    // Les bots qui remplissent automatiquement les inputs DOM le remplissent aussi.
+    const botcheckRef = useRef();
 
     // Form State
     const [message, setMessage] = useState('');
@@ -226,10 +229,19 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
 
     // Handle send button click - Submit to Web3Forms
     const handleButtonClick = useCallback(async () => {
+        // Garde anti double-envoi : ignore les clics pendant qu'une soumission est en vol
+        if (isSubmitting) return;
+
         // Reset previous status
         setSubmitStatus(null);
 
         if (!validateForm()) {
+            return;
+        }
+
+        // Honeypot rempli = bot : on simule un succès sans rien envoyer
+        if (botcheckRef.current?.checked || botcheckRef.current?.value) {
+            setSubmitStatus('success');
             return;
         }
 
@@ -251,10 +263,12 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                 },
                 body: JSON.stringify({
                     access_key: WEB3FORMS_KEY,
+                    botcheck: false,
                     from_name: 'Hakkilo XR — Contact',
-                    email: email,
-                    subject: subject,
-                    message: message
+                    email: email.trim(),
+                    // Le sujet part dans l'en-tête du mail : on retire tout saut de ligne
+                    subject: subject.replace(/[\r\n]+/g, ' ').trim(),
+                    message: message.trim()
                 })
             });
 
@@ -278,7 +292,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
         } finally {
             setIsSubmitting(false);
         }
-    }, [message, email, subject, onSend, validateForm]);
+    }, [message, email, subject, onSend, validateForm, isSubmitting]);
 
     // Input handlers
     const handleMessageInput = useCallback((e) => {
@@ -357,6 +371,8 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                 <textarea ref={hiddenInputRef} value={message} onChange={handleMessageInput} onBlur={handleBlur} aria-label="Message" style={{ pointerEvents: 'auto' }} />
                 <input ref={emailInputRef} type="email" value={email} onChange={handleEmailInput} onBlur={handleBlur} aria-label="E-mail" style={{ pointerEvents: 'auto' }} />
                 <input ref={subjectInputRef} type="text" value={subject} onChange={handleSubjectInput} onBlur={handleBlur} aria-label="Sujet" style={{ pointerEvents: 'auto' }} />
+                {/* Honeypot : invisible, hors tabulation, ignoré des lecteurs d'écran */}
+                <input ref={botcheckRef} type="checkbox" name="botcheck" tabIndex={-1} autoComplete="off" aria-hidden="true" />
             </Html>
 
             {/* Main Paper Mesh - FRONT (with texture) */}

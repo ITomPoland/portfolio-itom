@@ -6,6 +6,26 @@ import '../../styles/GlobalOverlay.scss';
 
 gsap.registerPlugin(TextPlugin);
 
+// Le TextPlugin de GSAP écrit dans le DOM via innerHTML : tout HTML présent dans la
+// description serait interprété. On échappe pour garantir un rendu texte brut,
+// identique à ce que React affiche déjà (enfant JSX échappé) avant l'animation.
+const escapeHtml = (str = '') => str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+// N'autorise que http(s) (ancres et chemins relatifs inclus via la résolution URL) —
+// neutralise javascript:, data:, vbscript:… si une URL de contenu devient un jour dynamique.
+const safeUrl = (url) => {
+    if (typeof url !== 'string' || url === '') return '#';
+    try {
+        const parsed = new URL(url, window.location.origin);
+        return (parsed.protocol === 'http:' || parsed.protocol === 'https:') ? url : '#';
+    } catch {
+        return '#';
+    }
+};
+
 const GlobalOverlay = () => {
     const { overlayContent, closeOverlay } = useScene();
     const [isVisible, setIsVisible] = useState(false);
@@ -80,11 +100,11 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
             gsap.killTweensOf(descriptionRef.current);
             gsap.fromTo(descriptionRef.current,
                 { text: "" },
-                { 
-                    text: content.description, 
-                    duration: Math.min(2.5, content.description.length * 0.015), 
-                    ease: "none", 
-                    delay: 0.3 
+                {
+                    text: escapeHtml(content.description),
+                    duration: Math.min(2.5, content.description.length * 0.015),
+                    ease: "none",
+                    delay: 0.3
                 }
             );
         }
@@ -438,7 +458,7 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                                     }}
                                         onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
                                         onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                                        onClick={() => window.open(item.url || content.url || '#', '_blank')}
+                                        onClick={() => window.open(safeUrl(item.url || content.url), '_blank', 'noopener,noreferrer')}
                                     >
                                         <div style={{
                                             position: 'relative',
@@ -533,7 +553,7 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                                 ...getStaggerStyle(400)
                             }}>
                                 <a
-                                    href={content.url}
+                                    href={safeUrl(content.url)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="studio-action-button"

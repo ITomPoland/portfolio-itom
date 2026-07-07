@@ -1,9 +1,9 @@
 # NEXT — relais des sessions web
 
-**Prochaine session : A** (W02 CI + W03 safeOpen + W04 a11y) — voir `.ai-web/tasks/README.md`.
+**Prochaine session : A** (W03 safeOpen + W04 a11y) — voir `.ai-web/tasks/README.md`.
 
-État : W01 mergée (Vitest, 49 tests). W02–W05, W07–W15 à faire. W06 supprimée (décision d'archi
-prise, cf. `CLAUDE.md` §5).
+État : W01 mergée (Vitest, 49 tests). W02 (CI) faite EN LOCAL et mergée — NE PAS la refaire.
+W03–W05, W07–W15 à faire. W06 supprimée (décision d'archi prise, cf. `CLAUDE.md` §5).
 
 Commande à coller dans une nouvelle session :
 « Lis CLAUDE.md puis exécute la Session A de .ai-web/tasks/README.md »

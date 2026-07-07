@@ -11,7 +11,7 @@ par tâche, jamais de merge soi-même.
 
 | Session | Tâches | Contenu |
 |---------|--------|---------|
-| **A** | W02 + W03 + W04 | CI GitHub Actions ; safeOpen/liens ; a11y DOM |
+| **A** | W03 + W04 | safeOpen/liens ; a11y DOM |
 | **B** | W05 + W07 | Bundle manualChunks ; docs systèmes + JSDoc |
 | **C** | W09 + W10 | Fondations backend (D1 + API produits) ; front branché avec fallback |
 | **D** | W11 + W12 | Back-office admin ; Stripe Checkout hébergé |
@@ -19,6 +19,8 @@ par tâche, jamais de merge soi-même.
 | **F** | W15 + W08 | Tests finaux + runbook release ; lint → 0 (tout dernier) |
 
 - W01 (Vitest) : ✅ FAITE, mergée.
+- W02 (CI GitHub Actions) : ✅ FAITE EN LOCAL (commit `ci(infra)` sur feature/mini-ville) — ne pas
+  refaire ; le workflow tournera sur vos PRs.
 - W06 (ADR backend) : ✖ SUPPRIMÉE — la décision d'architecture a été prise par l'Engineering
   Manager (CLAUDE.md §5) ; W07 documente l'as-built.
 - W08 reste TOUJOURS la dernière tâche (elle touche tous les fichiers).

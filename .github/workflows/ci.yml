@@ -1,0 +1,39 @@
+# CI for every PR and for pushes to the two long-lived branches.
+# Lint is deliberately absent: ~239 pre-existing errors are owned by task W08;
+# a permanently red lint step would train everyone to ignore CI (see CLAUDE.md).
+name: CI
+
+on:
+  push:
+    branches: [main, feature/mini-ville]
+  pull_request:
+    branches: [main, feature/mini-ville]
+
+# A newer push to the same branch/PR supersedes the in-flight run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Env keys (VITE_POSTHOG_KEY, VITE_WEB3FORMS_KEY, ...) are optional by
+      # design: the build must stay green without any secret configured.
+      - run: npm run build
+
+      # --if-present keeps the job green on branches that predate W01 (tests).
+      - run: npm test --if-present

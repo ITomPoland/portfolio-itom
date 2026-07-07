@@ -3,6 +3,7 @@ import { useScene } from '../../context/SceneContext';
 import gsap from 'gsap';
 import { TextPlugin } from 'gsap/TextPlugin';
 import '../../styles/GlobalOverlay.scss';
+import { safeOpen } from '../../utils/safeOpen';
 
 gsap.registerPlugin(TextPlugin);
 
@@ -458,7 +459,7 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                                     }}
                                         onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
                                         onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                                        onClick={() => window.open(safeUrl(item.url || content.url), '_blank', 'noopener,noreferrer')}
+                                        onClick={() => safeOpen(safeUrl(item.url || content.url))}
                                     >
                                         <div style={{
                                             position: 'relative',

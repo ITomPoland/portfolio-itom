@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useScene } from '../../../context/SceneContext';
 
 /**
  * VilleLife — living ambiance ported from the standalone prototype ("Hakkilo XR - Mini
@@ -71,8 +72,27 @@ function buildDrone() {
     return { group, rotors, led };
 }
 
+// Scene snapshot for the drone selfie. The canvas is created WITHOUT preserveDrawingBuffer
+// (permanent perf cost) → a naive toBlob reads a cleared buffer (black image). Re-rendering
+// synchronously in the same tick keeps the buffer valid for the snapshot. Trade-off: this
+// plain render bypasses the EffectComposer, so the photo has no bloom on MEDIUM/HIGH tiers.
+function downloadSelfie(gl, scene, camera) {
+    gl.render(scene, camera);
+    gl.domElement.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const stamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+        a.href = url;
+        a.download = `hakkilo-selfie-${stamp}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }, 'image/png');
+}
+
 export default function VilleLife({ nightRef }) {
-    const { camera } = useThree();
+    const { camera, gl, scene } = useThree();
+    const { villeSelfie, setVilleSelfie, isInRoom, isTeleporting } = useScene();
 
     const birdRef = useRef();
     const wLRef = useRef();
@@ -114,6 +134,8 @@ export default function VilleLife({ nightRef }) {
                 tmp: new THREE.Vector3(),
                 fwd: new THREE.Vector3(),
                 bobT: Math.random() * 9,
+                selfiePhase: 'idle', // 'idle' | 'pose' | 'celebrate' (prototype drone states)
+                selfieT: 0,
             };
             pickBirdTarget(simRef.current, camera);
         }
@@ -157,14 +179,51 @@ export default function VilleLife({ nightRef }) {
             for (const r of drone.rotors) r.rotation.y += dt * 40;
             drone.led.material.emissiveIntensity = 1 + Math.sin(t * 6) * 0.8 + (nightRef?.current ?? 0);
 
+            // Selfie sequence transitions (prototype ask/selfie → celebrate → follow).
+            // Player camera/controls are never touched — only the drone moves.
+            if (villeSelfie && s.selfiePhase === 'idle' && !isInRoom && !isTeleporting) {
+                s.selfiePhase = 'pose';
+                s.selfieT = 0;
+            } else if (s.selfiePhase !== 'idle' && (isInRoom || isTeleporting)) {
+                s.selfiePhase = 'idle'; // abort: visitor entered a building mid-sequence
+                setVilleSelfie(false);
+            }
+
             camera.getWorldDirection(s.fwd);
             const base = Math.atan2(s.fwd.x, s.fwd.z); // camera heading in the XZ plane
-            const a = base + 0.9 + Math.sin(t * 0.5) * 0.35;
-            const dist = 2.6 + Math.sin(s.bobT * 0.7) * 0.4;
+            let a, dist, ty;
+            let lerpK = Math.min(1, dt * 1.6);
+            if (s.selfiePhase === 'pose') {
+                // straight in front of the visitor, close (prototype 'ask'/'selfie' target)
+                s.selfieT += dt;
+                a = base;
+                dist = 1.9;
+                ty = camera.position.y + 0.25 + Math.sin(s.bobT * 2.2) * 0.06;
+                lerpK = Math.min(1, dt * 3);
+                if (s.selfieT > 1.8) {
+                    downloadSelfie(gl, scene, camera);
+                    s.selfiePhase = 'celebrate';
+                    s.selfieT = 0;
+                }
+            } else if (s.selfiePhase === 'celebrate') {
+                // joy wiggle (prototype 'celebrate'), then back to follow
+                s.selfieT += dt;
+                const spin = s.selfieT * 4;
+                a = base + Math.sin(spin) * 0.8;
+                dist = 2.4;
+                ty = camera.position.y + 0.7 + Math.sin(spin * 2) * 0.3;
+                lerpK = Math.min(1, dt * 3);
+                if (s.selfieT > 2.6) {
+                    s.selfiePhase = 'idle';
+                    setVilleSelfie(false);
+                }
+            } else {
+                a = base + 0.9 + Math.sin(t * 0.5) * 0.35;
+                dist = 2.6 + Math.sin(s.bobT * 0.7) * 0.4;
+                ty = camera.position.y + 0.55 + Math.sin(s.bobT * 1.8) * 0.12;
+            }
             const tx = camera.position.x + Math.sin(a) * dist;
             const tz = camera.position.z + Math.cos(a) * dist;
-            const ty = camera.position.y + 0.55 + Math.sin(s.bobT * 1.8) * 0.12;
-            const lerpK = Math.min(1, dt * 1.6);
             const p = drone.group.position;
             p.x += (tx - p.x) * lerpK;
             p.y += (ty - p.y) * lerpK;

@@ -20,6 +20,7 @@ export const SceneProvider = ({ children }) => {
     const [villeTheme, setVilleTheme] = useState(getStoredVilleTheme); // 'auto' (clock) | 'jour' | 'nuit'
     const [villeNearDoor, setVilleNearDoor] = useState(null); // VILLE_BUILDINGS entry when the visitor stands at an enterable door
     const [villeInfoCard, setVilleInfoCard] = useState(null); // VILLE_BUILDINGS entry whose info card is shown (guided tour)
+    const [villeSelfie, setVilleSelfie] = useState(false); // drone selfie sequence in progress (button → VilleLife)
 
     // Teleportation states
     const [teleportTarget, setTeleportTarget] = useState(null); // Room ID to teleport to
@@ -173,6 +174,8 @@ export const SceneProvider = ({ children }) => {
         setVilleNearDoor,
         villeInfoCard,
         setVilleInfoCard,
+        villeSelfie,
+        setVilleSelfie,
         isInRoom: currentRoom !== null,
         // Teleportation
         teleportTarget,
@@ -208,6 +211,8 @@ export const SceneProvider = ({ children }) => {
         setVilleNearDoor,
         villeInfoCard,
         setVilleInfoCard,
+        villeSelfie,
+        setVilleSelfie,
         // Teleportation dependencies
         teleportTarget,
         isTeleporting,

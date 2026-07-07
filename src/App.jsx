@@ -15,6 +15,7 @@ import VilleNavToggle from './components/ui/VilleNavToggle';
 import VilleThemeToggle from './components/ui/VilleThemeToggle';
 import VilleDoorPrompt from './components/ui/VilleDoorPrompt';
 import VilleInfoCard from './components/ui/VilleInfoCard';
+import VilleSelfieButton from './components/ui/VilleSelfieButton';
 import { VILLE_MODE } from './components/canvas/ville/villeConfig';
 import GlobalOverlay from './components/ui/GlobalOverlay';
 import ScreenReaderOverlay from './components/ui/ScreenReaderOverlay';
@@ -188,6 +189,7 @@ function AppContent() {
               {VILLE_MODE && <VilleThemeToggle />}
               {VILLE_MODE && <VilleDoorPrompt />}
               {VILLE_MODE && <VilleInfoCard />}
+              {VILLE_MODE && <VilleSelfieButton />}
               <GlobalOverlay />
               <PaperTransition />
               <ScreenReaderOverlay />

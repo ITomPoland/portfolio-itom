@@ -28,7 +28,7 @@ export default function VilleDoorPrompt() {
     if (!active) return null;
 
     return (
-        <div style={wrapStyle}>
+        <div style={wrapStyle} aria-live="polite">
             <button
                 type="button"
                 onClick={() => teleportTo(villeNearDoor.roomId)}

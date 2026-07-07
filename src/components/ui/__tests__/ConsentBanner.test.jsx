@@ -27,28 +27,28 @@ describe('ConsentBanner', () => {
         analyticsMock.analyticsEnabled.mockReturnValue(true);
         analyticsMock.getConsent.mockReturnValue(null);
         render(<ConsentBanner />);
-        expect(screen.getByRole('dialog')).toBeInTheDocument();
+        expect(screen.getByRole('region')).toBeInTheDocument();
     });
 
     it('does not render when analytics is disabled', () => {
         analyticsMock.analyticsEnabled.mockReturnValue(false);
         analyticsMock.getConsent.mockReturnValue(null);
         render(<ConsentBanner />);
-        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(screen.queryByRole('region')).not.toBeInTheDocument();
     });
 
     it('does not re-render when a choice is already stored ("granted")', () => {
         analyticsMock.analyticsEnabled.mockReturnValue(true);
         analyticsMock.getConsent.mockReturnValue('granted');
         render(<ConsentBanner />);
-        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(screen.queryByRole('region')).not.toBeInTheDocument();
     });
 
     it('does not re-render when a choice is already stored ("denied")', () => {
         analyticsMock.analyticsEnabled.mockReturnValue(true);
         analyticsMock.getConsent.mockReturnValue('denied');
         render(<ConsentBanner />);
-        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(screen.queryByRole('region')).not.toBeInTheDocument();
     });
 
     it('clicking Accepter calls grantConsent once, never denyConsent, and hides the banner', () => {
@@ -60,7 +60,7 @@ describe('ConsentBanner', () => {
 
         expect(analyticsMock.grantConsent).toHaveBeenCalledTimes(1);
         expect(analyticsMock.denyConsent).not.toHaveBeenCalled();
-        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(screen.queryByRole('region')).not.toBeInTheDocument();
     });
 
     it('clicking Refuser calls denyConsent once, never grantConsent, and hides the banner', () => {
@@ -72,6 +72,6 @@ describe('ConsentBanner', () => {
 
         expect(analyticsMock.denyConsent).toHaveBeenCalledTimes(1);
         expect(analyticsMock.grantConsent).not.toHaveBeenCalled();
-        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(screen.queryByRole('region')).not.toBeInTheDocument();
     });
 });

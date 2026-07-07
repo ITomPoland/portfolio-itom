@@ -23,8 +23,9 @@
         transform: translateX(10px);
     }
 
-    // Hover state on the PARENT wrapper triggers the reveal
-    &:hover .volume-slider-container {
+    // Hover state on the PARENT wrapper or focus within triggers the reveal
+    &:hover .volume-slider-container,
+    &:focus-within .volume-slider-container {
         opacity: 1;
         width: 100px;
         transform: translateX(0);
@@ -43,6 +44,11 @@
 
         &:focus {
             outline: none;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #1a1a1a;
+            outline-offset: 4px;
         }
 
         // --- TRACK (The Line) ---

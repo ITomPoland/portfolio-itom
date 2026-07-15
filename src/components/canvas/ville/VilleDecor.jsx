@@ -281,6 +281,39 @@ function SimplePole({ x, z, lampPoleMat, lampHeadMat, poleGeo, poleHeadGeo }) {
     );
 }
 
+/**
+ * Static street row only. Plaza lamps keep SimplePole as an individually mountable
+ * Suspense/ErrorBoundary fallback while the fixed grid can share two draw calls.
+ */
+function InstancedStreetPoles({ spots, lampPoleMat, lampHeadMat, poleGeo, poleHeadGeo }) {
+    const poleRef = useRef();
+    const headRef = useRef();
+
+    useLayoutEffect(() => {
+        const matrix = new THREE.Matrix4();
+
+        spots.forEach(([x, z], index) => {
+            matrix.makeTranslation(x, 2.3, z);
+            poleRef.current.setMatrixAt(index, matrix);
+
+            matrix.makeTranslation(x, 4.7, z);
+            headRef.current.setMatrixAt(index, matrix);
+        });
+
+        for (const ref of [poleRef, headRef]) {
+            ref.current.instanceMatrix.needsUpdate = true;
+            ref.current.computeBoundingSphere();
+        }
+    }, [spots, lampPoleMat, lampHeadMat, poleGeo, poleHeadGeo]);
+
+    return (
+        <group>
+            <instancedMesh ref={poleRef} args={[poleGeo, lampPoleMat, spots.length]} />
+            <instancedMesh ref={headRef} args={[poleHeadGeo, lampHeadMat, spots.length]} />
+        </group>
+    );
+}
+
 // Kenney buildings config
 const KENNEY_BUILDINGS = [
     { file: 'building-a.glb', position: [-44, 0, -8],  rotationY: Math.PI / 2 },
@@ -461,18 +494,14 @@ export default function VilleDecor({ nightRef, textures: texturesProp }) {
                 </BuildingErrorBoundary>
             ))}
 
-            {/* 6. Street Lamps (Using low-poly SimplePole model for optimal performance) */}
-            {streetLamps.map((spot, idx) => (
-                <SimplePole
-                    key={idx}
-                    x={spot[0]}
-                    z={spot[1]}
-                    lampPoleMat={lampPoleMat}
-                    lampHeadMat={lampHeadMat}
-                    poleGeo={poleGeo}
-                    poleHeadGeo={poleHeadGeo}
-                />
-            ))}
+            {/* 6. Fixed street row: 10 poles in two instanced draws. */}
+            <InstancedStreetPoles
+                spots={streetLamps}
+                lampPoleMat={lampPoleMat}
+                lampHeadMat={lampHeadMat}
+                poleGeo={poleGeo}
+                poleHeadGeo={poleHeadGeo}
+            />
 
             {/* 7. Night PointLights — tier-aware count (fable/007). Forward rendering pays
                 every light in EVERY fragment shader, day included (intensity 0 still runs the

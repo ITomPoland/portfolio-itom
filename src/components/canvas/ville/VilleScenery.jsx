@@ -19,7 +19,9 @@ export default function VilleScenery({ textures, nightRef }) {
     const matMontRef1 = useRef();
     const matMontRef2 = useRef();
     const skyMatRef = useRef();
+    const starsRef = useRef();
     const starMatRef = useRef();
+    const moonGroupRef = useRef();
     const moonMatRef = useRef();
     const moonHaloMatRef = useRef();
 
@@ -218,10 +220,12 @@ export default function VilleScenery({ textures, nightRef }) {
         if (starMatRef.current) {
             const starsOpacity = k > 0.35 ? ((k - 0.35) / 0.65) * 1.4 : 0;
             starMatRef.current.opacity = starsOpacity;
+            if (starsRef.current) starsRef.current.visible = starsOpacity > 0;
         }
 
         // Moon fades in slightly before the stars
         const moonK = k > 0.25 ? (k - 0.25) / 0.75 : 0;
+        if (moonGroupRef.current) moonGroupRef.current.visible = moonK > 0;
         if (moonMatRef.current) moonMatRef.current.opacity = moonK;
         if (moonHaloMatRef.current) moonHaloMatRef.current.opacity = moonK * 0.22;
     });
@@ -232,7 +236,6 @@ export default function VilleScenery({ textures, nightRef }) {
             <instancedMesh key={`g1-${grassCount}`} ref={imRef1} args={[gGeo, null, grassCount]}>
                 <meshStandardMaterial
                     map={textures.texGrass}
-                    transparent
                     alphaTest={0.35}
                     side={THREE.DoubleSide}
                     roughness={1}
@@ -242,7 +245,6 @@ export default function VilleScenery({ textures, nightRef }) {
             <instancedMesh key={`g2-${grassCount}`} ref={imRef2} args={[gGeo, null, grassCount]}>
                 <meshStandardMaterial
                     map={textures.texGrass}
-                    transparent
                     alphaTest={0.35}
                     side={THREE.DoubleSide}
                     roughness={1}
@@ -280,7 +282,7 @@ export default function VilleScenery({ textures, nightRef }) {
             </instancedMesh>
 
             {/* Stars Particle System */}
-            <points key={`stars-${starCount}`} frustumCulled={false}>
+            <points ref={starsRef} key={`stars-${starCount}`} frustumCulled={false} visible={false}>
                 <bufferGeometry>
                     <bufferAttribute
                         attach="attributes-position"
@@ -301,7 +303,7 @@ export default function VilleScenery({ textures, nightRef }) {
             {/* Moon — night-only, opposite the sun. fog=false: it sits at ~314 m, far beyond
                 the 210 m fog cutoff, so fogged it would vanish into the sky colour (same
                 reason the stars material disables fog). */}
-            <group position={[-170, 240, -110]}>
+            <group ref={moonGroupRef} position={[-170, 240, -110]} visible={false}>
                 <mesh>
                     <sphereGeometry args={[16, 24, 18]} />
                     <meshBasicMaterial

@@ -8,13 +8,24 @@ import posthog from 'posthog-js';
 const KEY = import.meta.env.VITE_POSTHOG_KEY;
 const HOST = import.meta.env.VITE_POSTHOG_HOST;
 
+/**
+ * LocalStorage key for persisting RGPD analytics consent state ('granted'|'denied').
+ * @type {string}
+ */
 export const CONSENT_STORAGE_KEY = 'hakkilo_analytics_consent';
 
 let initialized = false;
 
-// Analytics only exists when a key is configured (dev/local runs stay clean).
+/**
+ * Checks if PostHog analytics key is configured.
+ * @returns {boolean} True if analytics environment key is present.
+ */
 export const analyticsEnabled = () => Boolean(KEY);
 
+/**
+ * Retrieves stored analytics consent value from localStorage.
+ * @returns {'granted' | 'denied' | null} Stored consent or null if not answered.
+ */
 export function getConsent() {
   try {
     return localStorage.getItem(CONSENT_STORAGE_KEY);
@@ -23,8 +34,11 @@ export function getConsent() {
   }
 }
 
-// Init PostHog opted-OUT by default: nothing is captured and no analytics cookie
-// is set until grantConsent() runs. Safe to call multiple times.
+/**
+ * Initializes PostHog analytics opted-OUT by default (RGPD compliant).
+ * Safe to call multiple times. Event capture and cookie creation only begin if
+ * stored consent is already 'granted' or when grantConsent() is invoked.
+ */
 export function initAnalytics() {
   if (initialized || !KEY) return;
   posthog.init(KEY, {
@@ -38,6 +52,9 @@ export function initAnalytics() {
   if (getConsent() === 'granted') posthog.opt_in_capturing();
 }
 
+/**
+ * Grants RGPD analytics consent, persists choice to localStorage, and enables PostHog capturing.
+ */
 export function grantConsent() {
   try {
     localStorage.setItem(CONSENT_STORAGE_KEY, 'granted');
@@ -47,6 +64,9 @@ export function grantConsent() {
   if (initialized) posthog.opt_in_capturing();
 }
 
+/**
+ * Denies RGPD analytics consent, persists choice to localStorage, and disables PostHog capturing.
+ */
 export function denyConsent() {
   try {
     localStorage.setItem(CONSENT_STORAGE_KEY, 'denied');

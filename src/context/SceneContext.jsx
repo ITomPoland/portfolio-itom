@@ -3,6 +3,12 @@ import { VILLE_THEME_STORAGE_KEY, getStoredVilleTheme } from '../components/canv
 
 const SceneContext = createContext(null);
 
+/**
+ * Custom React hook to access the SceneContext.
+ *
+ * @throws {Error} Throws an error if used outside of a SceneProvider.
+ * @returns {Object} The current scene state machine and action methods.
+ */
 export const useScene = () => {
     const context = useContext(SceneContext);
     if (!context) {
@@ -11,6 +17,19 @@ export const useScene = () => {
     return context;
 };
 
+/**
+ * SceneProvider Component.
+ *
+ * Root state machine managing current room state, 2D overlay data,
+ * room entry/exit requests, teleportation state transitions,
+ * and mini-ville navigation & theme settings.
+ *
+ * INVARIANT: Additive changes only. Sub-systems rely on exact function signatures.
+ *
+ * @param {Object} props - Component props.
+ * @param {React.ReactNode} props.children - Child components to render within context.
+ * @returns {React.ReactElement} Provider wrapped children.
+ */
 export const SceneProvider = ({ children }) => {
     const [currentRoom, setCurrentRoom] = useState(null); // null = corridor, 'about', 'portfolio', etc.
     const [hasEntered, setHasEntered] = useState(false);  // Has user clicked entrance doors?

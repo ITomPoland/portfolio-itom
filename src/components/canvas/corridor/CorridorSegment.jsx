@@ -19,16 +19,48 @@ import CorridorDecorations from './CorridorDecorations';
  * Segment length: 80 units
  * Positioned based on segmentIndex * segmentLength
  */
+/**
+ * Length of a single corridor segment in world units (80u).
+ * @type {number}
+ */
 const SEGMENT_LENGTH = 80;
 
-// Sawtooth Geometry Constants (Shared with CorridorWalls logic conceptually)
+/**
+ * Outer X boundary coordinate for the corridor sawtooth wall geometry.
+ * @type {number}
+ */
 const WALL_X_OUTER = 3.5;
+
+/**
+ * Inner X boundary coordinate for the corridor sawtooth wall geometry.
+ * @type {number}
+ */
 const WALL_X_INNER = 1.7;
+
+/**
+ * Z span of the door opening within a sawtooth wall segment.
+ * @type {number}
+ */
 const DOOR_Z_SPAN = 4;
+
 // Angle of the wall relative to the corridor axis
 const WALL_ANGLE = Math.atan2(WALL_X_OUTER - WALL_X_INNER, DOOR_Z_SPAN);
 
-
+/**
+ * CorridorSegment Component.
+ *
+ * Represents a single repeatable 80-unit segment of the infinite corridor.
+ * Instantiates walls, hero text, avatar, decorations, and the 4 section doors
+ * (THE GALLERY, THE STUDIO, THE ABOUT, LET'S CONNECT).
+ *
+ * @param {Object} props - Component props.
+ * @param {number} [props.segmentIndex=0] - Index of the segment (determines Z offset).
+ * @param {Function} [props.onDoorEnter] - Callback triggered when entering a door.
+ * @param {boolean} [props.hideSegmentDoors=false] - Hide doors while keeping preloaded content.
+ * @param {number} [props.zClip=100000] - Z-axis clipping plane.
+ * @param {Function} [props.setCameraOverride] - Function to pass camera control to DoorSection.
+ * @returns {React.ReactElement} The 3D corridor segment group.
+ */
 const CorridorSegment = ({
     segmentIndex = 0,
     onDoorEnter,

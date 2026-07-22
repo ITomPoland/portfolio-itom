@@ -30,10 +30,18 @@ const SUBTITLES = {
 const NATURAL_TILE_W = (1582 / 94) * 0.15;
 
 /**
- * RoomInterior Component
+ * RoomInterior Component.
  *
- * Memoized room geometry to prevent re-renders and improve performance.
- * Contains corridor + giant room at the end.
+ * Renders the mini-corridor vestibule transition behind a door and dynamically
+ * mounts the target room component (GalleryRoom, StudioRoom, AboutRoom, ContactRoom)
+ * under <Suspense> when `showRoom` is true.
+ *
+ * @param {Object} props - Component props.
+ * @param {string} props.label - Room door label.
+ * @param {boolean} props.showRoom - Lazy loading flag to mount room 3D content.
+ * @param {Function} [props.onReady] - Callback invoked when room assets are ready to open door.
+ * @param {boolean} [props.isExiting] - Flag indicating room exit animation is in progress.
+ * @returns {React.ReactElement} The 3D room interior group.
  */
 const RoomInterior = memo(({ label, showRoom, onReady, isExiting }) => {
     const { corridorWidth, corridorHeight, corridorDepth, roomWidth, roomHeight, roomDepth } = ROOM_CONFIG;

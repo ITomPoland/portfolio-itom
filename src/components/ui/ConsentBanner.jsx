@@ -2,9 +2,16 @@ import { useState } from 'react';
 import { getConsent, grantConsent, denyConsent, analyticsEnabled } from '../../utils/analytics';
 import '../../styles/ConsentBanner.scss';
 
-// Minimal, neutral RGPD/CNIL consent gate for PostHog analytics.
-// Visual is intentionally plain — Claude Design owns the final look (constitution §5);
-// the behaviour (no tracking before consent) is the contract that must survive a restyle.
+/**
+ * ConsentBanner Component.
+ *
+ * Minimal, neutral RGPD/CNIL banner prompting user consent for PostHog audience measurement.
+ * Disappears once answered and persists decision via `grantConsent()` / `denyConsent()`.
+ *
+ * CONTRACT: No tracking or cookies created before explicit user opt-in.
+ *
+ * @returns {React.ReactElement|null} Banner UI or null if hidden/already answered.
+ */
 export default function ConsentBanner() {
   // Only prompt when analytics is configured and no choice is stored yet.
   // Lazy init (client-only app) — no effect needed to read env/localStorage.

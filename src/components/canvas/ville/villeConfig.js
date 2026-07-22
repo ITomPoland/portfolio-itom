@@ -6,29 +6,84 @@
 // documented here — positions, rotations and room mapping live ONLY in this file so the port
 // stays consistent.
 
-// Flip to false to fall back to the original infinite-corridor exterior (kept intact during
-// the migration so both experiences can coexist on this branch).
+// villeConfig.js — Data contract for the Mini Ville XR exterior.
+//
+// Single source of truth for: the ville/corridor toggle, the camera spawn, the hero-building
+// placements + door→room mapping, and movement/day-night tuning. The heavy scene geometry and
+// textures are transcribed by agy from the Claude Design prototype against the interfaces
+// documented here — positions, rotations and room mapping live ONLY in this file so the port
+// stays consistent.
+
+/**
+ * Global toggle for mini-ville exterior mode. Set false to fallback to infinite corridor.
+ * @type {boolean}
+ */
 export const VILLE_MODE = true;
 
-// Camera spawn — prototype starts a PerspectiveCamera at [0, 1.7, 52] facing the city (−Z).
+/**
+ * Default spawn position and orientation for the mini-ville camera.
+ * @type {{ position: [number, number, number], yaw: number, pitch: number }}
+ */
 export const VILLE_SPAWN = { position: [0, 1.7, 52], yaw: 0, pitch: 0 };
 
-// Walkable bounds + eye height (prototype clamps position to ±55, y locked to 1.7).
+/**
+ * Walkable boundary distance from world origin (square bounds ±55u).
+ * @type {number}
+ */
 export const VILLE_BOUNDS = 55;
+
+/**
+ * Eye-level Y height in meters for camera in mini-ville (1.7m).
+ * @type {number}
+ */
 export const VILLE_EYE_Y = 1.7;
 
-// Movement tuning.
-export const VILLE_WALK_SPEED = 7;          // m/s
-export const VILLE_RUN_SPEED = 14;          // m/s (Shift)
-export const VILLE_TURN_SPEED = 2.4;        // rad/s — keyboard yaw (Q/D). FIX: Q/D turn, not strafe.
-export const VILLE_LOOK_SENSITIVITY = 3.2;  // mouse-drag yaw
-export const VILLE_PITCH_SENSITIVITY = 2.2; // mouse-drag pitch
-export const VILLE_PITCH_CLAMP = 1.2;       // rad
+/**
+ * Walking speed in meters per second.
+ * @type {number}
+ */
+export const VILLE_WALK_SPEED = 7;
 
-// Hero buildings. `roomId` = the existing portfolio-itom room to teleport into when the door is
-// clicked (null = no interior yet → show a teaser overlay via `teaser`). Positions/rotations are
-// world-space, straight from the prototype scene. The door trigger mesh is built by
-// VilleBuildings (agy), which calls `onDoorEnter(roomId, id)` on click.
+/**
+ * Running speed (Shift) in meters per second.
+ * @type {number}
+ */
+export const VILLE_RUN_SPEED = 14;
+
+/**
+ * Keyboard turn speed in radians per second (Q/D yaw).
+ * @type {number}
+ */
+export const VILLE_TURN_SPEED = 2.4;
+
+/**
+ * Mouse-drag yaw look sensitivity.
+ * @type {number}
+ */
+export const VILLE_LOOK_SENSITIVITY = 3.2;
+
+/**
+ * Mouse-drag pitch look sensitivity.
+ * @type {number}
+ */
+export const VILLE_PITCH_SENSITIVITY = 2.2;
+
+/**
+ * Maximum pitch clamp angle in radians.
+ * @type {number}
+ */
+export const VILLE_PITCH_CLAMP = 1.2;
+
+/**
+ * Array of hero building definitions in the mini-ville plaza.
+ * Maps building IDs to portfolio-itom room IDs (`roomId`) and guided tour text (`info`).
+ *
+ * KNOWN TRAP / INVARIANT:
+ * `texSkyline` returned by `makeVilleTextures()` is an OBJECT `{ map, emissiveMap }`,
+ * NOT a single THREE.Texture instance.
+ *
+ * @type {Array<{ id: string, position: [number, number, number], rotationY: number, roomId: string|null, label: string, info: { title: string, body: string } }>}
+ */
 export const VILLE_BUILDINGS = [
     {
         id: 'hall', position: [0, 0, 0], rotationY: 0, roomId: null, teaser: 'hall', label: 'HAKKILO XR', collider: 7,
@@ -76,23 +131,43 @@ export const VILLE_BUILDINGS = [
     },
 ];
 
-// Guided-tour info cards: a card pops once per pass when the visitor comes within
-// `infoRadius ?? VILLE_INFO_RADIUS` metres of a building, and re-arms (may pop again)
-// only after they retreat beyond radius + VILLE_INFO_REARM (hysteresis, no flicker).
+/**
+ * Trigger radius in meters for guided-tour building info cards.
+ * @type {number}
+ */
 export const VILLE_INFO_RADIUS = 16;
+
+/**
+ * Hysteresis re-arm distance in meters for info card popups.
+ * @type {number}
+ */
 export const VILLE_INFO_REARM = 6;
 
-// Day/night — night when local hour ≥ 19 or < 7 (prototype `isNightNow`). `nightAmount` eases
-// toward this target each frame at rate `dt * VILLE_NIGHT_EASE`.
+/**
+ * Checks if current local hour falls in night time (19:00 - 07:00).
+ * @returns {boolean} True if local time is night.
+ */
 export const villeIsNightNow = () => {
     const h = new Date().getHours();
     return h >= 19 || h < 7;
 };
+
+/**
+ * Interpolation rate for day/night sky transitions.
+ * @type {number}
+ */
 export const VILLE_NIGHT_EASE = 2.2;
 
-// Theme override (demo toggle, prototype `themePref`): 'auto' follows the local clock,
-// 'jour'/'nuit' force the cycle. Persisted under the prototype's own localStorage key.
+/**
+ * LocalStorage key for persisting mini-ville theme preference ('auto'|'jour'|'nuit').
+ * @type {string}
+ */
 export const VILLE_THEME_STORAGE_KEY = 'hakkilo-ville-theme';
+
+/**
+ * Retrieves the stored mini-ville theme preference from localStorage.
+ * @returns {'auto' | 'jour' | 'nuit'} Stored theme or 'auto' fallback.
+ */
 export const getStoredVilleTheme = () => {
     try {
         const t = localStorage.getItem(VILLE_THEME_STORAGE_KEY);
@@ -101,19 +176,38 @@ export const getStoredVilleTheme = () => {
         return 'auto'; // storage unavailable (private mode) → clock-driven
     }
 };
+
+/**
+ * Calculates target night interpolation amount (0 for day, 1 for night) for a given theme.
+ * @param {'auto' | 'jour' | 'nuit'} theme - Active theme setting.
+ * @returns {number} Target night factor (0 or 1).
+ */
 export const villeNightTargetFor = (theme) =>
     theme === 'nuit' ? 1 : theme === 'jour' ? 0 : (villeIsNightNow() ? 1 : 0);
 
-// Camera far plane the ville needs (mountains at r≈215, stars at r≈380). Corridor uses 150;
-// MiniVille raises it on mount and restores it on unmount so App.jsx stays generic.
+/**
+ * Camera far clipping plane for mini-ville scene (600u).
+ * @type {number}
+ */
 export const VILLE_CAMERA_FAR = 600;
 
-// Portrait framing (mobile-first): below aspect 1 the vertical FOV widens so a phone held
-// upright keeps the horizontal field a landscape viewer gets (city breadth, HAKKILO XR
-// entrance text), clamped before wide-angle distortion kicks in. Single source of truth —
-// applied by usePortraitFov at the Experience root, reactive to resize/rotation.
+/**
+ * Base camera FOV in degrees (60°).
+ * @type {number}
+ */
 export const CAMERA_BASE_FOV = 60; // keep in sync with the <Canvas camera> fov in App.jsx
+
+/**
+ * Maximum portrait camera FOV in degrees (92°).
+ * @type {number}
+ */
 export const CAMERA_PORTRAIT_MAX_FOV = 92;
+
+/**
+ * Calculates responsive FOV based on screen aspect ratio to maintain horizontal field in portrait mode.
+ * @param {number} aspect - Current viewport aspect ratio (width / height).
+ * @returns {number} Calculated FOV in degrees clamped to CAMERA_PORTRAIT_MAX_FOV.
+ */
 export const portraitFovFor = (aspect) => {
     if (!(aspect > 0) || aspect >= 1) return CAMERA_BASE_FOV;
     const halfBase = (CAMERA_BASE_FOV * Math.PI) / 360;
@@ -121,23 +215,61 @@ export const portraitFovFor = (aspect) => {
     return Math.min(fov, CAMERA_PORTRAIT_MAX_FOV);
 };
 
-// Fog (prototype): day #BFD9F2 near 70 / far 210, lerping to night #0D1220.
+/**
+ * Day fog color.
+ * @type {string}
+ */
 export const VILLE_FOG_DAY = '#BFD9F2';
+
+/**
+ * Night fog color.
+ * @type {string}
+ */
 export const VILLE_FOG_NIGHT = '#0D1220';
+
+/**
+ * Fog near distance in meters.
+ * @type {number}
+ */
 export const VILLE_FOG_NEAR = 70;
+
+/**
+ * Fog far distance in meters.
+ * @type {number}
+ */
 export const VILLE_FOG_FAR = 210;
 
-// Asset base — agy copies the prototype's GLB/textures here (task 013).
+/**
+ * Base asset directory path for mini-ville 3D models and textures.
+ * @type {string}
+ */
 export const VILLE_ASSET_BASE = '/ville-assets';
 
-// Guided tour (mode 'guide' = DEFAULT): a CatmullRom spline through the city, advanced by
-// scroll (desktop) / vertical swipe (mobile). 18 waypoints at eye height, faithful to the
-// prototype — circles the central plaza and passes every building. Look-around is a damped offset.
+/**
+ * Waypoints array defining the CatmullRom spline path for the guided tour.
+ * @type {Array<[number, number, number]>}
+ */
 export const VILLE_TOUR_WAYPOINTS = [
     [0, 1.7, 52], [0, 1.7, 32], [-6, 1.7, 23], [-19, 1.7, 19], [-21, 1.7, 6], [-21, 1.7, -8],
     [-18, 1.7, -18], [-8, 1.7, -22], [-3, 1.7, -30], [0, 1.7, -37], [3, 1.7, -30], [8, 1.7, -22],
     [19, 1.7, -19], [21, 1.7, -6], [21, 1.7, 10], [19, 1.7, 19], [8, 1.7, 22], [0, 1.7, 30],
 ];
+
+/**
+ * CatmullRom spline tension parameter.
+ * @type {number}
+ */
 export const VILLE_TOUR_TENSION = 0.3;
+
+/**
+ * Scroll wheel sensitivity for guided tour progress.
+ * @type {number}
+ */
 export const VILLE_TOUR_SCROLL_SENS = 0.00012; // wheel deltaY → path progress
+
+/**
+ * Touch swipe sensitivity for guided tour progress.
+ * @type {number}
+ */
 export const VILLE_TOUR_SWIPE_SENS = 1.1;       // touch vertical-drag fraction → path progress
+

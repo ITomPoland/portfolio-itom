@@ -57,12 +57,26 @@ const DOOR_PAINTED_TEXTURES = {
 
 
 /**
- * DoorSection Component
+ * DoorSection Component.
  * 
- * Groups the angled wall + door + label as one unit.
- * Uses 2D textures for door, frame, and handle (like entrance doors).
- * Pivots from the OUTER edge (where wall connects to corridor).
- * Dynamic tilt: starts nearly flat, tilts more when camera approaches.
+ * Unit combining angled wall + door + frame + sign + positional audio.
+ * Controls camera flight animation into the room on click.
+ *
+ * INVARIANT: Camera ownership during room entry belongs exclusively to DoorSection.
+ * A room component must ONLY take camera control once `isInRoom === true` (after entry flight).
+ *
+ * @param {Object} props - Component props.
+ * @param {number[]} props.position - World coordinates [x, y, z] of wall segment center.
+ * @param {'left' | 'right'} [props.side='left'] - Wall side in corridor.
+ * @param {string} props.label - Display label ('THE GALLERY', 'THE STUDIO', 'THE ABOUT', "LET'S CONNECT").
+ * @param {string} [props.roomId] - Target room ID for context updates.
+ * @param {string} [props.icon] - Door icon symbol.
+ * @param {Function} [props.onEnter] - Callback triggered when room entry sequence starts.
+ * @param {number} [props.autoCloseDelay=3000] - Auto-close delay in ms.
+ * @param {number} [props.enterDistance=8] - Fly-through camera distance into the room.
+ * @param {Function} [props.setCameraOverride] - Takes over camera control from useInfiniteCamera.
+ * @param {number} props.segmentIndex - Index of the parent corridor segment.
+ * @returns {React.ReactElement} The 3D door section group.
  */
 const DoorSection = ({
     position, // [x, y, z] - center of the wall segment

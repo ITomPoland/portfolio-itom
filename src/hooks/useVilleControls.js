@@ -30,17 +30,19 @@ const TOUR_PATH = new THREE.CatmullRomCurve3(
 );
 
 /**
- * useVilleControls — two navigation modes for the Mini Ville, MOBILE-FIRST.
+ * Custom React hook managing camera navigation in the mini-ville exterior scene.
  *
- * mode='guide' (DEFAULT): guided scroll tour. The camera follows a CatmullRom spline through the
- *   city; you advance with the wheel (desktop) or a vertical swipe (mobile), and glance around with
- *   a drag (a damped offset that springs back to the path-forward direction).
- * mode='libre': free walk. Z/W/S + Q/A/D/arrows (Q/D = turn, not strafe) on desktop; on mobile the
- *   left half is a move joystick and the right half is look-drag.
+ * Supports two navigation modes:
+ * - mode='guide' (DEFAULT): Camera moves along a CatmullRom spline curve driven by scroll or vertical touch swipe.
+ * - mode='libre': Free-walk controls using keyboard (Z/W/S/Q/D/arrows) or mobile virtual joystick.
  *
- * Invariant preserved: when `enabled` is false (inside a building / mid-teleport) the hook does NOT
- * touch the camera, so DoorSection / TeleportRoom keep the room-entry camera. Guide progress (pathT)
- * and free-walk position persist while disabled → leaving a room resumes where you were.
+ * INVARIANT: When `enabled` is false (e.g. inside a room or during teleport), this hook stops updating
+ * camera position and rotation, preserving camera state until re-enabled.
+ *
+ * @param {Object} [options={}] - Options object.
+ * @param {boolean} [options.enabled=true] - Whether camera control is currently active.
+ * @param {'guide' | 'libre'} [options.mode='guide'] - Navigation mode.
+ * @param {React.MutableRefObject<Array<{x: number, z: number, r: number}>|null>} [options.collidersRef=null] - Collider refs for free-walk collision response.
  */
 export default function useVilleControls({ enabled = true, mode = 'guide', collidersRef = null } = {}) {
     const { camera, gl } = useThree();

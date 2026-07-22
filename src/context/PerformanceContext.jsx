@@ -1,7 +1,12 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useThree } from "@react-three/fiber";
 
-// Performance Tiers
+/**
+ * Performance Tiers enumeration.
+ * - HIGH: Full DPR up to 2x, shadows enabled, anti-aliasing on, 100% particles.
+ * - MEDIUM: DPR capped at 1.5x, shadows disabled, anti-aliasing on, 60% particles.
+ * - LOW: DPR 0.8x-1x, shadows disabled, anti-aliasing off, 30% particles.
+ */
 export const TIERS = {
   HIGH: "HIGH",
   MEDIUM: "MEDIUM",
@@ -41,6 +46,12 @@ const SETTINGS = {
 
 const PerformanceContext = createContext(null);
 
+/**
+ * Custom React hook to access PerformanceContext settings and tier state.
+ *
+ * @throws {Error} Throws an error if used outside of a PerformanceProvider.
+ * @returns {{ tier: string, settings: Object, isDetecting: boolean, downgradeTier: Function }}
+ */
 export const usePerformance = () => {
   const context = useContext(PerformanceContext);
   if (!context) {
@@ -49,6 +60,16 @@ export const usePerformance = () => {
   return context;
 };
 
+/**
+ * PerformanceProvider Component.
+ *
+ * Auto-detects device capabilities on mount (mobile UA, CPU cores, RAM)
+ * and exposes active tier settings. Supports dynamic tier downgrading via PerformanceMonitor.
+ *
+ * @param {Object} props - Component props.
+ * @param {React.ReactNode} props.children - Children to wrap with context.
+ * @returns {React.ReactElement} Provider wrapped children.
+ */
 export const PerformanceProvider = ({ children }) => {
   const [tier, setTier] = useState(TIERS.HIGH); // Default to HIGH, degrade if needed
   const [isDetecting, setIsDetecting] = useState(true);

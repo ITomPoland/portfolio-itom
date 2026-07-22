@@ -36,6 +36,7 @@
     "globals": "^16.5.0",
     "jimp": "^1.6.0",
     "jsdom": "^29.1.1",
+    "rollup-plugin-visualizer": "^7.0.1",
     "sass": "^1.97.1",
     "sharp": "^0.34.5",
     "vite": "^7.2.4",

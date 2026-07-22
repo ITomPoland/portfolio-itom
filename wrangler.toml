@@ -1,0 +1,10 @@
+name = "hakkilo-xr"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-07-22"
+
+[[d1_databases]]
+binding = "PRODUCTS_DB"
+database_name = "hakkilo-catalogue"
+# Replace with the ID returned by: wrangler d1 create hakkilo-catalogue
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"

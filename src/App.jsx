@@ -4,6 +4,7 @@ import { Preload, useTexture, Text, PerformanceMonitor } from '@react-three/drei
 import * as THREE from 'three';
 
 import Preloader from './components/dom/Preloader';
+import { bootLog } from './utils/debugBoot';
 import RootErrorBoundary from './components/dom/RootErrorBoundary';
 import PaperTransition from './components/dom/PaperTransition';
 import { AudioProvider, useAudio } from './context/AudioManager';
@@ -94,6 +95,7 @@ const detectWebGLSupport = () => {
   }
 };
 const WEBGL_SUPPORT = detectWebGLSupport();
+bootLog('WEBGL_SUPPORT =', WEBGL_SUPPORT);
 
 const FONT_URL = 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff';
 
@@ -144,7 +146,9 @@ function AppContent() {
   }, []);
 
   const handleSceneReady = useCallback(() => {
+    bootLog('handleSceneReady appelé — RAF programmé');
     requestAnimationFrame(() => {
+      bootLog('sceneReady = true');
       setSceneReady(true);
     });
   }, []);
@@ -194,6 +198,7 @@ function AppContent() {
               }}
               dpr={settings.dpr}
               shadows={settings.shadows}
+              onCreated={() => bootLog('Canvas onCreated — contexte WebGL créé')}
             >
               <color attach="background" args={['#fafafa']} />
               <fog attach="fog" args={['#fafafa', 15, 50]} />

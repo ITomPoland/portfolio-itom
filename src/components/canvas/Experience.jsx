@@ -11,6 +11,7 @@ import useInfiniteCamera from '../../hooks/useInfiniteCamera';
 import usePortraitFov from '../../hooks/usePortraitFov';
 import SignSystem from './entrance/SignSystem';
 import { useScene } from '../../context/SceneContext';
+import { bootLog } from '../../utils/debugBoot';
 import { VILLE_MODE } from './ville/villeConfig';
 import MiniVille from './ville/MiniVille';
 import { Perf } from 'r3f-perf';
@@ -45,6 +46,10 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
     // Mobile-first: widen the vertical FOV in portrait (ville, entrance text, corridor).
     // Lives OUTSIDE useInfiniteCamera (invariant) — fov is orthogonal to its position work.
     usePortraitFov();
+
+    useEffect(() => {
+        bootLog('Experience monté (Suspense résolu)');
+    }, []);
 
     // Camera control - both scroll and parallax only work after entering
     // Disable during teleporting to prevent scroll interference

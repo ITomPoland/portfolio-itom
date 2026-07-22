@@ -1,5 +1,6 @@
 import { useRef, useState, Suspense } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
+import { bootLog } from '../../../utils/debugBoot';
 
 // Eagerly import all room components
 import GalleryRoom from '../rooms/Gallery/GalleryRoom';
@@ -31,6 +32,9 @@ const RoomWarmup = ({ onWarmupComplete, isLowTier }) => {
         if (isDone || completeFired.current) return;
 
         frameCount.current++;
+        if (frameCount.current === 1) {
+            bootLog('RoomWarmup: 1ʳᵉ frame (boucle RAF active), isLowTier =', isLowTier);
+        }
 
         // For low tier, we skip warmup, but still wait 1 frame for entrance to mount
         const targetFrames = isLowTier ? 1 : 3;
@@ -40,9 +44,10 @@ const RoomWarmup = ({ onWarmupComplete, isLowTier }) => {
 
             const finishWarmup = () => {
                 const warmupDuration = ((performance.now() - warmupStart.current) / 1000).toFixed(2);
-                // console.info(`🔥 GPU/Shader Warmup Complete: ${warmupDuration}s ${isLowTier ? '(Bypassed for LOW tier)' : ''}`);
-                
+                bootLog(`RoomWarmup: warmup fini en ${warmupDuration}s — RAF avant onWarmupComplete`);
+
                 requestAnimationFrame(() => {
+                    bootLog('RoomWarmup: onWarmupComplete →');
                     setIsDone(true);
                     onWarmupComplete?.();
                 });
@@ -56,6 +61,7 @@ const RoomWarmup = ({ onWarmupComplete, isLowTier }) => {
 
             // Force compile all shaders in the scene (including warm-up rooms)
             // Use 2026 compileAsync to avoid blocking the main thread!
+            bootLog('RoomWarmup: frames atteintes — compileAsync dispo ?', !!gl.compileAsync);
             if (gl.compileAsync) {
                 // Some drivers (seen: Mesa/Iris + KHR_parallel_shader_compile) never
                 // report compile completion, so the promise would hang the preloader
@@ -75,7 +81,10 @@ const RoomWarmup = ({ onWarmupComplete, isLowTier }) => {
                     }
                 }, 8000);
                 gl.compileAsync(scene, camera, scene)
-                    .then(finishOnce)
+                    .then(() => {
+                        bootLog('RoomWarmup: compileAsync résolu');
+                        finishOnce();
+                    })
                     .catch((err) => {
                         console.error('Async compilation failed, falling back to sync', err);
                         if (!settled) gl.compile(scene, camera);

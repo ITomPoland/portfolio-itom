@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { useAudio } from '../../context/AudioManager';
+import { DEBUG_BOOT, bootLog } from '../../utils/debugBoot';
 
 // Reusable SVG Line Component (now accepts ref)
 const TearLineSVG = ({ svgPathData, pathLength, strokeDashoffset, pathRef }) => (
@@ -108,6 +109,37 @@ const Preloader = ({ onComplete, ready }) => {
     const origOnProgress = THREE.DefaultLoadingManager.onProgress;
     const origOnLoad = THREE.DefaultLoadingManager.onLoad;
 
+    // Debug ledger (?debugboot): tracks LoadingManager items to expose the batch
+    // that never settles — counts per URL, since concurrent loads of the same
+    // asset start/end an uneven number of times (root cause of fable/012).
+    let firstLoadDone = false;
+    let restoreLedger = () => {};
+    if (DEBUG_BOOT) {
+      const mgr = THREE.DefaultLoadingManager;
+      const origItemStart = mgr.itemStart.bind(mgr);
+      const origItemEnd = mgr.itemEnd.bind(mgr);
+      const pendingItems = new Map();
+      mgr.itemStart = (url) => {
+        pendingItems.set(url, (pendingItems.get(url) ?? 0) + 1);
+        if (firstLoadDone) bootLog('item start (post-preload):', url);
+        origItemStart(url);
+      };
+      mgr.itemEnd = (url) => {
+        pendingItems.set(url, (pendingItems.get(url) ?? 0) - 1);
+        if (firstLoadDone) bootLog('item end (post-preload):', url);
+        origItemEnd(url);
+      };
+      const dumpTimer = setTimeout(() => {
+        const unbalanced = [...pendingItems].filter(([, n]) => n !== 0);
+        bootLog('items start/end déséquilibrés après 20s:', unbalanced);
+      }, 20000);
+      restoreLedger = () => {
+        mgr.itemStart = origItemStart;
+        mgr.itemEnd = origItemEnd;
+        clearTimeout(dumpTimer);
+      };
+    }
+
     THREE.DefaultLoadingManager.onStart = (url, loaded, total) => {
       setActive(true);
       origOnStart?.(url, loaded, total);
@@ -122,6 +154,8 @@ const Preloader = ({ onComplete, ready }) => {
     };
 
     THREE.DefaultLoadingManager.onLoad = () => {
+      bootLog('LoadingManager onLoad — batch fini');
+      firstLoadDone = true;
       cancelAnimationFrame(t);
       setRealProgress(100);
       setActive(false);
@@ -137,6 +171,7 @@ const Preloader = ({ onComplete, ready }) => {
       THREE.DefaultLoadingManager.onStart = origOnStart;
       THREE.DefaultLoadingManager.onProgress = origOnProgress;
       THREE.DefaultLoadingManager.onLoad = origOnLoad;
+      restoreLedger();
     };
   }, []);
 
@@ -162,7 +197,10 @@ const Preloader = ({ onComplete, ready }) => {
   const trackerRef = useRef({ val: 0 });
   const readyRef = useRef(ready);
 
-  useEffect(() => { readyRef.current = ready; }, [ready]);
+  useEffect(() => {
+    readyRef.current = ready;
+    if (ready) bootLog('Preloader: ready=true → cible 100%');
+  }, [ready]);
 
   // ----------------------------------------
   // GENERATE TEAR PATH
@@ -208,16 +246,22 @@ const Preloader = ({ onComplete, ready }) => {
   // ----------------------------------------
   useEffect(() => {
     let newTarget = 0;
-    if (active) {
+    if (ready) {
+      // `ready` (sceneReady) is only emitted after the initial preload finished
+      // AND the room warmup ran, so the experience is provably usable. Lazy
+      // post-preload batches (ville models, room textures, sounds) flip `active`
+      // back to true, and their LoadingManager onLoad can never re-fire when
+      // itemStart/itemEnd counts drift (three.js quirk with concurrent loads of
+      // the same URL). On slow disks those batches overlap `ready`, which froze
+      // the preloader at 90% forever (fable/012) — `ready` must always win.
+      newTarget = 100;
+    } else if (active) {
       newTarget = (realProgress / 100) * 85;
     } else {
-      if (ready) {
-        newTarget = 100;
-      } else {
-        newTarget = 90;
-      }
+      newTarget = 90;
     }
 
+    bootLog('Preloader: newTarget =', newTarget, '| active:', active, 'ready:', ready);
     setTargetProgress(prev => Math.max(prev, newTarget));
   }, [realProgress, active, ready]);
 
@@ -234,6 +278,7 @@ const Preloader = ({ onComplete, ready }) => {
 
     // Exit phase
     if (val >= 99.5 && readyRef.current && !exitStarted.current) {
+      bootLog('Preloader: seuil 99.5 atteint → startExit');
       exitStarted.current = true;
       startExit();
     }
@@ -262,11 +307,14 @@ const Preloader = ({ onComplete, ready }) => {
       duration = 0.4;
     }
 
+    bootLog('Preloader: tween créé →', targetProgress, '| depuis', displayProgressRef.current.toFixed(1));
     gsap.to(trackerRef.current, {
       val: targetProgress,
       duration: duration,
       ease: "power2.out",
       overwrite: true, // Auto kill previous tweens on trackerRef
+      onStart: () => bootLog('Preloader: tween démarré →', targetProgress),
+      onComplete: () => bootLog('Preloader: tween fini, val =', trackerRef.current.val.toFixed(1)),
       onUpdate: () => {
         const val = trackerRef.current.val;
         displayProgressRef.current = val;
@@ -302,6 +350,7 @@ const Preloader = ({ onComplete, ready }) => {
   }, [ready]);
 
   const startExit = () => {
+    bootLog('Preloader: startExit — lancement timeline de sortie');
     exitStarted.current = true;
 
     if (pencilSoundRef.current) {
@@ -312,6 +361,7 @@ const Preloader = ({ onComplete, ready }) => {
 
     const tl = gsap.timeline({
       onComplete: () => {
+        bootLog('Preloader: exit terminé — setIsDone(true)');
         setIsDone(true);
         
         const exitEnd = performance.now();

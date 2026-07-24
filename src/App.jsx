@@ -39,8 +39,9 @@ import {
   ENTRANCE_TEXTURES, 
   CORRIDOR_TEXTURES, 
   UI_TEXTURES,
-  PRELOAD_ALL, 
-  PRELOAD_LOADER,
+  GALLERY_TEXTURES,
+  CONTACT_TEXTURES,
+  STUDIO_TEXTURES,
   ABOUT_TEXTURES,
   IMAGE_ASSETS,
   filterTexturesByDevice
@@ -64,21 +65,13 @@ const isLowEnd = isMobileDevice || isWeakCPU || isLowRAM || isSmallScreen;
 // Laptops with touch screens (which also have a mouse/trackpad) will return true here.
 const supportsHover = typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches;
 
-// Trigger Three.js preloads at module level (as standard for Drei)
-if (isLowEnd) {
-  const CORE_TEXTURES = [...ENTRANCE_TEXTURES, ...CORRIDOR_TEXTURES, ...UI_TEXTURES, ...IMAGE_ASSETS];
-  const filteredCore = filterTexturesByDevice(CORE_TEXTURES, supportsHover);
-  const filteredAbout = filterTexturesByDevice(ABOUT_TEXTURES, supportsHover);
-
-  filteredCore.forEach(path => useTexture.preload(path));
-  filteredAbout.forEach(path => useLoader.preload(TextureLoader, path));
-} else {
-  const filteredAll = filterTexturesByDevice(PRELOAD_ALL, supportsHover);
-  const filteredLoader = filterTexturesByDevice(PRELOAD_LOADER, supportsHover);
-  
-  filteredAll.forEach(path => useTexture.preload(path));
-  filteredLoader.forEach(path => useLoader.preload(TextureLoader, path));
-}
+// Trigger Three.js preloads at module level (as standard for Drei).
+// Boot-critical assets ONLY (entrance + corridor + UI): the 4 rooms' textures
+// (~5 MB) are NOT needed to reach first interaction (VILLE_MODE starts outside),
+// so they are deferred until the preloader is gone (see AppContent) instead of
+// competing with the visible scene for bandwidth/decode during boot (fable/013).
+const BOOT_TEXTURES = [...ENTRANCE_TEXTURES, ...CORRIDOR_TEXTURES, ...UI_TEXTURES, ...IMAGE_ASSETS];
+filterTexturesByDevice(BOOT_TEXTURES, supportsHover).forEach(path => useTexture.preload(path));
 
 // WebGL preflight: with failIfMajorPerformanceCaveat the context creation FAILS
 // silently on software-rendered browsers (GPU blocklisted / broken driver) and the
@@ -144,6 +137,20 @@ function AppContent() {
   useEffect(() => {
     initAudio();
   }, []);
+
+  // Deferred room-texture preload (fable/013): once the preloader is gone and the
+  // app is interactive, warm the texture caches of the 4 rooms in the background
+  // so RoomWarmup's background compile pass and the first room entry stay
+  // stutter-free — without having gated the boot on ~5 MB of hidden-room assets.
+  // Device coverage matches the previous behavior exactly (lists + hover filter),
+  // only the timing changed.
+  useEffect(() => {
+    if (!isLoaded) return;
+    const texList = isLowEnd ? [] : [...GALLERY_TEXTURES, ...CONTACT_TEXTURES];
+    const loaderList = isLowEnd ? ABOUT_TEXTURES : [...ABOUT_TEXTURES, ...STUDIO_TEXTURES];
+    filterTexturesByDevice(texList, supportsHover).forEach(path => useTexture.preload(path));
+    filterTexturesByDevice(loaderList, supportsHover).forEach(path => useLoader.preload(TextureLoader, path));
+  }, [isLoaded]);
 
   const handleSceneReady = useCallback(() => {
     bootLog('handleSceneReady appelé — RAF programmé');

@@ -2,6 +2,8 @@ import React, { useMemo, useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { VILLE_BUILDINGS } from './villeConfig';
+import { useScene } from '../../../context/SceneContext';
+import { usePerformance } from '../../../context/PerformanceContext';
 
 /**
  * Sub-component for the interactive door markers (bouncing arrow + ground ring + hitbox)
@@ -10,6 +12,18 @@ function DoorMarker({ x, doorTop, z, color, roomId, onDoorEnter, building, regis
     const coneRef = useRef();
     const hitRef = useRef();
     const baseVal = doorTop + 1.05;
+
+    // Miora approach feedback: when THIS door is the context's nearest walk-in door,
+    // ease a 0..1 factor that boosts the marker emissive, pulses the ground ring and
+    // (on capable tiers) lights the threshold with a warm interior spill.
+    const { villeNearDoor } = useScene();
+    const { tier } = usePerformance();
+    const isNear = !!roomId && villeNearDoor?.id === building.id;
+    const approachRef = useRef(0);
+    const coneMatRef = useRef();
+    const ringMatRef = useRef();
+    const ringRef = useRef();
+    const glowRef = useRef();
 
     // Walk-in entry: publish this door's WORLD position so MiniVille can detect the
     // visitor standing in front of it (proximity "Entrer" prompt). getWorldPosition
@@ -23,11 +37,22 @@ function DoorMarker({ x, doorTop, z, color, roomId, onDoorEnter, building, regis
     }, [registerDoor, building, isInteractive]);
 
     useFrame((state) => {
+        const elapsed = state.clock.getElapsedTime();
         if (coneRef.current) {
-            const elapsed = state.clock.getElapsedTime();
             coneRef.current.position.y = baseVal + Math.sin(elapsed * 2.4) * 0.12;
             coneRef.current.rotation.y = elapsed * 1.4;
         }
+
+        // Eased approach factor (no allocations, refs only)
+        approachRef.current = THREE.MathUtils.lerp(approachRef.current, isNear ? 1 : 0, 0.08);
+        const k = approachRef.current;
+        if (coneMatRef.current) coneMatRef.current.emissiveIntensity = 0.55 + k * 0.9;
+        if (ringMatRef.current) ringMatRef.current.opacity = 0.5 + k * (0.2 + Math.sin(elapsed * 3) * 0.15);
+        if (ringRef.current) {
+            const s = 1 + k * 0.1 * (0.5 + Math.sin(elapsed * 3) * 0.5);
+            ringRef.current.scale.set(s, s, 1);
+        }
+        if (glowRef.current) glowRef.current.intensity = k * 2.4;
     });
 
     const eventHandlers = isInteractive ? {
@@ -55,6 +80,7 @@ function DoorMarker({ x, doorTop, z, color, roomId, onDoorEnter, building, regis
             >
                 <coneGeometry args={[0.3, 0.55, 4]} />
                 <meshStandardMaterial 
+                    ref={coneMatRef}
                     color={color} 
                     emissive={color} 
                     emissiveIntensity={0.55} 
@@ -64,17 +90,32 @@ function DoorMarker({ x, doorTop, z, color, roomId, onDoorEnter, building, regis
 
             {/* Ground Ring */}
             <mesh 
+                ref={ringRef}
                 position={[x, 0.07, z + 1.1]} 
                 rotation-x={-Math.PI / 2}
             >
                 <ringGeometry args={[0.55, 0.8, 28]} />
                 <meshBasicMaterial 
+                    ref={ringMatRef}
                     color={color} 
                     transparent 
                     opacity={0.5} 
                     side={THREE.DoubleSide} 
                 />
             </mesh>
+
+            {/* Warm interior light spill at the threshold (Miora approach state).
+                Mounted only while near and above LOW tier — intensity eased from 0. */}
+            {isNear && tier !== 'LOW' && (
+                <pointLight
+                    ref={glowRef}
+                    position={[x, 1.6, z + 1]}
+                    color="#FFE4B5"
+                    intensity={0}
+                    distance={5}
+                    decay={2}
+                />
+            )}
 
             {/* Invisible but raycastable Click Hitbox */}
             <mesh ref={hitRef} position={[x, 1.8, z + 0.4]}>
@@ -114,14 +155,16 @@ function createSignTexture(txt, color) {
     return { texture: t, aspect: c.width / c.height };
 }
 
-// Signs coordinates in world-space
+// Signs coordinates in world-space.
+// Miora Brief 2: one shared emissive mint (#9FE0BB) signage family at night, slight idle
+// glow at day (0.1); L'Académie stays dimmed (no active invitation — "Bientôt" building).
 const SIGNS_CONFIG = [
-    { text: 'HAKKILO XR', color: '#7C9AFF', position: [0, 10.6, 5.9], rotationY: 0, scale: 1.35 },
-    { text: 'LE STUDIO', color: '#F7F4EE', position: [-26 + Math.cos(Math.PI/4)*5.3, 7.6, -26 + Math.sin(Math.PI/4)*5.3], rotationY: Math.PI*.75, scale: 1.1 },
-    { text: 'PRÉSENTATION', color: '#F7F4EE', position: [26 - Math.cos(Math.PI/4)*5.3, 17, -26 + Math.sin(Math.PI/4)*5.3], rotationY: -Math.PI*.75, scale: 1.1 },
-    { text: 'LA GALERIE', color: '#E09F3E', position: [-26 + Math.cos(Math.PI/4)*5.6, 5.9, 26 - Math.sin(Math.PI/4)*5.6], rotationY: Math.PI/4 + Math.PI, scale: 1.05 },
-    { text: 'CONTACT', color: '#9fe0bb', position: [26 - Math.cos(Math.PI/4)*4.4, 4.6, 26 - Math.sin(Math.PI/4)*4.4], rotationY: Math.PI/4 + Math.PI, scale: 0.95 },
-    { text: "L'ACADÉMIE", color: '#BFD1FF', position: [0, 9.9, -40.5], rotationY: 0, scale: 1.2 }
+    { text: 'HAKKILO XR', color: '#9FE0BB', position: [0, 10.6, 5.9], rotationY: 0, scale: 1.35 },
+    { text: 'LE STUDIO', color: '#9FE0BB', position: [-26 + Math.cos(Math.PI/4)*5.3, 7.6, -26 + Math.sin(Math.PI/4)*5.3], rotationY: Math.PI*.75, scale: 1.1 },
+    { text: 'PRÉSENTATION', color: '#9FE0BB', position: [26 - Math.cos(Math.PI/4)*5.3, 17, -26 + Math.sin(Math.PI/4)*5.3], rotationY: -Math.PI*.75, scale: 1.1 },
+    { text: 'LA GALERIE', color: '#9FE0BB', position: [-26 + Math.cos(Math.PI/4)*5.6, 5.9, 26 - Math.sin(Math.PI/4)*5.6], rotationY: Math.PI/4 + Math.PI, scale: 1.05 },
+    { text: 'CONTACT', color: '#9FE0BB', position: [26 - Math.cos(Math.PI/4)*4.4, 4.6, 26 - Math.sin(Math.PI/4)*4.4], rotationY: Math.PI/4 + Math.PI, scale: 0.95 },
+    { text: "L'ACADÉMIE", color: '#9FE0BB', position: [0, 9.9, -40.5], rotationY: 0, scale: 1.2, nightGlow: 0.45 }
 ];
 
 export default function VilleBuildings({ textures, nightRef, onDoorEnter, registerDoor }) {
@@ -526,7 +569,7 @@ export default function VilleBuildings({ textures, nightRef, onDoorEnter, regist
                         map={s.texture} 
                         emissiveMap={s.texture} 
                         emissive={0xffffff} 
-                        ref={registerMat(0, 0.9)} 
+                        ref={registerMat(0.1, s.nightGlow ?? 0.9)} 
                         roughness={0.6} 
                         transparent 
                     />

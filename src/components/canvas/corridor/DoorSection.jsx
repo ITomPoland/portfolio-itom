@@ -55,6 +55,19 @@ const DOOR_PAINTED_TEXTURES = {
     "LET'S CONNECT": '/textures/corridor/doors/drzwikontakt_painted.webp',
 };
 
+// French display lines per label (Miora Brief 2 naming). `label` keys stay the
+// door→room mapping contract — ONLY the painted sign text is localized.
+const SIGN_LINES = {
+    'THE GALLERY': { lines: ['LA', 'GALERIE'], fontSize: 0.25 },
+    'THE STUDIO': { lines: ['LE', 'STUDIO'], fontSize: 0.25 },
+    'THE ABOUT': { lines: ['PRÉSENTATION'], fontSize: 0.17 },
+    "LET'S CONNECT": { lines: ['CONTACT'], fontSize: 0.25 },
+};
+
+// Miora approach feedback: activation radius + accent color (mint #9FE0BB)
+const APPROACH_RADIUS = 5;
+const ACCENT_COLOR = '#9FE0BB';
+
 
 /**
  * DoorSection Component.
@@ -202,6 +215,11 @@ const DoorSection = ({
     // Dynamic tilt state
     const currentTilt = useRef(0);
 
+    // Miora approach feedback (eased 0..1) + material refs driven in useFrame
+    const currentApproach = useRef(0);
+    const haloMatRef = useRef();   // mint accent bar under the sign
+    const enterMatRef = useRef();  // « Entrer » text material
+
     // Load wall texture
     const originalWallTexture = useTexture('/textures/corridor/wall_texture.webp');
 
@@ -326,7 +344,7 @@ const DoorSection = ({
 
     // Force shader compilation: let the painted versions render for 2 frames during preloader, then hide
     const compileFramesRef = useRef(0);
-    useFrame(() => {
+    useFrame((state) => {
         // === SHADER COMPILE (first 2 frames only) ===
         if (compileFramesRef.current < 2) {
             compileFramesRef.current++;
@@ -342,6 +360,7 @@ const DoorSection = ({
         if (!groupRef.current) return;
 
         let targetTilt = BASE_TILT;
+        let approachTarget = 0;
 
         // If tilt is locked (clicked/entering), force it to MAX_TILT (fully facing user)
         if (isTiltLocked) {
@@ -358,7 +377,18 @@ const DoorSection = ({
             } else if (distance <= TILT_PEAK) {
                 targetTilt = MAX_TILT;
             }
+
+            // Miora approach state: reveal the mint halo + « Entrer » hint when close
+            if (!isOpen && distance < APPROACH_RADIUS) approachTarget = 1;
         }
+
+        // Eased approach feedback — drives sign halo pulse + « Entrer » fade (no allocations)
+        currentApproach.current = THREE.MathUtils.lerp(currentApproach.current, approachTarget, 0.08);
+        const approach = currentApproach.current;
+        if (haloMatRef.current) {
+            haloMatRef.current.opacity = approach * (0.65 + Math.sin(state.clock.elapsedTime * 2.6) * 0.2);
+        }
+        if (enterMatRef.current) enterMatRef.current.opacity = approach;
 
         // Smooth interpolation
         currentTilt.current = THREE.MathUtils.lerp(currentTilt.current, targetTilt, 0.06);
@@ -1082,79 +1112,75 @@ const DoorSection = ({
                             />
                         </mesh>
 
-                        {/* === DYNAMIC TEXT FOR SIGNS === */}
-                        {label === 'THE GALLERY' && (
-                            <group position={[0, 0, 0.01]}>
+                        {/* === DYNAMIC TEXT FOR SIGNS (French display, Miora Brief 2 naming) === */}
+                        {(() => {
+                            const sign = SIGN_LINES[label] || { lines: [label], fontSize: 0.2 };
+                            return sign.lines.length === 2 ? (
+                                <group position={[0, 0, 0.01]}>
+                                    <Text
+                                        font="/fonts/CabinSketch-Bold.ttf"
+                                        fontSize={sign.fontSize}
+                                        color="#111111"
+                                        anchorX="center"
+                                        anchorY="bottom"
+                                        position={[0, -0.02, 0]}
+                                    >
+                                        {sign.lines[0]}
+                                    </Text>
+                                    <Text
+                                        font="/fonts/CabinSketch-Bold.ttf"
+                                        fontSize={sign.fontSize}
+                                        color="#111111"
+                                        anchorX="center"
+                                        anchorY="top"
+                                        position={[0, +0.02, 0]}
+                                    >
+                                        {sign.lines[1]}
+                                    </Text>
+                                </group>
+                            ) : (
                                 <Text
                                     font="/fonts/CabinSketch-Bold.ttf"
-                                    fontSize={0.25}
+                                    fontSize={sign.fontSize}
                                     color="#111111"
                                     anchorX="center"
-                                    anchorY="bottom"
-                                    position={[0, -0.02, 0]}
+                                    anchorY="middle"
+                                    position={[0, 0, 0.01]}
                                 >
-                                    THE
+                                    {sign.lines[0]}
                                 </Text>
-                                <Text
-                                    font="/fonts/CabinSketch-Bold.ttf"
-                                    fontSize={0.25}
-                                    color="#111111"
-                                    anchorX="center"
-                                    anchorY="top"
-                                    position={[0, +0.02, 0]}
-                                >
-                                    GALLERY
-                                </Text>
-                            </group>
-                        )}
-                        {label === 'THE STUDIO' && (
-                            <group position={[0, 0, 0.01]}>
-                                <Text
-                                    font="/fonts/CabinSketch-Bold.ttf"
-                                    fontSize={0.25}
-                                    color="#111111"
-                                    anchorX="center"
-                                    anchorY="bottom"
-                                    position={[0, -0.02, 0]}
-                                >
-                                    THE
-                                </Text>
-                                <Text
-                                    font="/fonts/CabinSketch-Bold.ttf"
-                                    fontSize={0.25}
-                                    color="#111111"
-                                    anchorX="center"
-                                    anchorY="top"
-                                    position={[0, +0.03, 0]}
-                                >
-                                    STUDIO
-                                </Text>
-                            </group>
-                        )}
-                        {label === 'THE ABOUT' && (
-                            <Text
-                                font="/fonts/CabinSketch-Bold.ttf"
-                                fontSize={0.30}
-                                color="#111111"
-                                anchorX="center"
-                                anchorY="middle"
-                                position={[0, 0, 0.01]}
-                            >
-                                ABOUT
-                            </Text>
-                        )}
-                        {label === "LET'S CONNECT" && (
-                            <Text
-                                font="/fonts/CabinSketch-Bold.ttf"
-                                fontSize={0.25}
-                                color="#111111"
-                                anchorX="center"
-                                anchorY="middle"
-                                position={[0, 0, 0.01]}
-                            >
-                                CONTACT
-                            </Text>
-                        )}
+                            );
+                        })()}
+
+                        {/* === MIORA APPROACH FEEDBACK (mint halo bar + « Entrer » hint) ===
+                            Opacities are driven per-frame from currentApproach in useFrame —
+                            fully decorative, no pointer handlers, camera logic untouched. */}
+                        <mesh position={[0, -0.38, 0.01]}>
+                            <planeGeometry args={[1.1, 0.045]} />
+                            <meshBasicMaterial
+                                ref={haloMatRef}
+                                color={ACCENT_COLOR}
+                                transparent
+                                opacity={0}
+                                depthWrite={false}
+                            />
+                        </mesh>
+                        <Text
+                            font="/fonts/CabinSketch-Bold.ttf"
+                            fontSize={0.15}
+                            anchorX="center"
+                            anchorY="top"
+                            position={[0, -0.44, 0.01]}
+                        >
+                            Entrer
+                            <meshBasicMaterial
+                                ref={enterMatRef}
+                                color="#0D1220"
+                                transparent
+                                opacity={0}
+                                depthWrite={false}
+                            />
+                        </Text>
                     </group>
 
                     {/* === DOOR FRAME (textured) === */}

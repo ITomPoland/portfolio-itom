@@ -1,12 +1,12 @@
 import { useScene } from '../../context/SceneContext';
+import '../../styles/VilleInfoCard.scss';
 
 /**
- * VilleInfoCard — guided-tour building card. When the tour brings the visitor near a
- * building (proximity + hysteresis computed by MiniVille → villeInfoCard), shows a compact
- * top-centre card telling what the building is about. Non-blocking: never grabs the camera
- * or the controls, closes itself when walking away, ✕ closes it manually. Top-centre keeps
- * it clear of the bottom widgets (nav/theme toggles, door prompt, consent banner).
- * Minimal glass style — restyle belongs to Claude Design.
+ * VilleInfoCard — building info popover (Miora Brief 3, night-glass register).
+ *
+ * INFORMATIVE only: title + body + close. Entry is via the 3D door, not a CTA.
+ * Non-blocking (pointer-events only on the card). ✕ target ≥ 44 px.
+ * Data contract unchanged: villeInfoCard.info = { title, body }.
  */
 export default function VilleInfoCard() {
     const { villeInfoCard, setVilleInfoCard, isTeleporting, isInRoom } = useScene();
@@ -15,74 +15,30 @@ export default function VilleInfoCard() {
     const { title, body } = villeInfoCard.info;
 
     return (
-        <div style={wrapStyle}>
-            <div style={cardStyle} role="status" aria-live="polite">
-                <div style={headRowStyle}>
-                    <h3 style={titleStyle}>{title}</h3>
+        <div className="ville-info-card-wrap">
+            <div className="ville-info-card" role="status" aria-live="polite">
+                <div className="ville-info-card__accent" aria-hidden="true" />
+                <div className="ville-info-card__head">
+                    <h3 className="ville-info-card__title">{title}</h3>
                     <button
                         type="button"
+                        className="ville-info-card__close"
                         onClick={() => setVilleInfoCard(null)}
-                        style={closeStyle}
                         aria-label="Fermer la carte d'information"
                     >
-                        ✕
+                        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                            <path
+                                d="M18 6L6 18M6 6l12 12"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                            />
+                        </svg>
                     </button>
                 </div>
-                <p style={bodyStyle}>{body}</p>
+                <p className="ville-info-card__body">{body}</p>
             </div>
         </div>
     );
 }
-
-const wrapStyle = {
-    position: 'fixed',
-    left: '50%',
-    top: 'max(0.9rem, env(safe-area-inset-top))',
-    transform: 'translateX(-50%)',
-    zIndex: 59, // under the door prompt / toggles (60-61): those stay usable if ever adjacent
-    width: 'min(92vw, 400px)',
-    pointerEvents: 'none',
-};
-
-const cardStyle = {
-    pointerEvents: 'auto',
-    padding: '0.85rem 0.9rem 0.9rem 1.1rem',
-    borderRadius: '14px',
-    border: '1px solid rgba(159, 224, 187, 0.4)',
-    background: 'rgba(18, 16, 20, 0.78)',
-    backdropFilter: 'blur(8px)',
-    WebkitBackdropFilter: 'blur(8px)',
-    color: '#F7F4EE',
-};
-
-const headRowStyle = {
-    display: 'flex',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: '0.5rem',
-};
-
-const titleStyle = {
-    margin: '0.15rem 0 0',
-    font: '700 1.02rem/1.25 Sora, system-ui, sans-serif',
-    letterSpacing: '0.01em',
-};
-
-const closeStyle = {
-    flex: 'none',
-    width: '44px',
-    height: '44px',
-    margin: '-0.55rem -0.55rem 0 0', // 44px tap target without inflating the card visually
-    border: 'none',
-    borderRadius: '12px',
-    background: 'transparent',
-    color: 'rgba(247, 244, 238, 0.75)',
-    font: '400 1.05rem/1 system-ui, sans-serif',
-    cursor: 'pointer',
-};
-
-const bodyStyle = {
-    margin: '0.45rem 0 0',
-    font: '400 0.86rem/1.45 "IBM Plex Sans", system-ui, sans-serif',
-    color: 'rgba(247, 244, 238, 0.92)',
-};

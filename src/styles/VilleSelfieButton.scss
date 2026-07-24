@@ -1,0 +1,92 @@
+// VilleSelfieButton — Miora Brief 4 (night glass + mint accent).
+@use 'variables' as *;
+
+$mint: #9FE0BB;
+$cream: #F7F4EE;
+$glass: rgba(18, 16, 20, 0.62);
+$glass-border: rgba(255, 255, 255, 0.12);
+
+.ville-selfie-btn {
+    position: fixed;
+    left: max(1rem, env(safe-area-inset-left));
+    // Elevated above joystick (mobile) / nav block — same row as theme toggle
+    bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 5.5rem);
+    z-index: 60;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border-radius: 999px;
+    border: 1px solid $glass-border;
+    background: $glass;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: $mint;
+    cursor: pointer;
+    box-shadow:
+        0 4px 24px rgba(0, 0, 0, 0.4),
+        0 0 12px rgba($mint, 0.15);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
+
+    &__glow {
+        position: absolute;
+        inset: -4px;
+        border-radius: inherit;
+        background: rgba($mint, 0.18);
+        opacity: 0.55;
+        pointer-events: none;
+        z-index: -1;
+    }
+
+    &__icon {
+        display: block;
+        pointer-events: none;
+    }
+
+    &:hover:not(:disabled) {
+        border-color: rgba($mint, 0.45);
+        box-shadow:
+            0 4px 28px rgba(0, 0, 0, 0.45),
+            0 0 18px rgba($mint, 0.28);
+        transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+        outline: 2px solid $mint;
+        outline-offset: 3px;
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.96);
+    }
+
+    &.is-busy,
+    &:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    }
+}
+
+@media (min-width: $breakpoint-tablet) {
+    .ville-selfie-btn {
+        width: 56px;
+        height: 56px;
+        left: max(1.5rem, env(safe-area-inset-left));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ville-selfie-btn {
+        transition: none;
+
+        &__glow {
+            opacity: 0.35;
+        }
+    }
+}

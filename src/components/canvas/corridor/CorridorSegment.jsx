@@ -102,7 +102,7 @@ const CorridorSegment = ({
                 label: 'THE ABOUT',
                 icon: '★',
                 color: '#efe6f5',
-                enterDistance: 25 // Enter deep into the room (clouds are far back)
+                enterDistance: 8 // Atelier depth (was 25 for sky-flight; Brief 5 room is compact)
             },
             {
                 id: `connect-${segmentIndex}`,

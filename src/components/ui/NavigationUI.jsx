@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { useScene } from '../../context/SceneContext';
+import { loadProducts, getLastCatalogueSource } from '../../utils/catalogue';
 import { useAudio } from '../../context/AudioManager';
 import { setMusicVolume, getMusicVolume } from '../../utils/audioManager';
 import { useAchievements } from '../../context/AchievementsContext';
@@ -21,7 +22,7 @@ const ROOMS = [
 const PIN_START_POSITION = { x: 50.5, y: 97 };
 
 const NavigationUI = () => {
-    const { currentRoom, isInRoom, requestExit, hasEntered, teleportTo, isTeleporting } = useScene();
+    const { currentRoom, isInRoom, requestExit, hasEntered, teleportTo, isTeleporting, openOverlay } = useScene();
     const { isMuted, toggleMute, globalVolume, setGlobalVolume } = useAudio();
     const { showTutorial, unlockAchievement } = useAchievements();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -215,10 +216,51 @@ const NavigationUI = () => {
         requestExit();
     };
 
+    const handleOpenCatalogue = async () => {
+        openOverlay({
+            layout: 'product_catalogue',
+            title: 'Le Studio — Boutique',
+            subtitle: 'Notre sélection de matériel XR professionnel',
+            items: [],
+            catalogueLoading: true,
+        });
+        try {
+            const items = await loadProducts();
+            openOverlay({
+                layout: 'product_catalogue',
+                title: 'Le Studio — Boutique',
+                subtitle: 'Notre sélection de matériel XR professionnel',
+                items,
+                catalogueLoading: false,
+                catalogueError: getLastCatalogueSource() === 'static',
+            });
+        } catch {
+            openOverlay({
+                layout: 'product_catalogue',
+                title: 'Le Studio — Boutique',
+                subtitle: 'Notre sélection de matériel XR professionnel',
+                items: [],
+                catalogueLoading: false,
+                catalogueError: true,
+            });
+        }
+    };
+
     return (
         <div className="navigation-ui">
             {/* Global Achievement Popup */}
             <AchievementPopup />
+
+            {hasEntered && isInRoom && currentRoom === 'studio' && (
+                <button
+                    type="button"
+                    className="nav-btn catalogue-btn"
+                    onClick={handleOpenCatalogue}
+                    aria-label="Ouvrir le catalogue produits"
+                >
+                    Catalogue
+                </button>
+            )}
 
             {/* Back Button - Only visible in rooms, hides up when clicked */}
             {hasEntered && isInRoom && (

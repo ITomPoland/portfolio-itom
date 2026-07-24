@@ -267,3 +267,195 @@
         }
     }
 }
+
+// Miora Brief 6 — boutique catalogue grid + product fiche
+$boutique-paper: #F7F4EE;
+$boutique-ink: #1a1a1a;
+$boutique-muted: #6b6b6b;
+$boutique-mint: #9FE0BB;
+$boutique-rupture: #e06060;
+
+.boutique-catalogue {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    &__subtitle {
+        margin: 0;
+        font-family: 'Sora', sans-serif;
+        font-size: 0.85rem;
+        color: $boutique-muted;
+    }
+
+    &__status {
+        margin: 0;
+        font-size: 0.8rem;
+        color: $boutique-muted;
+
+        &--warn {
+            color: darken($boutique-rupture, 10%);
+        }
+    }
+
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 0.75rem;
+        overflow-y: auto;
+        padding: 0.25rem 0.25rem 1rem;
+    }
+
+    &__card {
+        text-align: left;
+        background: #f9f9f9;
+        border: 1.5px solid #d4cfc7;
+        border-radius: 12px;
+        padding: 0.75rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transform: rotate(var(--rot, 0deg));
+        cursor: pointer;
+        min-height: 44px;
+        font: inherit;
+        color: $boutique-ink;
+
+        &:hover {
+            transform: rotate(var(--rot, 0deg)) translateY(-4px);
+        }
+
+        h3 {
+            margin: 0.35rem 0 0;
+            font-family: 'Cabin Sketch', cursive;
+            font-size: 0.95rem;
+        }
+    }
+
+    &__thumb {
+        aspect-ratio: 1;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #2a2a3a, #4a8a6a);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.35rem;
+
+        span {
+            font-family: 'Cabin Sketch', cursive;
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.75);
+            text-align: center;
+        }
+    }
+
+    &__price {
+        margin: 0.25rem 0 0;
+        font-family: 'Sora', sans-serif;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    &__meta {
+        margin: 0.15rem 0 0;
+        font-size: 0.7rem;
+        color: $boutique-muted;
+    }
+
+    &__badge {
+        display: inline-block;
+        margin-top: 0.35rem;
+        font-family: 'IBM Plex Sans', sans-serif;
+        font-size: 0.62rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        padding: 0.15rem 0.45rem;
+        border-radius: 999px;
+        background: rgba($boutique-mint, 0.35);
+        color: #2d7a4f;
+
+        &.is-out {
+            background: rgba($boutique-rupture, 0.15);
+            color: darken($boutique-rupture, 15%);
+        }
+    }
+}
+
+.boutique-fiche {
+    &__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem 1rem;
+        align-items: center;
+        font-size: 0.82rem;
+        color: $boutique-muted;
+        border-bottom: 1px dashed rgba($boutique-ink, 0.15);
+        padding-bottom: 0.85rem;
+    }
+
+    &__price {
+        font-family: 'Sora', sans-serif;
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: $boutique-ink;
+    }
+
+    &__stock {
+        font-family: 'IBM Plex Sans', sans-serif;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        padding: 0.2rem 0.5rem;
+        border-radius: 999px;
+        background: rgba($boutique-mint, 0.35);
+        color: #2d7a4f;
+
+        &.is-out {
+            background: rgba($boutique-rupture, 0.15);
+            color: darken($boutique-rupture, 15%);
+        }
+    }
+
+    &__description {
+        line-height: 1.6;
+        color: #333;
+        font-size: 0.95rem;
+        margin: 0;
+    }
+
+    &__error {
+        color: darken($boutique-rupture, 10%);
+        font-size: 0.85rem;
+        margin: 0.5rem 0 0;
+    }
+
+    &__actions {
+        margin-top: auto;
+        padding-top: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+    }
+
+    &__buy {
+        min-height: 44px;
+        padding: 0 1.1rem;
+        border-radius: 8px;
+        border: none;
+        background: $boutique-mint;
+        color: #0d3d28;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: 'Sora', sans-serif;
+
+        &:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+    }
+
+    &__demo {
+        flex: 1;
+        min-width: 160px;
+        text-align: center;
+    }
+}

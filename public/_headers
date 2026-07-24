@@ -57,6 +57,12 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), midi=(), serial=(), bluetooth=(), display-capture=(), magnetometer=(), xr-spatial-tracking=(), browsing-topics=(), accelerometer=(self), gyroscope=(self)
   Cross-Origin-Opener-Policy: same-origin
 
+/admin
+  X-Robots-Tag: noindex, nofollow
+
+/admin/*
+  X-Robots-Tag: noindex, nofollow
+
 # Cache static assets for 1 year (Performance & SEO)
 /*.js
   Cache-Control: public, max-age=31536000, immutable

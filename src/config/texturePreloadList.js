@@ -120,39 +120,13 @@ export const UI_TEXTURES = [
 // ROOM TEXTURES - Preloaded for instant room entry
 // ============================================
 
-// Gallery Room textures (loaded via useTexture / drei)
-// These are organized to handle conditional painted vs standard versions
-export const GALLERY_TEXTURES_BASE = [
-    '/textures/gallery/floor.webp',
-    '/textures/gallery/railing.webp',
-    '/textures/gallery/domki.webp',
-    '/textures/gallery/miastotlo.webp',
-    '/textures/gallery/bird_gray.webp',
-    '/textures/gallery/klamerka.webp',
-    '/textures/gallery/openliveproject.webp',
-];
+// Gallery Room — immersive redesign (Fable 017) uses procedural CanvasTextures.
+// Former copyrighted template assets (monetune / timberkitty / domki / …) are
+// no longer referenced by GalleryRoom.jsx. Keep arrays empty so preload does
+// not fetch purged / illegal textures. Real project photos → agy/nanobanana 2.
+export const GALLERY_TEXTURES_BASE = [];
 
-export const GALLERY_TEXTURES_VERSIONED = [
-    // Project cards
-    'monetuneprzod',
-    'timberkittyprzod',
-    'youngmultiprzod',
-    'bioprzod',
-    // Card back
-    'tylkartki',
-    'przyciskdotylukartki',
-    // Tech stack logos
-    'csslogo',
-    'elementorlogo',
-    'firebaselogo',
-    'htmllogo',
-    'jslogo',
-    'netlifylogo',
-    'phplogo',
-    'reactlogo',
-    'tailwindlogo',
-    'wordpresslogo',
-];
+export const GALLERY_TEXTURES_VERSIONED = [];
 
 export const GALLERY_TEXTURES = [
     ...GALLERY_TEXTURES_BASE,

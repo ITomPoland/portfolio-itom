@@ -1,77 +1,113 @@
-// ConsentBanner — minimal/neutral RGPD gate. Restylable by Claude Design (§5).
+// ConsentBanner — Miora Brief 1 (paper / croquis register). Equal-weight actions.
 @use 'variables' as *;
+
+$paper: #F7F4EE;
+$ink: #1a1a1a;
+$mint: #9FE0BB;
+$btn-hover: #e8e4dc;
+$btn-pressed: #ddd8cf;
 
 .consent-banner {
     position: fixed;
     left: 50%;
-    // safe-area aware: never sits under the iOS home indicator
     bottom: calc(max(#{$spacing-sm}, env(safe-area-inset-bottom)));
     transform: translateX(-50%);
-    z-index: 10000; // above all UI — legal gate must be reachable
+    z-index: 10000;
 
     width: calc(100% - #{$spacing-md});
-    max-width: 560px;
+    max-width: 520px;
     box-sizing: border-box;
 
     display: flex;
     flex-direction: column;
-    gap: $spacing-sm;
-    padding: $spacing-sm;
+    gap: 0.85rem;
+    padding: 1.1rem 1.15rem 1rem;
 
-    background: rgba($color-black, 0.92);
-    color: $color-white;
-    border: 1px solid rgba($color-white, 0.15);
-    border-radius: 12px;
-    font-family: $font-primary;
+    background: $paper;
+    color: $ink;
+    border: 1px solid rgba($ink, 0.14);
+    border-radius: 4px 255px 3px 255px / 255px 5px 225px 3px; // organic paper edge
+    box-shadow:
+        0 8px 28px rgba(0, 0, 0, 0.28),
+        0 1px 0 rgba(255, 255, 255, 0.4) inset;
+    font-family: 'Sora', $font-primary;
     pointer-events: auto;
+
+    &__accent {
+        position: absolute;
+        top: 0;
+        left: 1.25rem;
+        right: 1.25rem;
+        height: 2px;
+        border-radius: 999px;
+        background: rgba($mint, 0.45);
+    }
 
     &__text {
         margin: 0;
-        font-size: 0.85rem;
-        line-height: 1.45;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: $ink;
     }
 
     &__actions {
         display: flex;
-        gap: $spacing-xs;
+        gap: 0.6rem;
         justify-content: flex-end;
     }
 
     &__btn {
         cursor: pointer;
-        min-height: 44px; // mobile tap-target floor
-        padding: 0.5rem 1.1rem;
-        border-radius: 8px;
-        font-family: $font-primary;
-        font-size: 0.85rem;
-        font-weight: 600;
-        border: 1px solid transparent;
-        transition: $transition-fast;
+        min-height: 44px;
+        min-width: 44px;
+        padding: 0.5rem 1.15rem;
+        border-radius: 6px;
+        font-family: 'Sora', $font-primary;
+        font-size: 0.875rem;
+        font-weight: 500;
+        // Equal visual weight — no dark pattern (Brief 1)
+        background: $paper;
+        color: $ink;
+        border: 1.5px solid rgba($ink, 0.28);
+        box-shadow: 0 1px 0 rgba($ink, 0.06);
+        transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
 
-        &--accept {
-            background: $color-neon-green;
-            color: $color-black;
-
-            &:hover { filter: brightness(1.1); }
+        &:hover {
+            background: $btn-hover;
+            border-color: rgba($ink, 0.35);
         }
 
-        &--decline {
-            background: transparent;
-            color: $color-white;
-            border-color: rgba($color-white, 0.3);
+        &:focus-visible {
+            outline: 2px solid $mint;
+            outline-offset: 2px;
+        }
 
-            &:hover { background: rgba($color-white, 0.1); }
+        &:active {
+            background: $btn-pressed;
+            transform: scale(0.98);
         }
     }
 }
 
-// On the narrowest screens, stack the buttons full-width (mobile-first).
 @media (max-width: $breakpoint-mobile) {
+    .consent-banner {
+        bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 0.25rem);
+        // Clear joystick / look zones: inset from edges, stay bottom-centre
+        width: calc(100% - 2rem);
+        left: 50%;
+    }
+
     .consent-banner__actions {
         flex-direction: column-reverse;
     }
 
     .consent-banner__btn {
         width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .consent-banner__btn {
+        transition: none;
     }
 }

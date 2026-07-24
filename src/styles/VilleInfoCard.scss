@@ -1,0 +1,113 @@
+// VilleInfoCard — Miora Brief 3 (night glass, informative only).
+@use 'variables' as *;
+
+$mint: #9FE0BB;
+$cream: #F7F4EE;
+$glass: rgba(18, 16, 20, 0.78);
+$glass-border: rgba(159, 224, 187, 0.35);
+
+.ville-info-card-wrap {
+    position: fixed;
+    left: 50%;
+    top: max(0.9rem, env(safe-area-inset-top));
+    transform: translateX(-50%);
+    z-index: 59;
+    width: min(92vw, 400px);
+    pointer-events: none;
+    animation: ville-info-in 0.28s ease-out;
+}
+
+.ville-info-card {
+    position: relative;
+    pointer-events: auto;
+    padding: 0.95rem 0.95rem 1rem 1.15rem;
+    border-radius: 14px;
+    border: 1px solid $glass-border;
+    background: $glass;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: $cream;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+
+    &__accent {
+        position: absolute;
+        top: 0;
+        left: 1.1rem;
+        right: 1.1rem;
+        height: 2px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba($mint, 0.55), rgba($mint, 0.15));
+    }
+
+    &__head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    &__title {
+        margin: 0.2rem 0 0;
+        font-family: 'Cabin Sketch', 'Sora', cursive;
+        font-weight: 700;
+        font-size: 1.15rem;
+        line-height: 1.25;
+        letter-spacing: 0.01em;
+        color: $cream;
+    }
+
+    &__close {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        margin: -0.45rem -0.45rem 0 0;
+        border: none;
+        border-radius: 12px;
+        background: transparent;
+        color: rgba($cream, 0.75);
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: $cream;
+        }
+
+        &:focus-visible {
+            outline: 2px solid $mint;
+            outline-offset: 2px;
+        }
+    }
+
+    &__body {
+        margin: 0.5rem 0 0;
+        font-family: 'IBM Plex Sans', 'Sora', $font-primary;
+        font-size: 0.86rem;
+        line-height: 1.45;
+        color: rgba($cream, 0.92);
+    }
+}
+
+@keyframes ville-info-in {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ville-info-card-wrap {
+        animation: none;
+    }
+
+    .ville-info-card__close {
+        transition: none;
+    }
+}

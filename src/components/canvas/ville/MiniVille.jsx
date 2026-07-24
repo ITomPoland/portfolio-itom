@@ -43,7 +43,17 @@ const NIGHT_SUN = new THREE.Color('#39508f');
  */
 export default function MiniVille() {
     const { scene, camera } = useThree();
-    const { markEntered, teleportTo, isTeleporting, isInRoom, villeNavMode, villeTheme, setVilleNearDoor, setVilleInfoCard } = useScene();
+    const { markEntered, teleportTo, isTeleporting, isInRoom, teleportPhase, villeNavMode, villeTheme, setVilleNearDoor, setVilleInfoCard } = useScene();
+
+    // The rooms are mounted at the SAME world coordinates as the city (Experience
+    // mounts the corridor machinery in place during teleport). The city must
+    // therefore disappear as soon as the paper transition is fully closed
+    // (phase 'teleporting') and stay hidden while inside a room — otherwise its
+    // lamps/vegetation/benches leak INTO the room interiors and its sun /
+    // hemisphere / plaza point lights wash out the rooms' own lighting rigs
+    // (fable/014). Hiding the group also disables every ville light.
+    // Phase 'closing' keeps it visible: the paper is still closing over it.
+    const cityHidden = isInRoom || (isTeleporting && teleportPhase !== 'closing');
 
     const textures = useMemo(() => makeVilleTextures(), []);
     const nightRef = useRef(villeNightTargetFor(villeTheme));
@@ -95,14 +105,38 @@ export default function MiniVille() {
         };
     }, [camera, scene, markEntered]);
 
+    // While the city is hidden, hand the scene environment back to the "corridor"
+    // values rooms are designed against (App.jsx <color>/<fog>): the rooms have
+    // see-through areas (gallery sky, ink splashes) that would otherwise reveal
+    // the ville day/night sky as a dark blotch (fable/014). Restored on re-show;
+    // the day/night useFrame below re-converges the colors.
+    useEffect(() => {
+        if (!scene.fog) return;
+        /* eslint-disable react-hooks/immutability -- R3F pattern: MiniVille owns
+           scene fog/sky (same as the mount effect above, pre-existing rule 7 hits) */
+        if (cityHidden) {
+            scene.fog.color.set('#fafafa');
+            scene.fog.near = 15;
+            scene.fog.far = 50;
+            if (scene.background?.isColor) scene.background.set('#fafafa');
+        } else {
+            scene.fog.near = VILLE_FOG_NEAR;
+            scene.fog.far = VILLE_FOG_FAR;
+        }
+        /* eslint-enable react-hooks/immutability */
+    }, [cityHidden, scene]);
+
     // Day/night easing → sky / fog / sun / hemi. Target = theme override or local clock.
     useFrame((_, delta) => {
         const target = villeNightTargetFor(villeTheme);
         const n = nightRef.current + (target - nightRef.current) * Math.min(1, delta * VILLE_NIGHT_EASE);
         nightRef.current = n;
 
-        if (scene.fog) scene.fog.color.copy(DAY_SKY).lerp(NIGHT_SKY, n);
-        if (scene.background?.isColor) scene.background.copy(DAY_SKY).lerp(NIGHT_SKY, n);
+        // Sky/fog colors belong to the rooms while the city is hidden (see above).
+        if (!cityHidden) {
+            if (scene.fog) scene.fog.color.copy(DAY_SKY).lerp(NIGHT_SKY, n);
+            if (scene.background?.isColor) scene.background.copy(DAY_SKY).lerp(NIGHT_SKY, n);
+        }
         if (sunRef.current) {
             sunRef.current.intensity = THREE.MathUtils.lerp(2.2, 0.25, n);
             sunRef.current.color.copy(DAY_SUN).lerp(NIGHT_SUN, n);
@@ -169,7 +203,7 @@ export default function MiniVille() {
     }, [teleportTo]);
 
     return (
-        <group>
+        <group visible={!cityHidden}>
             <hemisphereLight ref={hemiRef} args={['#dfeaff', '#8a7a5c', 0.85]} />
             <directionalLight ref={sunRef} position={[38, 55, 22]} intensity={2.2} color="#fff2dc" />
 

@@ -4,6 +4,8 @@ import gsap from 'gsap';
 import { TextPlugin } from 'gsap/TextPlugin';
 import '../../styles/GlobalOverlay.scss';
 import { safeOpen } from '../../utils/safeOpen';
+import { formatPriceEuros, stockBadgeLabel } from '../../utils/catalogue';
+import { startCheckout } from '../../utils/checkout';
 
 gsap.registerPlugin(TextPlugin);
 
@@ -90,9 +92,30 @@ const GlobalOverlay = () => {
 };
 
 const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
+    const { openOverlay } = useScene();
+    const [buyPending, setBuyPending] = useState(false);
+    const [buyError, setBuyError] = useState('');
+
     if (!content) return null;
 
     const label = content.platformConfig?.label || 'Content';
+    const priceLabel = formatPriceEuros(content.priceCents);
+    const stockLabel = stockBadgeLabel(content.stock);
+    const canBuy = typeof content.priceCents === 'number'
+        && content.priceCents >= 0
+        && (content.stock == null || content.stock > 0);
+
+    const handleBuy = async () => {
+        if (!content.id || buyPending) return;
+        setBuyError('');
+        setBuyPending(true);
+        try {
+            await startCheckout(content.id, 1);
+        } catch (err) {
+            setBuyError(err.message || 'Paiement indisponible.');
+            setBuyPending(false);
+        }
+    };
 
     // GSAP TextPlugin typing effect for description
     const descriptionRef = useRef(null);
@@ -516,7 +539,49 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                     </div>
 
                     {/* === LAYOUT: CERTIFICATE GRID === */}
-                    {content.layout === 'certificate_grid' ? (
+                    {/* === LAYOUT: PRODUCT CATALOGUE (Miora Brief 6) === */}
+                    {content.layout === 'product_catalogue' ? (
+                        <div className="boutique-catalogue">
+                            {content.subtitle && (
+                                <p className="boutique-catalogue__subtitle">{content.subtitle}</p>
+                            )}
+                            {content.catalogueLoading && (
+                                <p className="boutique-catalogue__status" role="status">Chargement du catalogue…</p>
+                            )}
+                            {content.catalogueError && (
+                                <p className="boutique-catalogue__status boutique-catalogue__status--warn" role="status">
+                                    Catalogue local (API indisponible)
+                                </p>
+                            )}
+                            <div className="boutique-catalogue__grid">
+                                {(content.items || []).map((item, index) => {
+                                    const itemPrice = formatPriceEuros(item.priceCents);
+                                    const itemStock = stockBadgeLabel(item.stock);
+                                    return (
+                                        <button
+                                            type="button"
+                                            key={item.id || index}
+                                            className="boutique-catalogue__card"
+                                            style={{ '--rot': `${(index % 2 === 0 ? 0.5 : -0.7)}deg` }}
+                                            onClick={() => openOverlay(item)}
+                                        >
+                                            <div className="boutique-catalogue__thumb" aria-hidden="true">
+                                                <span>{item.platformConfig?.label || item.title}</span>
+                                            </div>
+                                            <h3>{item.title}</h3>
+                                            {itemPrice && <p className="boutique-catalogue__price">{itemPrice}</p>}
+                                            <p className="boutique-catalogue__meta">{item.date}</p>
+                                            {itemStock && (
+                                                <span className={`boutique-catalogue__badge ${itemStock === 'Rupture' ? 'is-out' : ''}`}>
+                                                    {itemStock}
+                                                </span>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ) : content.layout === 'certificate_grid' ? (
                         <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
                             <div
                                 ref={scrollContainerRef}
@@ -607,47 +672,51 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                         /* === LAYOUT: DEFAULT (The Studio Style) === */
                         <>
                             {/* Meta Info */}
-                            <div style={{
-                                display: 'flex',
-                                flexWrap: 'wrap',
-                                gap: '1rem',
-                                fontSize: '0.8rem',
-                                color: '#666',
-                                borderBottom: '1px dashed #ccc',
-                                paddingBottom: '1rem',
-                                ...getStaggerStyle(200)
-                            }}>
+                            <div className="boutique-fiche__meta" style={getStaggerStyle(200)}>
                                 <strong>{content.date}</strong>
+                                {priceLabel && <span className="boutique-fiche__price">{priceLabel}</span>}
+                                {stockLabel && (
+                                    <span className={`boutique-fiche__stock ${stockLabel === 'Rupture' ? 'is-out' : ''}`}>
+                                        {stockLabel}
+                                    </span>
+                                )}
                                 {content.views && <span>{content.views} views</span>}
                             </div>
 
                             {/* Description */}
                             <p 
                                 ref={descriptionRef}
+                                className="boutique-fiche__description"
                                 style={{
-                                lineHeight: 1.6,
-                                color: '#333',
-                                fontSize: '0.95rem',
-                                margin: 0,
-                                minHeight: '80px', // Prevent layout jump while typing
+                                minHeight: '80px',
                                 ...getStaggerStyle(300)
                             }}>
                                 {content.description}
                             </p>
 
-                            {/* Action Button */}
-                            <div style={{
-                                marginTop: 'auto',
-                                paddingTop: '1rem',
-                                ...getStaggerStyle(400)
-                            }}>
+                            {buyError && (
+                                <p className="boutique-fiche__error" role="alert">{buyError}</p>
+                            )}
+
+                            {/* Actions */}
+                            <div className="boutique-fiche__actions" style={getStaggerStyle(400)}>
+                                {canBuy && (
+                                    <button
+                                        type="button"
+                                        className="boutique-fiche__buy"
+                                        disabled={buyPending}
+                                        onClick={handleBuy}
+                                    >
+                                        {buyPending ? 'Redirection…' : 'Acheter'}
+                                    </button>
+                                )}
                                 <a
                                     href={safeUrl(content.url)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="studio-action-button"
+                                    className="studio-action-button boutique-fiche__demo"
                                 >
-                                    {content.ctaLabel || 'Ouvrir le lien ↗'}
+                                    {content.ctaLabel || 'Demander une démo ↗'}
                                 </a>
                             </div>
                         </>

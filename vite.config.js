@@ -22,6 +22,9 @@ export default defineConfig({
             if (id.includes('node_modules/three/')) {
               return 'vendor-three';
             }
+            if (id.includes('/src/admin/')) {
+              return 'chunk-admin';
+            }
             if (
               id.includes('node_modules/@react-three/') ||
               id.includes('node_modules/r3f-perf/') ||

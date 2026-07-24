@@ -1,0 +1,218 @@
+$paper: #F7F4EE;
+$ink: #1a1a1a;
+$muted: #6b6b6b;
+$mint: #9FE0BB;
+$page: #0D1220;
+$rupture: #e06060;
+
+.admin-app {
+    min-height: 100vh;
+    background: $page;
+    color: $paper;
+    font-family: 'Sora', 'Inter', sans-serif;
+    padding: 2rem 1rem 3rem;
+
+    &--login,
+    &--checkout {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+.admin-card {
+    background: $paper;
+    color: $ink;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+
+    h1 {
+        font-family: 'Cabin Sketch', cursive;
+        margin: 0 0 0.75rem;
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    label {
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    input {
+        min-height: 44px;
+        border: 1px solid rgba($ink, 0.2);
+        border-radius: 8px;
+        padding: 0 0.75rem;
+        font: inherit;
+    }
+}
+
+.admin-header {
+    max-width: 1100px;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+
+    h1 {
+        font-family: 'Cabin Sketch', cursive;
+        margin: 0;
+        font-size: 1.75rem;
+    }
+}
+
+.admin-tabs {
+    display: flex;
+    gap: 0.5rem;
+
+    button {
+        min-height: 44px;
+        padding: 0 1rem;
+        border-radius: 999px;
+        border: 1px solid rgba($mint, 0.35);
+        background: transparent;
+        color: $paper;
+        cursor: pointer;
+
+        &.active {
+            background: rgba($mint, 0.2);
+        }
+    }
+}
+
+.admin-section {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.admin-toolbar {
+    margin-bottom: 1rem;
+}
+
+.admin-table-wrap {
+    overflow-x: auto;
+    background: rgba($paper, 0.04);
+    border-radius: 12px;
+    border: 1px solid rgba($paper, 0.08);
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+
+    th,
+    td {
+        padding: 0.65rem 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid rgba($paper, 0.08);
+    }
+
+    button {
+        margin-right: 0.35rem;
+        min-height: 36px;
+        cursor: pointer;
+    }
+}
+
+.admin-mono {
+    font-family: ui-monospace, monospace;
+    font-size: 0.75rem;
+    word-break: break-all;
+}
+
+.admin-form {
+    margin-top: 1.5rem;
+    background: $paper;
+    color: $ink;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: grid;
+    gap: 0.75rem;
+
+    label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    input,
+    textarea {
+        font: inherit;
+        border: 1px solid rgba($ink, 0.15);
+        border-radius: 8px;
+        padding: 0.5rem 0.65rem;
+        min-height: 44px;
+    }
+
+    textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+}
+
+.admin-check {
+    flex-direction: row !important;
+    align-items: center;
+    gap: 0.5rem !important;
+}
+
+.admin-form-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.admin-btn {
+    min-height: 44px;
+    padding: 0 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba($ink, 0.2);
+    background: $paper;
+    color: $ink;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &--primary {
+        background: $mint;
+        border-color: darken($mint, 8%);
+        color: #0d3d28;
+    }
+}
+
+.admin-banner {
+    max-width: 1100px;
+    margin: 0 auto 1rem;
+    padding: 0.65rem 1rem;
+    border-radius: 8px;
+
+    &--ok {
+        background: rgba($mint, 0.15);
+    }
+
+    &--err {
+        background: rgba($rupture, 0.15);
+    }
+}
+
+.admin-loading {
+    max-width: 1100px;
+    margin: 0 auto;
+    color: $muted;
+}

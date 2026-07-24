@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useMemo, useCallback, memo, Suspense } fro
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import gsap from 'gsap';
-import { PRODUCTS } from './productData';
+import { useCatalogueProducts } from '../../../../hooks/useCatalogueProducts';
 import { PRODUCT_MODELS } from './ProductModels';
 import RoomShell from './RoomShell';
 import BoutiqueLighting from './BoutiqueLighting';
@@ -60,6 +60,7 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
     const clusterRef = useRef();
     const { camera, size } = useThree();
     const { settings } = usePerformance();
+    const { products: catalogueProducts } = useCatalogueProducts();
 
     // Responsive camera parameters based on PIXEL width
     const responsiveParams = useMemo(() => {
@@ -146,11 +147,11 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
 
     // Arrange products in a single ring, facing outward
     const productData = useMemo(() => {
-        const count = PRODUCTS.length;
+        const count = catalogueProducts.length;
         const angleStep = (Math.PI * 2) / count;
         const currentRadius = responsiveParams.clusterRadius;
 
-        return PRODUCTS.map((product, index) => {
+        return catalogueProducts.map((product, index) => {
             const angle = index * angleStep;
             const x = Math.cos(angle) * currentRadius;
             const z = Math.sin(angle) * currentRadius;
@@ -167,7 +168,7 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                 rot: -angle + Math.PI / 2,
             };
         });
-    }, [responsiveParams.clusterRadius]);
+    }, [responsiveParams.clusterRadius, catalogueProducts]);
 
     // --- INTERACTION: drag-to-rotate the cluster (only while pointer-down on it) ---
     const handlePointerDown = (e) => {

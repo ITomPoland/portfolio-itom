@@ -89,6 +89,22 @@
 }
 
 // === BACK BUTTON ===
+.catalogue-btn {
+    position: fixed;
+    top: 56px;
+    left: 24px;
+    min-height: 44px;
+    padding: 0 0.85rem;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: rgba(#F7F4EE, 0.92);
+    color: #1a1a1a;
+    border: 1px solid rgba(#9FE0BB, 0.5);
+    border-radius: 999px;
+    cursor: pointer;
+}
+
 .back-btn {
     position: fixed;
     top: 0; // Starts from top edge

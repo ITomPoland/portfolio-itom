@@ -39,7 +39,7 @@ const ENTRANCE_DOORS_Z = 22;
  */
 const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
     // Use SceneContext for room state
-    const { hasEntered, markEntered, enterRoom, isTeleporting, isInRoom, pendingDoorClick } = useScene();
+    const { hasEntered, markEntered, enterRoom, isTeleporting, isInRoom, teleportPhase, pendingDoorClick } = useScene();
 
     const { camera } = useThree();
 
@@ -129,9 +129,12 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
                 while teleporting / inside a room: DoorSection is the sole consumer of
                 pendingDoorClick and the only caller of signalRoomReady (paper re-open), so
                 without it the ville room-entry hung forever behind the closed paper (bug
-                fable/008). The city hides itself meanwhile — corridor and rooms share its
-                world coordinates. */}
-            {(!VILLE_MODE || isTeleporting || isInRoom) && (
+                fable/008). The city hides itself meanwhile (MiniVille `cityHidden`) —
+                corridor and rooms share its world coordinates. In VILLE_MODE the corridor
+                must NOT mount during phase 'closing': the paper is still open over the
+                city, so the corridor walls would visibly pop across the plaza (fable/014).
+                It mounts once the paper is fully closed ('teleporting'). */}
+            {(!VILLE_MODE || (isTeleporting && teleportPhase !== 'closing') || isInRoom) && (
                 <InfiniteCorridorManager
                     onDoorEnter={handleDoorEnter}
                     hideDoorsForSegments={hasEntered ? [] : [-1]}

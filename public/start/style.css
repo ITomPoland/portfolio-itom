@@ -1,0 +1,97 @@
+:root {
+    --bg-color: #fafafa;
+    --text-color: #111;
+    --btn-bg: #fff;
+    --btn-border: #ccc;
+    --btn-hover-bg: #eee;
+}
+
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 600px;
+    width: 100%;
+    padding: 2rem 1.5rem;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.profile-header h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+}
+
+.profile-header h2 {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #555;
+}
+
+.profile-header p {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 2rem;
+    color: #444;
+}
+
+.links-section, .social-section {
+    margin-bottom: 2rem;
+}
+
+h3 {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+    margin-bottom: 1rem;
+}
+
+.links-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.link-btn {
+    display: block;
+    padding: 1rem;
+    background-color: var(--btn-bg);
+    border: 1px solid var(--btn-border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.link-btn:hover {
+    background-color: var(--btn-hover-bg);
+}
+
+.social-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.social-nav a {
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.social-nav a:hover {
+    text-decoration: underline;
+}

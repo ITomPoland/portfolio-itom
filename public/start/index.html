@@ -1,42 +1,68 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ITom | Creative Developer</title>
-    <link rel="stylesheet" href="/start/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f1e9">
+  <meta name="description" content="ITom — Creative Developer. I build interactive websites, motion and weird things on the internet. Find my portfolio, UI sketchbook and profiles here.">
+  <title>ITom — Creative Developer</title>
+  <link rel="icon" type="image/png" href="/favico.png">
+  <link rel="apple-touch-icon" href="/favico.png">
+  <link rel="preload" href="/start/fonts/barlow-condensed-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/start/style.css">
+  <script src="/start/script.js" defer></script>
 </head>
 <body>
-    <div class="container">
-        <header class="profile-header">
-            <h1>ITom</h1>
-            <h2>Creative Developer</h2>
-            <p>I build interactive websites, motion and weird things on the internet.</p>
-        </header>
+  <video id="scrub-video" src="/videos/scrub-video-intra.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+  <a class="skip-link" href="#links">Skip to links</a>
+  <div class="sheet">
+    <main>
+      <div class="doodle-annotation top-annotation">
+        <div class="signature"><h1>ITom</h1><p class="role">Creative Developer</p></div>
+        <svg class="doodle-squiggle" viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M 5,10 Q 30,2 60,12 T 120,8 T 195,12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
 
-        <main>
-            <section class="links-section">
-                <h3>Primary Links</h3>
-                <nav class="links-nav">
-                    <a href="/" class="link-btn">View Interactive Portfolio &rarr;</a>
-                    <a href="/gallery" class="link-btn">Selected Work &rarr;</a>
-                    <a href="#" class="link-btn">UI Sketchbook (Placeholder) &rarr;</a>
-                    <a href="/contact" class="link-btn">Work With Me / Contact &rarr;</a>
-                </nav>
-            </section>
+      <nav class="primary" id="links" aria-label="My work" tabindex="-1">
+        <a class="work-link portfolio-link" href="/" aria-label="Interactive Portfolio">
+          <span class="work-label" aria-hidden="true"><span class="word">Interactive</span> <span class="last-word"><span class="word">Portfolio</span><svg class="press-arrow" viewBox="0 0 82 82"><path class="arrow-back" d="M8 59 46 20 18 20 18 6 71 7 70 59 56 60 56 32 19 70Z"/><path class="arrow-face" d="M8 59 46 20 18 20 18 6 71 7 70 59 56 60 56 32 19 70Z"/></svg></span></span>
+        </a>
+        <a class="work-link sketchbook-link" href="https://itom-ui-components.vercel.app" target="_blank" rel="noopener noreferrer" aria-label="UI Sketchbook">
+          <span class="work-label" aria-hidden="true"><span class="word">UI</span> <span class="last-word"><span class="word">Sketchbook</span><svg class="press-arrow" viewBox="0 0 82 82"><path class="arrow-back" d="M8 59 46 20 18 20 18 6 71 7 70 59 56 60 56 32 19 70Z"/><path class="arrow-face" d="M8 59 46 20 18 20 18 6 71 7 70 59 56 60 56 32 19 70Z"/></svg></span></span>
+        </a>
+      </nav>
 
-            <section class="social-section">
-                <h3>Socials</h3>
-                <nav class="social-nav">
-                    <a href="https://github.com/ITomPoland" target="_blank" rel="noopener noreferrer">GitHub</a>
-                    <a href="https://www.linkedin.com/in/tomasz-szmajda-259337305/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-                    <a href="https://www.instagram.com/itom.dev/" target="_blank" rel="noopener noreferrer">Instagram</a>
-                    <a href="#">X</a>
-                    <a href="#">TikTok</a>
-                    <a href="#">YouTube</a>
-                </nav>
-            </section>
-        </main>
-    </div>
+      <div class="doodle-annotation side-annotation">
+        <p class="bio">I build interactive websites, motion<br class="wide-break"> and weird things on the internet.</p>
+        <svg class="doodle-arrow" viewBox="0 0 40 40" aria-hidden="true">
+          <path d="M 10,10 Q 25,30 35,35 M 25,35 L 35,35 L 32,25" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <nav class="profiles" aria-label="Profiles">
+        <a href="https://www.awwwards.com/ITom/" target="_blank" rel="noopener noreferrer">Awwwards</a>
+        <a href="https://www.behance.net/itompoland" target="_blank" rel="noopener noreferrer">Behance</a>
+        <a href="https://codepen.io/ITomDev" target="_blank" rel="noopener noreferrer">CodePen</a>
+        <a href="https://dribbble.com/itomdev" target="_blank" rel="noopener noreferrer">Dribbble</a>
+        <a href="https://www.facebook.com/people/ITom/61586563487664/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">Facebook</a>
+        <a href="https://github.com/ITomPoland" target="_blank" rel="noopener noreferrer" aria-label="GitHub">GitHub</a>
+        <a href="https://www.instagram.com/itom.dev/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">Instagram</a>
+        <a href="https://www.linkedin.com/in/itomdev/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">LinkedIn</a>
+        <a href="https://me.muz.li/itom" target="_blank" rel="noopener noreferrer">Muzli</a>
+        <a href="https://x.com/ITom_Dev" target="_blank" rel="noopener noreferrer">X</a>
+        <a href="https://www.youtube.com/@itomdev" target="_blank" rel="noopener noreferrer">YouTube</a>
+      </nav>
+    </main>
+    <footer>
+      <div class="availability-doodle">
+        <svg class="doodle-circle" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M 50,2 C 80,0 95,15 90,30 C 80,40 20,40 10,25 C 0,10 30,5 60,8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <p class="availability">AVAILABLE FOR SELECTED PROJECTS</p>
+      </div>
+    </footer>
+  </div>
+  <p class="notice" role="status" aria-live="polite" aria-atomic="true"></p>
 </body>
 </html>

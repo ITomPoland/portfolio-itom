@@ -154,7 +154,9 @@ const StudioRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
 
     const latestContent = useMemo(() => {
         if (!activeContent || activeContent.length === 0) return null;
-        return [...activeContent].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+        return [...activeContent].sort(
+            (a, b) => new Date(b.sortDate || b.date) - new Date(a.sortDate || a.date)
+        )[0];
     }, [activeContent]);
 
     // Monitor Y offsets for falling animation (mutable)

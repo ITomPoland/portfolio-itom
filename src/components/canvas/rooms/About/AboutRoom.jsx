@@ -25,10 +25,10 @@ export const AUDIO_SETTINGS = {
 // Story sections - positions define where each milestone appears
 // Using CHUNK_LENGTH to create looping story (every ~40 units restarts)
 const STORY_MILESTONES = [
-    { id: 'intro', position: [0, 0, -15], type: 'intro', title: 'ITOM', subtitle: '< creative developer />' },
-    { id: 'awards', position: [0, 0, -55], type: 'awards', title: 'AWARDS', subtitle: '1x SOTD Winner • 1x CSS Winner' },
-    { id: 'journey', position: [0, 0, -95], type: 'journey', title: 'JOURNEY', subtitle: 'Computer Science @ University of Opole' },
-    { id: 'skills', position: [0, 0, -135], type: 'skills', title: 'SKILLS', subtitle: 'React • Three.js • GSAP • Creative Code' },
+    { id: 'intro', position: [0, 0, -15], type: 'intro', title: '吴桐', subtitle: 'AI 设计师 · Base 长沙' },
+    { id: 'awards', position: [0, 0, -55], type: 'awards', title: '奖项', subtitle: 'AI荣誉 ×7 • 校园精选 ×18 • 社会精选 ×3' },
+    { id: 'journey', position: [0, 0, -95], type: 'journey', title: '旅程', subtitle: '三年设计经验，走向 AI 独立开发者' },
+    { id: 'skills', position: [0, 0, -135], type: 'skills', title: '技能', subtitle: '设计 • AI 工具 • 自媒体 • 打比赛' },
 ];
 
 const AboutRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {

@@ -64,10 +64,7 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
 
     return (
         <>
-            {/* === ROOM WARM-UP (pre-renders all rooms off-screen during preloader) === */}
-            {/* RoomWarmup mounts all 4 rooms 500 units below, compiles shaders via gl.compile(), 
-                then self-destructs and signals onSceneReady. This ensures both corridor segments
-                AND room shaders are pre-compiled before the user starts interacting. */}
+            {/* Only prepare the initial scene; rooms load on demand. */}
             <RoomWarmup onWarmupComplete={onSceneReady} isLowTier={isLowTier} />
 
             {/* === GLOBAL LIGHTING === */}
@@ -101,6 +98,7 @@ const Experience = ({ isLoaded, onSceneReady, performanceTier }) => {
 
             {/* === INFINITE CORRIDOR (segment -1 SegmentDoors hidden during entrance) === */}
             <InfiniteCorridorManager
+                hasEntered={hasEntered}
                 onDoorEnter={handleDoorEnter}
                 hideDoorsForSegments={hasEntered ? [] : [-1]} // Hide segment -1's doors until entered
                 clipSegmentNeg1={!hasEntered} // Clip segment -1 visualization until entered

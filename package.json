@@ -5,6 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "configure:gemini": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/configure-gemini-key.ps1",
+    "test:portrait-chat": "node --test tests/portrait-chat.test.mjs",
+    "test:fonts": "node --test tests/text-fonts.test.mjs",
+    "test:performance": "node --test tests/loading-performance.test.mjs",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -17,6 +21,7 @@
     "@sanity/client": "^7.23.2",
     "@sanity/image-url": "^2.1.1",
     "@types/three": "^0.182.0",
+    "gifuct-js": "^2.1.2",
     "gsap": "^3.14.2",
     "jimp": "^1.6.0",
     "posthog-js": "^1.360.0",
@@ -39,6 +44,7 @@
     "sass": "^1.97.1",
     "sharp": "^0.34.5",
     "vite": "^7.2.4",
-    "vite-plugin-compression": "^0.5.1"
+    "vite-plugin-compression": "^0.5.1",
+    "wrangler": "^4.131.1"
   }
 }

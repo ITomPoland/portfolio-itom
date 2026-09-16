@@ -1,13 +1,14 @@
-import { useMemo, memo, Suspense, useEffect } from 'react';
-import { Text } from '@react-three/drei';
+import { useMemo, memo, Suspense, useEffect, lazy } from 'react';
+import Text from '../LocalText';
 import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Eagerly import room components - textures are preloaded during the preloader phase
-import GalleryRoom from '../rooms/Gallery/GalleryRoom';
-import StudioRoom from '../rooms/Studio/StudioRoom';
-import AboutRoom from '../rooms/About/AboutRoom';
-import ContactRoom from '../rooms/Contact/ContactRoom';
+import { loadRoom } from './roomModules';
+
+const GalleryRoom = lazy(() => loadRoom('gallery'));
+const StudioRoom = lazy(() => loadRoom('studio'));
+const AboutRoom = lazy(() => loadRoom('about'));
+const ContactRoom = lazy(() => loadRoom('contact'));
 
 // Room configurations
 const ROOM_CONFIG = {
@@ -20,10 +21,10 @@ const ROOM_CONFIG = {
 };
 
 const SUBTITLES = {
-    'THE GALLERY': 'Explore my creative projects',
-    'THE STUDIO': 'Watch behind the scenes',
-    'DEV DIARY': 'My development journey',
-    "LET'S CONNECT": 'Get in touch with me'
+    'THE GALLERY': '我的创意项目与作品',
+    'THE STUDIO': '创作幕后与内容',
+    'DEV DIARY': '我的开发旅程',
+    "LET'S CONNECT": '与我联系'
 };
 
 // Naturalny kafelek listwy: 1582x94px przy wysokości 0.15 → ~2.524 units szerokości
@@ -39,6 +40,7 @@ const RoomInterior = memo(({ label, showRoom, onReady, isExiting }) => {
     const { corridorWidth, corridorHeight, corridorDepth, roomWidth, roomHeight, roomDepth } = ROOM_CONFIG;
     const halfDepth = corridorDepth / 2;
     const roomZ = -corridorDepth - roomDepth / 2;
+    const isGallery = label === 'THE GALLERY';
 
     // Load corridor textures
     const floorTexSrc = useTexture('/textures/corridor/kawalekpodlogi.webp');
@@ -51,8 +53,17 @@ const RoomInterior = memo(({ label, showRoom, onReady, isExiting }) => {
         // Floor
         const floorTex = floorTexSrc.clone();
         floorTex.needsUpdate = true;
-        floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
-        floorTex.repeat.set(corridorDepth / 2.5, corridorWidth / 2.5);
+        if (isGallery) {
+            // Match the main corridor tile's scale and rotate only its UVs so
+            // the planks continue through the doorway without changing geometry.
+            floorTex.wrapS = floorTex.wrapT = THREE.ClampToEdgeWrapping;
+            floorTex.center.set(0.5, 0.5);
+            floorTex.rotation = Math.PI / 2;
+            floorTex.repeat.set(corridorDepth / 10, corridorWidth / 5);
+        } else {
+            floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
+            floorTex.repeat.set(corridorDepth / 2.5, corridorWidth / 2.5);
+        }
 
         // Left wall
         const wallTexL = wallTexSrc.clone();
@@ -84,30 +95,41 @@ const RoomInterior = memo(({ label, showRoom, onReady, isExiting }) => {
         bbRight.wrapS = bbRight.wrapT = THREE.RepeatWrapping;
         bbRight.repeat.set(corridorDepth / NATURAL_TILE_W, 1);
 
-        return {
-            corridorFloor: new THREE.MeshBasicMaterial({ color: '#e0e0e0',  map: floorTex, side: THREE.DoubleSide }),
-            corridorWallL: new THREE.MeshBasicMaterial({ color: '#e0e0e0',  map: wallTexL, side: THREE.DoubleSide }),
-            corridorWallR: new THREE.MeshBasicMaterial({ color: '#e0e0e0',  map: wallTexR, side: THREE.DoubleSide }),
-            corridorCeiling: new THREE.MeshBasicMaterial({ color: '#e0e0e0',  map: ceilTex, side: THREE.DoubleSide }),
-            bbLeft: new THREE.MeshBasicMaterial({ color: '#e0e0e0',  map: bbLeft, side: THREE.DoubleSide }),
-            bbRight: new THREE.MeshBasicMaterial({ color: '#e0e0e0',  map: bbRight, side: THREE.DoubleSide }),
-            threshold: new THREE.MeshBasicMaterial({ color: '#e0e0e0', 
+        const corridorTint = isGallery ? '#fffdf1' : '#e0e0e0';
+        const thresholdMaterial = isGallery
+            ? new THREE.MeshBasicMaterial({
+                transparent: true,
+                opacity: 0,
+                depthWrite: false,
+                side: THREE.DoubleSide
+            })
+            : new THREE.MeshBasicMaterial({
+                color: '#e0e0e0',
                 map: (() => {
                     const t = bbTexSrc.clone();
                     t.needsUpdate = true;
                     t.wrapS = t.wrapT = THREE.RepeatWrapping;
                     t.repeat.set(corridorWidth / NATURAL_TILE_W, 1);
-                    return t; })(),
-
+                    return t;
+                })(),
                 side: THREE.DoubleSide
-            }),
+            });
+
+        return {
+            corridorFloor: new THREE.MeshBasicMaterial({ color: '#e0e0e0', map: floorTex, side: THREE.DoubleSide }),
+            corridorWallL: new THREE.MeshBasicMaterial({ color: corridorTint, map: wallTexL, side: THREE.DoubleSide }),
+            corridorWallR: new THREE.MeshBasicMaterial({ color: corridorTint, map: wallTexR, side: THREE.DoubleSide }),
+            corridorCeiling: new THREE.MeshBasicMaterial({ color: corridorTint, map: ceilTex, side: THREE.DoubleSide }),
+            bbLeft: new THREE.MeshBasicMaterial({ color: corridorTint, map: bbLeft, side: THREE.DoubleSide }),
+            bbRight: new THREE.MeshBasicMaterial({ color: corridorTint, map: bbRight, side: THREE.DoubleSide }),
+            threshold: thresholdMaterial,
             // Room materials (keep flat for rooms that have their own content)
             roomFloor: new THREE.MeshBasicMaterial({ color: '#e5e5e5', side: THREE.DoubleSide }),
             roomCeiling: new THREE.MeshBasicMaterial({ color: '#fafafa', side: THREE.DoubleSide }),
             roomWall: new THREE.MeshBasicMaterial({ color: '#f0f0f0', side: THREE.DoubleSide }),
             roomBackWall: new THREE.MeshBasicMaterial({ color: '#f5f5f5', side: THREE.DoubleSide }),
         };
-    }, [floorTexSrc, wallTexSrc, ceilingTexSrc, bbTexSrc]);
+    }, [floorTexSrc, wallTexSrc, ceilingTexSrc, bbTexSrc, isGallery, corridorDepth, corridorWidth]);
 
     // Memoize geometries
     const geometries = useMemo(() => ({
@@ -119,8 +141,6 @@ const RoomInterior = memo(({ label, showRoom, onReady, isExiting }) => {
         roomSideWall: new THREE.PlaneGeometry(roomDepth, roomHeight),
         roomBackWall: new THREE.PlaneGeometry(roomWidth, roomHeight)
     }), []);
-
-    const isGallery = label === 'THE GALLERY';
 
     // Trigger onReady for generic rooms (which don't have their own component to do it)
     useEffect(() => {

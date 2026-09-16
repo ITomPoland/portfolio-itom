@@ -17,13 +17,11 @@ export const initAudio = () => {
     if (!bgMusicAudio) {
         // We use the file provided by the user in public/sounds/
         bgMusicAudio = new Audio('/sounds/cfl_turningpages-belem-breeze-487596.ogg');
-        bgMusicAudio.preload = 'auto'; // Force browser to fetch data immediately
+        bgMusicAudio.preload = 'none'; // Music starts on interaction, after entrance assets.
         bgMusicAudio.loop = true;
         bgMusicAudio.volume = 0.3; // Default volume for background cozy music
         bgMusicAudio.muted = isMuted; // Apply synced mute state
 
-        // Trigger background load
-        bgMusicAudio.load();
     }
 };
 

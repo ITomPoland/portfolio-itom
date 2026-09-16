@@ -1,5 +1,5 @@
 import { useMemo, memo } from 'react';
-import { Text } from '@react-three/drei';
+import Text from '../LocalText';
 import * as THREE from 'three';
 
 import CorridorWalls from './CorridorWalls';
@@ -165,6 +165,7 @@ const CorridorSegment = ({
             {/* pointLight removed for optimization as it didn't affect visuals significantly */}
 
             <CorridorDecorations
+                segmentIndex={segmentIndex}
                 segmentLength={SEGMENT_LENGTH}
                 zOffset={zOffset}
                 corridorWidth={WALL_X_OUTER * 2}

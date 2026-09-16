@@ -1,7 +1,8 @@
 import { useRef, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
+import Text from '../../LocalText';
 import * as THREE from 'three';
+import { ABOUT_BODY_FONT, ABOUT_DISPLAY_FONT } from './aboutTheme';
 
 // Reusable Vector3 to avoid allocations in useFrame
 const _worldPos = new THREE.Vector3();
@@ -167,7 +168,7 @@ const StoryMilestone = ({
                 color={styles.titleColor}
                 anchorX="center"
                 anchorY="middle"
-                font="/fonts/CabinSketch-Bold.ttf"
+                font={ABOUT_DISPLAY_FONT}
                 fillOpacity={0}
             >
                 {title}
@@ -182,7 +183,7 @@ const StoryMilestone = ({
                     color={styles.subtitleColor}
                     anchorX="center"
                     anchorY="middle"
-                    font="/fonts/CabinSketch-Regular.ttf"
+                    font={ABOUT_BODY_FONT}
                     fillOpacity={0}
                 >
                     {subtitle}

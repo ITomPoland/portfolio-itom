@@ -1,6 +1,4 @@
-# Ten plik służy tylko do wewnętrznych przekierowań ścieżek np:
-# /stara-strona /nowa-strona 301
-# Przekierowania z www na non-www ustawiamy bezpośrednio w zakładce "Rules -> Redirect Rules" w panelu głównym domeny w Cloudflare.
+# 仅用于站内路径重写（如 /gallery、/about 等前端路由）
 
-# SPA Fallback — ensures all virtual routes (e.g. /gallery, /about) serve index.html
+# SPA Fallback：所有前端路由统一回落到 index.html，由前端路由接管
 /*    /index.html   200

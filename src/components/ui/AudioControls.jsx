@@ -32,7 +32,7 @@ const AudioControls = () => {
                     step="0.01"
                     value={globalVolume}
                     onChange={(e) => setGlobalVolume(parseFloat(e.target.value))}
-                    aria-label="Volume"
+                    aria-label="音量"
                 />
             </div>
 
@@ -40,7 +40,7 @@ const AudioControls = () => {
             <button
                 className="mute-btn"
                 onClick={toggleMute}
-                aria-label={isMuted ? "Unmute" : "Mute"}
+                aria-label={isMuted ? "取消静音" : "静音"}
             >
                 {isMuted || globalVolume === 0 ? <SoundOffIcon /> : <SoundOnIcon />}
             </button>

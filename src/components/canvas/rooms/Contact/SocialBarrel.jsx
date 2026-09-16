@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useTexture, Text } from '@react-three/drei';
+import { useTexture } from '@react-three/drei';
+import Text from '../../LocalText';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import '../../shaders/RevealMaterial';

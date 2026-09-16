@@ -1,9 +1,11 @@
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Text, useTexture, PositionalAudio } from '@react-three/drei';
+import { useTexture, PositionalAudio } from '@react-three/drei';
+import Text from '../LocalText';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import RoomInterior from './RoomInterior';
+import { preloadRoom } from './roomModules';
 import '../shaders/RevealMaterial'; // Registers alpha-discard reveal shader
 import { useScene } from '../../../context/SceneContext';
 import { useAchievements } from '../../../context/AchievementsContext';
@@ -41,18 +43,18 @@ const DOOR_ALIGN_X = 1.2;
 
 // Door texture mapping - maps label to texture file
 const DOOR_TEXTURES = {
-    'THE GALLERY': '/textures/corridor/doors/drzwiprojekty.webp',
-    'THE STUDIO': '/textures/corridor/doors/drzwisocial.webp',
-    'THE ABOUT': '/textures/corridor/doors/drzwiabout.webp',
-    "LET'S CONNECT": '/textures/corridor/doors/drzwikontakt.webp',
+    'THE GALLERY': '/assets/corridor/doors/portfolio-letter-cutout-door-sketch-v2.webp',
+    'THE STUDIO': '/assets/corridor/doors/studio-project-stickers-sketch.webp',
+    'THE ABOUT': '/assets/corridor/doors/about-profile-sticker-sketch.webp',
+    "LET'S CONNECT": '/assets/corridor/doors/contact-penguin-cutout-door-sketch-v2.webp',
 };
 
 // Painted (colored) variants for brush-stroke reveal on hover
 const DOOR_PAINTED_TEXTURES = {
-    'THE GALLERY': '/textures/corridor/doors/drzwiprojekty_painted.webp',
-    'THE STUDIO': '/textures/corridor/doors/drzwisocial_painted.webp',
-    'THE ABOUT': '/textures/corridor/doors/drzwiabout_painted.webp',
-    "LET'S CONNECT": '/textures/corridor/doors/drzwikontakt_painted.webp',
+    'THE GALLERY': '/assets/corridor/doors/portfolio-letter-cutout-door-painted-v2.webp',
+    'THE STUDIO': '/assets/corridor/doors/studio-project-stickers-painted.webp',
+    'THE ABOUT': '/assets/corridor/doors/about-profile-sticker-painted.webp',
+    "LET'S CONNECT": '/assets/corridor/doors/contact-penguin-cutout-door-painted-v2.webp',
 };
 
 
@@ -93,6 +95,10 @@ const DoorSection = ({
     const [shouldRenderRoom, setShouldRenderRoom] = useState(false); // Lazy loading state
     const [roomReady, setRoomReady] = useState(false); // Room signaled it's ready
     const { camera } = useThree();
+    const cameraOwner = useMemo(
+        () => `door:${segmentIndex}:${roomId}`,
+        [roomId, segmentIndex]
+    );
     const closeTimerRef = useRef(null);
     const loadTimeoutRef = useRef(null); // Ref for the room loading fallback timeout
 
@@ -165,16 +171,15 @@ const DoorSection = ({
             if (doorRef.current) doorRef.current.rotation.y = 0;
             if (handleRef.current) handleRef.current.rotation.z = 0;
 
-            // 3. Reset Camera Override 
-            // Important: DO NOT RELEASE control here. 
-            // Experience.jsx manages the override during "isTeleporting".
-            // If we release it here, useInfiniteCamera takes over before the new room is ready.
-            // setCameraOverride?.(false); <--- REMOVED
+            // Release only this door's ownership so the destination can acquire
+            // the camera. Corridor motion remains disabled by isTeleporting.
+            // Retaining the old owner leaves the paper closed forever.
+            setCameraOverride?.(false, cameraOwner);
 
             // 4. Reset Timers
             if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
         }
-    }, [isTeleporting, teleportPhase, isInsideRoom, currentRoom, doorId, label, setCameraOverride]);
+    }, [isTeleporting, teleportPhase, isInsideRoom, currentRoom, doorId, label, setCameraOverride, cameraOwner]);
 
     // Save camera state before entering room (for ESC exit)
     // Save camera state before entering room (for ESC exit)
@@ -394,13 +399,16 @@ const DoorSection = ({
             return;
         }
 
+        const acquired = setCameraOverride?.(true, cameraOwner);
+        if (acquired === false) return;
+
+        // Fetch code during camera alignment, before mounting this room.
+        preloadRoom(doorId);
+
         // Reset cursor on transition
         document.body.style.cursor = "auto";
 
         setIsAnimating(true);
-
-        // Take control of camera from hook
-        setCameraOverride?.(true);
 
         // Lock tilt so the corridor doesn't rotate while we fly through
         setIsTiltLocked(true);
@@ -523,7 +531,7 @@ const DoorSection = ({
                 }, 8000);
             }
         });
-    }, [camera, side, isOpen, isAnimating, setCameraOverride, isFastTeleport]);
+    }, [camera, cameraOwner, doorId, side, isOpen, isAnimating, setCameraOverride, isFastTeleport]);
 
     const openDoor = useCallback((fastMode = false) => {
         if (!doorRef.current) return;
@@ -721,14 +729,14 @@ const DoorSection = ({
 
                                 setShouldRenderRoom(false);
                                 contextExitRoom();
-                                setCameraOverride?.(false);
+                                setCameraOverride?.(false, cameraOwner);
                             });
                         });
                     }
                 });
             }
         });
-    }, [isInsideRoom, isAnimating, camera, setCameraOverride, contextExitRoom]);
+    }, [isInsideRoom, isAnimating, camera, cameraOwner, setCameraOverride, contextExitRoom]);
 
     // ESC key listener for exiting room
     useEffect(() => {
@@ -821,6 +829,7 @@ const DoorSection = ({
     // Handle hover effects
     const handlePointerEnter = () => {
         if (isOpen || isAnimating) return;
+        preloadRoom(doorId);
         setIsHovered(true);
         document.body.style.cursor = "pointer";
 
@@ -1070,75 +1079,51 @@ const DoorSection = ({
 
                         {/* === DYNAMIC TEXT FOR SIGNS === */}
                         {label === 'THE GALLERY' && (
-                            <group position={[0, 0, 0.01]}>
-                                <Text
-                                    font="/fonts/CabinSketch-Bold.ttf"
-                                    fontSize={0.25}
-                                    color="#111111"
-                                    anchorX="center"
-                                    anchorY="bottom"
-                                    position={[0, -0.02, 0]}
-                                >
-                                    THE
-                                </Text>
-                                <Text
-                                    font="/fonts/CabinSketch-Bold.ttf"
-                                    fontSize={0.25}
-                                    color="#111111"
-                                    anchorX="center"
-                                    anchorY="top"
-                                    position={[0, +0.02, 0]}
-                                >
-                                    GALLERY
-                                </Text>
-                            </group>
-                        )}
-                        {label === 'THE STUDIO' && (
-                            <group position={[0, 0, 0.01]}>
-                                <Text
-                                    font="/fonts/CabinSketch-Bold.ttf"
-                                    fontSize={0.25}
-                                    color="#111111"
-                                    anchorX="center"
-                                    anchorY="bottom"
-                                    position={[0, -0.02, 0]}
-                                >
-                                    THE
-                                </Text>
-                                <Text
-                                    font="/fonts/CabinSketch-Bold.ttf"
-                                    fontSize={0.25}
-                                    color="#111111"
-                                    anchorX="center"
-                                    anchorY="top"
-                                    position={[0, +0.03, 0]}
-                                >
-                                    STUDIO
-                                </Text>
-                            </group>
-                        )}
-                        {label === 'THE ABOUT' && (
                             <Text
                                 font="/fonts/CabinSketch-Bold.ttf"
-                                fontSize={0.30}
+                                fontSize={0.3}
                                 color="#111111"
                                 anchorX="center"
                                 anchorY="middle"
                                 position={[0, 0, 0.01]}
                             >
-                                ABOUT
+                                作品集
+                            </Text>
+                        )}
+                        {label === 'THE STUDIO' && (
+                            <Text
+                                font="/fonts/CabinSketch-Bold.ttf"
+                                fontSize={0.3}
+                                color="#111111"
+                                anchorX="center"
+                                anchorY="middle"
+                                position={[0, 0, 0.01]}
+                            >
+                                创作室
+                            </Text>
+                        )}
+                        {label === 'THE ABOUT' && (
+                            <Text
+                                font="/fonts/CabinSketch-Bold.ttf"
+                                fontSize={0.3}
+                                color="#111111"
+                                anchorX="center"
+                                anchorY="middle"
+                                position={[0, 0, 0.01]}
+                            >
+                                关于我
                             </Text>
                         )}
                         {label === "LET'S CONNECT" && (
                             <Text
                                 font="/fonts/CabinSketch-Bold.ttf"
-                                fontSize={0.25}
+                                fontSize={0.28}
                                 color="#111111"
                                 anchorX="center"
                                 anchorY="middle"
                                 position={[0, 0, 0.01]}
                             >
-                                CONTACT
+                                联系我
                             </Text>
                         )}
                     </group>

@@ -1,10 +1,16 @@
-import { useMemo, useState, useRef, useEffect } from 'react';
-import { useTexture, Text } from '@react-three/drei';
+import { useMemo, useState, useRef, useEffect, lazy, Suspense } from 'react';
+import { useTexture } from '@react-three/drei';
+import Text from '../LocalText';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import gsap from 'gsap';
 import '../shaders/RevealMaterial';
 import { isTouchDevice } from '../../../utils/deviceDetect';
+import GifPictureContent from './GifPictureContent';
+import { useScene } from '../../../context/SceneContext';
+import CorridorCabinet from './CorridorCabinet';
+
+const WallPortraitModel = lazy(() => import('./WallPortraitModel'));
 /**
  * CorridorDecorations - Dekoracje korytarza.
  * 
@@ -27,13 +33,45 @@ const tempQuat = new THREE.Quaternion();
 
 
 const CABIN_SKETCH_URL = '/fonts/CabinSketch-Regular.ttf';
+const PORTRAIT_SCALE = 1.15;
+const PORTRAIT_RELATIVE_Z = -23;
+const PORTRAIT_SOURCE_HALF_DEPTH = 0.328765869;
+const PORTRAIT_SOURCE_HALF_HEIGHT = 0.5;
+const CABINET_HEIGHT = 1;
+const PORTRAIT_CABINET_GAP = 0.1;
+const PORTRAIT_CABINET_DEPTH = 0.75;
+const PORTRAIT_CABINET_WIDTH = 1.3;
 
-const PictureContent = ({ imagePath, imagePaintedPath, width, height, isPainted }) => {
+const StaticPictureContent = ({ imagePath, imagePaintedPath, width, height, isPainted }) => {
     const texture = useTexture(imagePath);
     // Render nothing if no painted path, but we still call the hook unconditionally to respect hook rules
     const paintedTexture = useTexture(imagePaintedPath || imagePath);
 
     const materialRef = useRef();
+
+    // Cover-crop: obraz wypełnia prostokątną ramkę bez zniekształceń (obcina nadmiar).
+    // Dzięki temu nie widać białego matu wokół zdjęcia i obraz wygląda jak "w ramce".
+    useEffect(() => {
+        const applyCoverUV = (tex) => {
+            if (!tex || !tex.image || !tex.image.naturalWidth || !tex.image.naturalHeight) return;
+            const imgAspect = tex.image.naturalWidth / tex.image.naturalHeight;
+            const planeAspect = width / height;
+            if (imgAspect > planeAspect) {
+                // Obraz szerszy niż ramka -> obetnij boki
+                const r = planeAspect / imgAspect;
+                tex.repeat.set(r, 1);
+                tex.offset.set((1 - r) / 2, 0);
+            } else {
+                // Obraz wyższy (np. kwadrat) -> obetnij górę/dół
+                const r = imgAspect / planeAspect;
+                tex.repeat.set(1, r);
+                tex.offset.set(0, (1 - r) / 2);
+            }
+            tex.needsUpdate = true;
+        };
+        applyCoverUV(texture);
+        applyCoverUV(paintedTexture);
+    }, [texture, paintedTexture, width, height]);
 
     useEffect(() => {
         if (!materialRef.current || !imagePaintedPath) return;
@@ -95,6 +133,29 @@ const PictureContent = ({ imagePath, imagePaintedPath, width, height, isPainted 
     );
 };
 
+// Wrapper: obrazy .gif odtwarzamy animowane, pozostałe statycznie.
+const PictureContent = ({ imagePath, imagePaintedPath, width, height, isPainted }) => {
+    const isGif = typeof imagePath === 'string' && imagePath.toLowerCase().endsWith('.gif');
+
+    if (isGif) {
+        return (
+            <group position={[0, 0, 0.01]}>
+                <GifPictureContent imagePath={imagePath} width={width} height={height} />
+            </group>
+        );
+    }
+
+    return (
+        <StaticPictureContent
+            imagePath={imagePath}
+            imagePaintedPath={imagePaintedPath}
+            width={width}
+            height={height}
+            isPainted={isPainted}
+        />
+    );
+};
+
 const InspectableFrame = ({ frame, wallX, frameTexture, framePaintedTexture, CABIN_SKETCH_URL, setCameraOverride }) => {
     const { camera, viewport } = useThree();
     const groupRef = useRef();
@@ -102,6 +163,7 @@ const InspectableFrame = ({ frame, wallX, frameTexture, framePaintedTexture, CAB
     const framePaintedRef = useRef();
     const compileFramesRef = useRef(0);
     const hideDelayRef = useRef();
+    const cameraOwner = useMemo(() => `frame:${frame.id}:${frame.z}`, [frame.id, frame.z]);
 
     // Zapisujemy oryginalną pozycję i rotację na ścianie
     const originalPos = useMemo(() => new THREE.Vector3(
@@ -126,11 +188,11 @@ const InspectableFrame = ({ frame, wallX, frameTexture, framePaintedTexture, CAB
     useEffect(() => {
         return () => {
             if (isInspected) {
-                if (setCameraOverride) setCameraOverride(false);
+                if (setCameraOverride) setCameraOverride(false, cameraOwner);
                 window.dispatchEvent(new CustomEvent('inspectChange', { detail: false }));
             }
         };
-    }, [isInspected, setCameraOverride]);
+    }, [cameraOwner, isInspected, setCameraOverride]);
 
     useEffect(() => {
         if (isHovered && !isMobile) document.body.style.cursor = 'pointer';
@@ -237,12 +299,16 @@ const InspectableFrame = ({ frame, wallX, frameTexture, framePaintedTexture, CAB
                 onClick={(e) => {
                     e.stopPropagation();
                     if (isMobile) return; // Całkowite wyłączenie na mobile
-                    setIsInspected((prev) => {
-                        const next = !prev;
-                        if (setCameraOverride) setCameraOverride(next); // Blokowanie / odblokowanie poruszania kamerą
-                        window.dispatchEvent(new CustomEvent('inspectChange', { detail: next }));
-                        return next;
-                    });
+                    if (!isInspected) {
+                        const acquired = setCameraOverride?.(true, cameraOwner);
+                        if (acquired === false) return;
+                        setIsInspected(true);
+                        window.dispatchEvent(new CustomEvent('inspectChange', { detail: true }));
+                    } else {
+                        setIsInspected(false);
+                        setCameraOverride?.(false, cameraOwner);
+                        window.dispatchEvent(new CustomEvent('inspectChange', { detail: false }));
+                    }
                     setIsHovered(false);
                 }}
                 onPointerEnter={(e) => {
@@ -318,11 +384,14 @@ const InspectableFrame = ({ frame, wallX, frameTexture, framePaintedTexture, CAB
     );
 };
 
-const CorridorDecorations = ({ segmentLength, zOffset, corridorWidth = 4, corridorHeight = 3.5, zClip = 100000, setCameraOverride }) => {
+const CorridorDecorations = ({ segmentIndex, segmentLength, zOffset, corridorWidth = 4, corridorHeight = 3.5, zClip = 100000, setCameraOverride }) => {
+    const { hasEntered } = useScene();
 
     const wallX = corridorWidth / 2 - 0.01;
     const floorY = -corridorHeight / 2;
     const ceilingY = corridorHeight / 2;
+    const portraitZ = zOffset + PORTRAIT_RELATIVE_Z;
+    const portraitY = floorY + CABINET_HEIGHT + PORTRAIT_CABINET_GAP + (PORTRAIT_SOURCE_HALF_HEIGHT * PORTRAIT_SCALE);
 
     // =============================================
     // TEKSTURY DEKORACJI
@@ -379,10 +448,10 @@ const CorridorDecorations = ({ segmentLength, zOffset, corridorWidth = 4, corrid
             height: 2.5 / 1.785,     // Legacy ratio 3200x1792
             y: 0.3,                  // Wysokość na ścianie
             id: 'frame-1',
-            // Custom setup for "rysuneknaobraz1.png"
-            image: '/textures/corridor/rysuneknaobraz1.webp',
-            imageWidth: 1.1,
-            imageHeight: 1.1,
+            // 吴桐头像 (768x747, ~kwadrat) - cover-crop wypełnia cały otwór ramki
+            image: '/textures/corridor/painting1.png',
+            imageWidth: 2.4,
+            imageHeight: 1.34,
             offsetFromWall: 0.1, // Przesunięcie bliżej środka korytarza (0.1 unit)
         },
         {
@@ -392,9 +461,10 @@ const CorridorDecorations = ({ segmentLength, zOffset, corridorWidth = 4, corrid
             height: 2.5 / 1.785,
             y: 0.2,
             id: 'frame-2',
-            image: '/textures/corridor/rysuneknaobrazek3.webp',
-            imageWidth: 1.7,
-            imageHeight: 1,
+            // 薇尔莉特 GIF (426x240, animowany)
+            image: '/textures/corridor/painting2.gif',
+            imageWidth: 1.6,
+            imageHeight: 0.9,
             offsetFromWall: 0.1
         },
         {
@@ -404,11 +474,11 @@ const CorridorDecorations = ({ segmentLength, zOffset, corridorWidth = 4, corrid
             height: 2.5 / 1.785,
             y: 0.25,
             id: 'frame-3',
-            signature: "Empty canvas!\nWant your art here?\nContact me!",
-            signatureX: 0,
-            signatureY: 0,
-            signatureSize: 0.12,
-            signatureColor: '#333333'
+            // output (7) (1).png (2048x908, panorama) - cover-crop wypełnia cały otwór ramki
+            image: '/textures/corridor/painting3.png',
+            imageWidth: 2.4,
+            imageHeight: 1.34,
+            offsetFromWall: 0.1
         },
         {
             z: zOffset - 55,         // Między About a Connect (relZ -50 do -60)
@@ -586,32 +656,45 @@ const CorridorDecorations = ({ segmentLength, zOffset, corridorWidth = 4, corrid
                 />
             ))}
 
+            {/* Interaktywna instalacja: portret 3D i szafka tylko w pierwszym segmencie. */}
+            {segmentIndex === 0 && (
+                <>
+                    <CorridorCabinet
+                        name="female-portrait-cabinet"
+                        position={[
+                            wallX - 0.01 - (PORTRAIT_CABINET_DEPTH / 2),
+                            floorY + (CABINET_HEIGHT / 2),
+                            portraitZ
+                        ]}
+                        depth={PORTRAIT_CABINET_DEPTH}
+                        width={PORTRAIT_CABINET_WIDTH}
+                        height={CABINET_HEIGHT}
+                        frontTexture={cabinetFrontTexture}
+                        restTexture={cabinetRestTexture}
+                    />
+                    {hasEntered && (
+                        <Suspense fallback={null}>
+                            <WallPortraitModel
+                                position={[
+                                    wallX - (PORTRAIT_SOURCE_HALF_DEPTH * PORTRAIT_SCALE) - 0.02,
+                                    portraitY,
+                                    portraitZ
+                                ]}
+                                scale={PORTRAIT_SCALE}
+                                setCameraOverride={setCameraOverride}
+                            />
+                        </Suspense>
+                    )}
+                </>
+            )}
+
             {/* === SZAFKA (CABINET) === */}
             {/* Prosty box jako placeholder, naprzeciwko drzwi About (Left -48) -> więc szafka na Right -51 */}
-            <mesh
+            <CorridorCabinet
                 position={[wallX - 0.26, floorY + 0.5, zOffset - 51]}
-            // X: wallX - (depth/2) - mały margin
-            // Y: floorY + (height/2)
-            // Z: zOffset - 51 (blisko drzwi About)
-            >
-                {/* Wymiary: X=0.5 (głębokość od ściany), Y=1.0 (wysokość), Z=0.8 (szerokość wzdłuż ściany) */}
-                <boxGeometry args={[0.5, 1.0, 1.0 * 0.8]} />
-                {/* 
-                    Materials for BoxGeometry:
-                    0: Right (+x) - Wall side
-                    1: Left (-x) - Corridor side (FRONT of cabinet) -> szafkaprzod.png
-                    2: Top (+y) -> szafkaprzodgora.png
-                    3: Bottom (-y) -> szafkaprzodgora.png (as requested)
-                    4: Front (+z) -> szafkaprzodgora.png (side)
-                    5: Back (-z) -> szafkaprzodgora.png (side)
-                */}
-                <meshBasicMaterial color="#e0e0e0" attach="material-0" map={cabinetRestTexture} />
-                <meshBasicMaterial color="#e0e0e0" attach="material-1" map={cabinetFrontTexture} />
-                <meshBasicMaterial color="#e0e0e0" attach="material-2" map={cabinetRestTexture} />
-                <meshBasicMaterial color="#e0e0e0" attach="material-3" map={cabinetRestTexture} />
-                <meshBasicMaterial color="#e0e0e0" attach="material-4" map={cabinetRestTexture} />
-                <meshBasicMaterial color="#e0e0e0" attach="material-5" map={cabinetRestTexture} />
-            </mesh>
+                frontTexture={cabinetFrontTexture}
+                restTexture={cabinetRestTexture}
+            />
 
             {/* === STOJĄCA RAMKA NA SZAFCE (STANDING FRAME) === */}
             {/* Stoi na szafce: Y = floorY + 1.0 (wysokość szafki) + połowa wysokości ramki */}

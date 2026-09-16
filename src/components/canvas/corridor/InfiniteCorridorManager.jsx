@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 
 import CorridorSegment, { SEGMENT_LENGTH } from './CorridorSegment';
@@ -50,24 +50,25 @@ const SegmentVisibilityWrapper = ({ children, segmentIndex }) => {
  */
 const InfiniteCorridorManager = ({
     onDoorEnter,
+    hasEntered = true,
     hideDoorsForSegments = [], // Segments that should hide their SegmentDoors
     clipSegmentNeg1 = false, // Whether to clip segment -1 at EntranceDoors
     setCameraOverride // Function to take over camera control
 }) => {
     const { camera } = useThree();
-    // Pre-mount segments 0 and 1 so shaders compile during preloader.
-    // Segment -1 is NOT pre-mounted to avoid visual collision with entrance doors.
-    // It mounts dynamically when camera reaches entrance (behind camera = invisible stutter).
-    const [activeSegments, setActiveSegments] = useState([0, 1]);
-
-    // Calculate which segment the camera is in
-    const getSegmentFromZ = useCallback((z) => {
-        return Math.floor((10 - z) / SEGMENT_LENGTH);
-    }, []);
+    // The entrance is at Z=22, but segment 0 only begins at Z=10.
+    // Keep the clipped tail of segment -1 mounted before opening the doors:
+    // it supplies the walls, floor and ceiling along the entrance camera path.
+    // Its duplicate doors remain hidden by hideDoorsForSegments / zClip.
+    const [activeSegments, setActiveSegments] = useState([-1, 0]);
+    const lastSegment = useRef(null);
 
     // Update active segments based on camera position
     useFrame(() => {
-        const currentSegment = getSegmentFromZ(camera.position.z);
+        if (!hasEntered) return;
+        const currentSegment = Math.floor((10 - camera.position.z) / SEGMENT_LENGTH);
+        if (lastSegment.current === currentSegment) return;
+        lastSegment.current = currentSegment;
 
         // Render previous, current, and next segment
         const shouldBeActive = [
@@ -76,13 +77,7 @@ const InfiniteCorridorManager = ({
             currentSegment + 1
         ];
 
-        // Check if we need to update
-        const needsUpdate = shouldBeActive.some(seg => !activeSegments.includes(seg)) ||
-            activeSegments.some(seg => !shouldBeActive.includes(seg));
-
-        if (needsUpdate) {
-            setActiveSegments(shouldBeActive);
-        }
+        setActiveSegments(shouldBeActive);
     });
 
     return (

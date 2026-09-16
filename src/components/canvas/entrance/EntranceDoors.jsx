@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Text, useTexture } from '@react-three/drei';
+import { useTexture } from '@react-three/drei';
+import Text from '../LocalText';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import '../shaders/RevealMaterial'; // Registers alpha-discard reveal shader
@@ -52,19 +53,19 @@ const EntranceDoors = ({
 
     // Dla hooków tekstur musimy obliczyć to raz na starcie
     const isMobileDevice = typeof window !== 'undefined' && (isTouchDevice() || window.innerWidth < 1000);
-    const dummyTex = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
     const frameTexture = useTexture('/textures/doors/frame_sketch.webp');
     const doorLeftTexture = useTexture('/textures/doors/door_left_sketch.webp');
     const doorRightTexture = useTexture('/textures/doors/door_right_sketch.webp');
 
-    // Mobile optimization: Don't load painted textures or handles on phones
-    const doorRightPaintedTexture = useTexture(isMobileDevice ? dummyTex : '/textures/doors/door_right_painted.webp');
-    const doorLeftPaintedTexture = useTexture(isMobileDevice ? dummyTex : '/textures/doors/door_left_painted.webp');
+    // Painted textures: always load real files so hover-reveal works on desktop.
+    // (Rendering is still gated by {!isMobile && ...} in JSX, so phones are unaffected.)
+    const doorRightPaintedTexture = useTexture('/textures/doors/door_right_painted.webp');
+    const doorLeftPaintedTexture = useTexture('/textures/doors/door_left_painted.webp');
     const handleLeftTexture = useTexture('/textures/doors/handle_left_sketch.webp');
-    const handleLeftPaintedTexture = useTexture(isMobileDevice ? dummyTex : '/textures/doors/handle_left_painted.webp');
+    const handleLeftPaintedTexture = useTexture('/textures/doors/handle_left_painted.webp');
     const handleRightTexture = useTexture('/textures/doors/handle_right_sketch.webp');
-    const handleRightPaintedTexture = useTexture(isMobileDevice ? dummyTex : '/textures/doors/handle_right_painted.webp');
+    const handleRightPaintedTexture = useTexture('/textures/doors/handle_right_painted.webp');
 
     // Dynamic textures for mobile
     const doorBackTexture = useTexture(isMobileDevice ? '/textures/doors/door_back.webp' : '/textures/doors/door_back_left_sketch.webp');
@@ -75,7 +76,7 @@ const EntranceDoors = ({
     // const catTexture = useTexture('/textures/entrance/cat_sketch.webp'); // Old side cat
     const catFrontBodyTexture = useTexture('/textures/entrance/cat_front_body.webp');
     const windowSketchTexture = useTexture('/textures/entrance/window_sketch.webp');
-    const avatarWindowTexture = useTexture('/textures/entrance/avatar_window.webp');
+    const avatarWindowTexture = useTexture('/assets/corridor/avatar_window.webp');
     const treeTexture = useTexture('/textures/entrance/tree_sketch.webp');
     const mouseTexture = useTexture('/textures/entrance/mouse_hanging.webp');
     const potTexture = useTexture('/textures/entrance/pot_with_duck.webp');
@@ -105,16 +106,16 @@ const EntranceDoors = ({
 
     // Rubber Duck Debugging Quotes
     const duckQuotes = [
-        "Have you tried console.log()?",
-        "Did you clear the cache?",
-        "It works on my machine! 🤷",
-        "Have you turned it off and on again?",
-        "Maybe it's a CSS issue?",
-        "Check for missing semicolons!",
-        "Did you read the error message?",
-        "Have you tried Stack Overflow?",
-        "Is it plugged in?",
-        "Works in production! 🚀",
+        "你试过 console.log() 了吗？",
+        "清过缓存了吗？",
+        "我机器上明明是好的！🤷",
+        "重启大法试过了吗？",
+        "会不会是 CSS 的问题？",
+        "检查一下有没有漏掉分号！",
+        "你仔细读报错信息了吗？",
+        "去 Stack Overflow 搜过吗？",
+        "电源插上了吗？",
+        "生产环境运行得好好的！🚀",
     ];
 
     // Bug Click Handler
@@ -940,9 +941,8 @@ const EntranceDoors = ({
                 outlineColor="#ffffff"
                 clipRect={[-1, -0.5, -1 + (clipProgress * 2.5), 0.5]}
             >
-                BUG FIXED!
+                已修复！
             </Text>
-
 
 
 

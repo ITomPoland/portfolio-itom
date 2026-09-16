@@ -208,14 +208,14 @@ const Preloader = ({ onComplete, ready }) => {
   // ----------------------------------------
   useEffect(() => {
     let newTarget = 0;
-    if (active) {
+    // The initial scene is authoritative. Cached resources can complete before
+    // these loading-manager listeners mount, and later rooms have their own loads.
+    if (ready) {
+      newTarget = 100;
+    } else if (active) {
       newTarget = (realProgress / 100) * 85;
     } else {
-      if (ready) {
-        newTarget = 100;
-      } else {
-        newTarget = 90;
-      }
+      newTarget = 90;
     }
 
     setTargetProgress(prev => Math.max(prev, newTarget));

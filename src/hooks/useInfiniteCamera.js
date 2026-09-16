@@ -54,6 +54,7 @@ const useInfiniteCamera = ({
 
     // Camera override - when true, external code (like DoorSection) controls camera
     const cameraOverride = useRef(false);
+    const cameraOverrideOwner = useRef(null);
     // Skip first frame after re-enabling to prevent camera jump
     const skipFrameAfterEnable = useRef(false);
     // Smooth blend-in counter (frames remaining to blend from saved rotation)
@@ -119,7 +120,7 @@ const useInfiniteCamera = ({
 
     // Handle wheel scroll (desktop)
     const handleWheel = useCallback((e) => {
-        if (!scrollEnabledRef.current) return;
+        if (!scrollEnabledRef.current || cameraOverride.current) return;
 
         e.preventDefault();
         const delta = e.deltaY * scrollSpeed;
@@ -129,7 +130,7 @@ const useInfiniteCamera = ({
 
     // Handle keyboard navigation (A1 accessibility)
     const handleKeyDown = useCallback((e) => {
-        if (!scrollEnabledRef.current) return;
+        if (!scrollEnabledRef.current || cameraOverride.current) return;
 
         // Don't interfere when user is typing in inputs or textareas
         const tag = e.target.tagName;
@@ -170,6 +171,8 @@ const useInfiniteCamera = ({
         const normalizedY = (e.clientY / window.innerHeight) * 2 - 1;
         lastMousePos.current = { x: normalizedX, y: normalizedY };
 
+        if (cameraOverride.current) return;
+
         // Only apply parallax when enabled
         if (!parallaxEnabledRef.current) return;
 
@@ -188,6 +191,12 @@ const useInfiniteCamera = ({
     const handleTouchMove = useCallback((e) => {
         const currentX = e.touches[0].clientX;
         const currentY = e.touches[0].clientY;
+
+        if (cameraOverride.current) {
+            touchStart.current.x = currentX;
+            touchStart.current.y = currentY;
+            return;
+        }
 
         // Vertical scroll - only when scroll enabled
         if (scrollEnabledRef.current) {
@@ -211,7 +220,7 @@ const useInfiniteCamera = ({
 
     // Handle device orientation (gyroscope for mobile parallax)
     const handleDeviceOrientation = useCallback((e) => {
-        if (!parallaxEnabledRef.current || !useGyroscope.current) return;
+        if (!parallaxEnabledRef.current || !useGyroscope.current || cameraOverride.current) return;
 
         // Desktop browsers sometimes fire this event with null values immediately when attached
         if (e.gamma === null && e.beta === null) return;
@@ -423,8 +432,18 @@ const useInfiniteCamera = ({
     }, [segmentLength, glanceIntensity]);
 
     // Function to enable/disable camera override
-    const setCameraOverride = useCallback((active) => {
+    const setCameraOverride = useCallback((active, owner = 'legacy') => {
+        if (active) {
+            if (cameraOverride.current && cameraOverrideOwner.current !== owner) return false;
+            cameraOverride.current = true;
+            cameraOverrideOwner.current = owner;
+            return true;
+        }
+
+        if (cameraOverride.current && cameraOverrideOwner.current !== owner) return false;
+
         cameraOverride.current = active;
+        cameraOverrideOwner.current = null;
         if (!active) {
             // When releasing override, sync our state with current camera position
             const z = camera.position.z;
@@ -486,6 +505,8 @@ const useInfiniteCamera = ({
             swipeGlance.current = 0;
             targetSwipeGlance.current = 0;
         }
+
+        return true;
     }, [camera, calculateGlance, segmentLength]);
 
     return {

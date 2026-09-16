@@ -1,10 +1,9 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Text, PositionalAudio } from '@react-three/drei';
+import { PositionalAudio, useGLTF, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
-import gsap from 'gsap';
-import MessagePaper from './MessagePaper';
-import SocialBarrel from './SocialBarrel';
+import ContactSocialModels from './ContactSocialModels';
+import InteractiveWater from './InteractiveWater';
 import { useScene } from '../../../../context/SceneContext';
 import GalleryClouds from '../Gallery/GalleryClouds';
 import { useAchievements } from '../../../../context/AchievementsContext';
@@ -12,13 +11,10 @@ import { useAudio } from '../../../../context/AudioManager';
 
 // ============================================
 // ============================================
-// 🌊 CONTACT ROOM v2 - MESSAGE IN A BOTTLE
-// Immersive experience: write message, roll into bottle, throw
+// 🌊 CONTACT ROOM v3 - INTERACTIVE SOCIAL MODELS
+// QQ / WeChat / Feishu models floating above the interactive water
 // ============================================
-import { useTexture } from '@react-three/drei';
 import { usePaintMaterial } from '../Gallery/usePaintMaterial';
-
-const WAVE_LAYERS = 4;
 
 // ============================================
 // ⚙️ AUDIO SETTINGS - TWEAK HERE
@@ -30,66 +26,117 @@ export const AUDIO_SETTINGS = {
     rolloff: 1.2           // Szybkość cichnięcia (rolloffFactor)
 };
 
+const WATER_SURFACE_Y = -1.02;
+const SIGNAL_STATION_HEIGHT = 20;
+const SIGNAL_STATION_SUBMERGE_DEPTH = 1.6;
+
 // ============================================
-// ⚙️ LATARNIA SETTINGS - TWEAK HERE
-// Edytuj te wartości, aby zmienić pozycję, obrót i wielkość latarni
+// ⚙️ FLOATING SIGNAL STATION SETTINGS
 // ============================================
-export const LATARNIA_SETTINGS = {
+export const SIGNAL_STATION_SETTINGS = {
+    // Keep the buoy base 0.72 units below the real water surface instead of
+    // positioning this centered GLB with the old flat lighthouse coordinates.
+    position: [
+        -15.5,
+        WATER_SURFACE_Y + SIGNAL_STATION_HEIGHT * 0.5 - SIGNAL_STATION_SUBMERGE_DEPTH,
+        -42
+    ],
+    rotation: [0, 0.35, 0],
+    height: SIGNAL_STATION_HEIGHT,
+    waterRadius: 0.09
+};
+
+const SIGNAL_STATION_MODEL_PATH = '/models/contact/floating-signal-station.glb';
+
+// ============================================
+// ⚙️ RUBBER DUCK SETTINGS
+// Background floater replacing the original paper boat
+// ============================================
+export const DUCK_SETTINGS = {
     // Pozycja: [lewo/prawo (X), góra/dół (Y), tył/przód (Z)]
-    position: [-10, 5, -20],
+    // The 1.3x sprite is 2.99 units tall. Raising its center to y=0.375 keeps
+    // the lower edge at y=-1.12, preserving the current immersion depth.
+    position: [0, 0.375, -15],
 
     // Rotacja: [przechył w przód/tył (X), obrót w lewo/prawo (Y), obrót na boki (Z)]
-    rotation: [0, 0.1, 0],
+    rotation: [0, -0.12, 0],
 
     // Wielkość: [szerokość, wysokość]
-    scale: [4.49, 5] // Legacy ratio 1102/1225
+    scale: [4.485, 2.99]
 };
 
-// ============================================
-// ⚙️ STATEK SETTINGS - TWEAK HERE
-// Edytuj te wartości, aby zmienić pozycję, obrót i wielkość statku
-// ============================================
-export const STATEK_SETTINGS = {
-    // Pozycja: [lewo/prawo (X), góra/dół (Y), tył/przód (Z)]
-    position: [0, 1.6, -15],
+const FloatingSignalStation = ({ paintOnBeforeCompile, floaterInteractionRef }) => {
+    const { scene } = useGLTF(SIGNAL_STATION_MODEL_PATH);
+    const stationRef = useRef();
 
-    // Rotacja: [przechył w przód/tył (X), obrót w lewo/prawo (Y), obrót na boki (Z)]
-    rotation: [0, -0.2, 0],
+    const normalizedModel = useMemo(() => {
+        const model = scene.clone(true);
+        const bounds = new THREE.Box3().setFromObject(model);
+        const size = bounds.getSize(new THREE.Vector3());
+        const center = bounds.getCenter(new THREE.Vector3());
+        const normalizedScale = SIGNAL_STATION_SETTINGS.height / Math.max(size.y, 0.0001);
 
-    // Wielkość: [szerokość, wysokość]
-    scale: [3.35, 1.3] // Legacy ratio 2525/978
+        model.scale.setScalar(normalizedScale);
+        model.position.set(
+            -center.x * normalizedScale,
+            -center.y * normalizedScale,
+            -center.z * normalizedScale
+        );
+
+        model.traverse((child) => {
+            if (!child.isMesh) return;
+
+            const sourceMaterials = Array.isArray(child.material)
+                ? child.material
+                : [child.material];
+            const paintedMaterials = sourceMaterials.map((sourceMaterial) => {
+                const material = sourceMaterial.clone();
+                material.onBeforeCompile = paintOnBeforeCompile;
+                material.needsUpdate = true;
+                return material;
+            });
+
+            child.material = Array.isArray(child.material)
+                ? paintedMaterials
+                : paintedMaterials[0];
+        });
+
+        return model;
+    }, [paintOnBeforeCompile, scene]);
+
+    useFrame((state) => {
+        if (!stationRef.current) return;
+
+        const time = state.clock.getElapsedTime();
+        const bobPhase = time * 0.52 + 0.8;
+        stationRef.current.position.y = SIGNAL_STATION_SETTINGS.position[1]
+            + Math.sin(bobPhase) * 0.065;
+        stationRef.current.rotation.x = SIGNAL_STATION_SETTINGS.rotation[0]
+            + Math.sin(time * 0.41) * 0.012;
+        stationRef.current.rotation.z = SIGNAL_STATION_SETTINGS.rotation[2]
+            + Math.cos(time * 0.37) * 0.018;
+
+        const waterContact = floaterInteractionRef?.current?.[4];
+        if (waterContact) {
+            waterContact.x = stationRef.current.position.x;
+            waterContact.z = stationRef.current.position.z;
+            waterContact.radius = SIGNAL_STATION_SETTINGS.waterRadius;
+            waterContact.strength = -0.000032 + Math.cos(bobPhase) * 0.00004;
+        }
+    });
+
+    return (
+        <group
+            ref={stationRef}
+            position={SIGNAL_STATION_SETTINGS.position}
+            rotation={SIGNAL_STATION_SETTINGS.rotation}
+        >
+            <primitive object={normalizedModel} dispose={null} />
+        </group>
+    );
 };
 
-// ============================================
-// ⚙️ CAMERA SETTINGS - TWEAK HERE
-// ============================================
-const CAMERA_SETTINGS = {
-    // Rotation X: How much to look down (radians)
-    // -1.5 is straight down (-90 deg), -1.2 is ~70 deg
-    lookDownAngle: -1.2,
-
-    // Rotation Y: Left/Right turn
-    // Set to 0 to force center, or null to keep current direction
-    forceCenterY: -1.05, // FORCE CENTER to align paper straight
-
-    // Rotation Z: Tilt/Roll
-    // Set to 0 to straighten the camera
-    forceStraightZ: 0,
-
-    // Animation speed
-    lerpSpeed: 2.5
-};
-
-// Experience phases
-const PHASE = {
-    ENTERING: 'entering',      // Camera entering room, looking at menu
-    LOOKING_DOWN: 'looking_down', // Camera animating to look at dock
-    WRITING: 'writing',        // User writing on paper
-    ROLLING: 'rolling',        // Paper rolling into bottle
-    HOLDING: 'holding',        // Camera holding bottle, looking at sea
-    THROWING: 'throwing',      // Bottle being thrown
-    DONE: 'done'               // Bottle floating away
-};
+useGLTF.preload(SIGNAL_STATION_MODEL_PATH);
 
 const ContactRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
     const { camera } = useThree();
@@ -111,24 +158,14 @@ const ContactRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
         }
     }, [isExiting, isTeleporting, hidePopup]);
 
-    // Load Sea Texture
-    const seaTexture = useTexture("/textures/contact/faletopdown.webp");
     // Load Molo Texture
-    const moloTexture = useTexture("/textures/contact/molo.webp");
-    // Load Latarnia Texture
-    const latarniaTexture = useTexture("/textures/contact/latarnia.webp");
-    // Load Statek Texture
-    const statekTexture = useTexture("/textures/contact/statek.webp");
+    const moloTexture = useTexture("/assets/contact/molo.webp");
+    // Load transparent rubber duck texture
+    const duckTexture = useTexture("/assets/contact/rubber-duck.png");
 
 
     // Configure texture repeating (1:1 scale)
     useEffect(() => {
-        if (seaTexture) {
-            seaTexture.wrapS = seaTexture.wrapT = THREE.MirroredRepeatWrapping;
-            seaTexture.repeat.set(6, 4);
-            seaTexture.needsUpdate = true;
-        }
-
         if (moloTexture) {
             moloTexture.wrapS = moloTexture.wrapT = THREE.RepeatWrapping;
             moloTexture.center.set(0.5, 0.5);
@@ -136,7 +173,7 @@ const ContactRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
             moloTexture.repeat.set(1, 1);
             moloTexture.needsUpdate = true;
         }
-    }, [seaTexture, moloTexture]);
+    }, [moloTexture]);
 
     useEffect(() => {
         // Change to YXZ smoothly on mount for proper head nodding, 
@@ -191,103 +228,29 @@ const ContactRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
     const frameCount = useRef(0);
     const FRAMES_TO_WAIT = 5;
 
-    // Phase state
-    const [currentPhase, setCurrentPhase] = useState(PHASE.ENTERING);
-    const [showSelection, setShowSelection] = useState(true);
-
-    const hasAnimatedDown = useRef(false);
-    // Latch exit state to prevent glitch
-    const hasExitTriggered = useRef(false);
-    if (isExiting && !hasExitTriggered.current) {
-        hasExitTriggered.current = true;
-        // Do NOT reorder to XYZ here. Let DoorSection's GSAP animate camera back to the door
-        // while remaining in YXZ order. This prevents "neck snapping" because interpolating 
-        // to X=0 in YXZ order naturally lifts the head up without twisting the neck.
-    }
-
     // Refs for animations
-    const waveRefs = useRef([]);
-    const statekRef = useRef(); // Ref for ship animation
-
-    // Target rotation values
-    const targetRotX = useRef(0);
-    const targetRotY = useRef(0);
-    const targetRotZ = useRef(0);
-
-    // Reset camera rotation when teleporting starts
-    useEffect(() => {
-        if (isTeleporting) {
-            hasAnimatedDown.current = false;
-            hasExitTriggered.current = false;
-            targetRotX.current = 0;
-            targetRotY.current = 0;
-            targetRotZ.current = 0;
-            setCurrentPhase(PHASE.ENTERING);
-            setShowSelection(true); // Reset selection menu
+    const duckRef = useRef();
+    const floaterInteractionRef = useRef([
+        { x: -4.1, z: -7.7, radius: 0.019, strength: 0 },
+        { x: 0, z: -7.15, radius: 0.0175, strength: 0 },
+        { x: 4.1, z: -7.7, radius: 0.018, strength: 0 },
+        { x: DUCK_SETTINGS.position[0], z: DUCK_SETTINGS.position[2], radius: 0.03, strength: 0 },
+        {
+            x: SIGNAL_STATION_SETTINGS.position[0],
+            z: SIGNAL_STATION_SETTINGS.position[2],
+            radius: SIGNAL_STATION_SETTINGS.waterRadius,
+            strength: 0
         }
-    }, [isTeleporting]);
-
-    // This effect now initializes the room but DOES NOT trigger look down
-    useEffect(() => {
-        if (hasSignaledReady.current && !hasAnimatedDown.current && showRoom) {
-            // Just ensure we are in entering phase
-            // We wait for user selection to trigger the rest
-        }
-
-        // EXIT ANIMATION CLEANUP
-        if (!showRoom) {
-            hasExitTriggered.current = false;
-            if (hasAnimatedDown.current) {
-                hasAnimatedDown.current = false;
-                setCurrentPhase(PHASE.ENTERING);
-                targetRotX.current = 0;
-                targetRotZ.current = 0;
-                setShowSelection(true);
-            }
-        }
-    }, [hasSignaledReady.current, showRoom, camera]);
-
-    const handleMailSelect = () => {
-        // Awaryjne przekierowanie mailto:
-        window.location.href = 'mailto:tomszma12@gmail.com';
-
-        /* 
-        setShowSelection(false);
-
-        // Trigger the look down sequence
-        hasAnimatedDown.current = true;
-        hasExitTriggered.current = false;
-
-        // Capture landing rotation (usually 0,0,0)
-        targetRotX.current = camera.rotation.x;
-        targetRotY.current = camera.rotation.y;
-        targetRotZ.current = camera.rotation.z;
-
-        // Start sequence directly
-        setCurrentPhase(PHASE.LOOKING_DOWN);
-
-        // 1. SET X (Looking down)
-        targetRotX.current = CAMERA_SETTINGS.lookDownAngle;
-
-        // 2. SET Y (Turning)
-        if (CAMERA_SETTINGS.forceCenterY !== null) {
-            targetRotY.current = CAMERA_SETTINGS.forceCenterY;
-        }
-
-        // 3. SET Z (Tilt)
-        if (CAMERA_SETTINGS.forceStraightZ !== null) {
-            targetRotZ.current = CAMERA_SETTINGS.forceStraightZ;
-        }
-
-        // Phase transition
-        setTimeout(() => {
-            setCurrentPhase(PHASE.WRITING);
-        }, 1500);
-        */
-    };
-
+    ]);
+    const updateFloaterInteraction = useCallback((index, x, z, radius, strength) => {
+        const floater = floaterInteractionRef.current[index];
+        floater.x = x;
+        floater.z = z;
+        floater.radius = radius;
+        floater.strength = strength;
+    }, []);
     // Frame Loop
-    useFrame((state, delta) => {
+    useFrame((state) => {
         // Update room origin for paint shader
         updateRoomOrigin(groupRef);
 
@@ -296,51 +259,36 @@ const ContactRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
             if (frameCount.current >= FRAMES_TO_WAIT) {
                 hasSignaledReady.current = true;
                 onReady?.();
-                if (!isWarmup) setTimeout(() => showTutorial('contact_submit'), 2000);
+                if (!isWarmup) setTimeout(() => showTutorial('contact_choose'), 2000);
             }
         }
 
-        // 1. Camera Animation (Simple Lerp)
-        if (hasAnimatedDown.current && !isExiting && !hasExitTriggered.current) {
-            // Only animate if we started the 'look down' sequence AND we are NOT exiting.
-            // When exiting, DoorSection.jsx takes full control of the camera with GSAP.
-
-            // Clamp delta to prevent massive jumps when React re-renders lag the frame rate
-            const safeDelta = Math.min(delta, 0.033);
-            const lerpSpeed = safeDelta * CAMERA_SETTINGS.lerpSpeed;
-
-            // NORMAL MODE (Look Down)
-            camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, targetRotX.current, lerpSpeed);
-            camera.rotation.y = THREE.MathUtils.lerp(camera.rotation.y, targetRotY.current, lerpSpeed);
-            camera.rotation.z = THREE.MathUtils.lerp(camera.rotation.z, targetRotZ.current, lerpSpeed);
-        }
-
-        // 2. Wave Animation
         const time = state.clock.getElapsedTime();
-        waveRefs.current.forEach((ref, i) => {
-            if (ref) {
-                const speed = 0.8 + i * 0.15;
-                const amplitude = 0.15 - i * 0.02;
-                const offset = i * 0.5;
-                ref.position.y = Math.sin(time * speed + offset) * amplitude;
-            }
-        });
 
-        // 2.5 Ship Animation (bobbing with waves and sailing)
-        if (statekRef.current) {
+        // 2. Rubber duck animation (bobbing with waves and drifting)
+        if (duckRef.current) {
             // 🌊 Bobbing up and down (Y axis)
-            const bobSpeed = 0.8;
-            const bobAmplitude = 0.3;
-            statekRef.current.position.y = STATEK_SETTINGS.position[1] + Math.sin(time * bobSpeed) * bobAmplitude;
+            const bobSpeed = 0.82;
+            const bobAmplitude = 0.1;
+            const bobPhase = time * bobSpeed;
+            duckRef.current.position.y = DUCK_SETTINGS.position[1] + Math.sin(bobPhase) * bobAmplitude;
 
             // ⛵ Sailing left and right (X axis)
             const sailSpeed = 0.04; // znacznie wolniejsze pływanie (było 0.15)
             const sailAmplitude = 12; // mniejszy obszar pływania, by nie wyjeżdżał za ekran (było 25)
-            statekRef.current.position.x = STATEK_SETTINGS.position[0] + Math.sin(time * sailSpeed) * sailAmplitude;
+            duckRef.current.position.x = DUCK_SETTINGS.position[0] + Math.sin(time * sailSpeed) * sailAmplitude;
 
             // 🔄 Add a slight tilt on the Z axis (roll)
             const rollAmplitude = 0.05;
-            statekRef.current.rotation.z = Math.sin(time * bobSpeed * 1.2) * rollAmplitude;
+            duckRef.current.rotation.z = Math.sin(time * bobSpeed * 1.2) * rollAmplitude;
+
+            // The duck presses the same GPGPU height field as the three
+            // contact models, creating a small wake at its current position.
+            const duckFloater = floaterInteractionRef.current[3];
+            duckFloater.x = duckRef.current.position.x;
+            duckFloater.z = duckRef.current.position.z;
+            duckFloater.radius = 0.03;
+            duckFloater.strength = -0.000035 + Math.cos(bobPhase) * 0.00005;
         }
 
     });
@@ -374,79 +322,21 @@ const ContactRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
             {/* ☁️ CLOUDS */}
             <GalleryClouds count={45} seed={88} rotationOffset={[0, 1, 0]} />
 
-            {/* 🌊 OCEAN WAVE LAYERS */}
-            <group position={[0, -1, -8]}>
-                {Array.from({ length: WAVE_LAYERS }).map((_, i) => (
-                    <mesh
-                        key={i}
-                        ref={el => waveRefs.current[i] = el}
-                        position={[0, -i * 0.1, -i * 8]}
-                        rotation={[-Math.PI / 2.5, 0, 0]}
-                    >
-                        <planeGeometry args={[80, 30]} />
-                        <meshBasicMaterial
-                            map={seaTexture}
-                            color="#ffffff"
-                            transparent={true}
-                            opacity={1 - i * 0.1}
-                            side={THREE.DoubleSide}
-                            toneMapped={false}
-                            onBeforeCompile={onBeforeCompile}
-                        />
-                    </mesh>
-                ))}
-            </group>
+            {/* 🌊 CONTINUOUS GPGPU WATER */}
+            <InteractiveWater
+                active={showRoom && !isWarmup}
+                paintOnBeforeCompile={onBeforeCompile}
+                floaterInteractionRef={floaterInteractionRef}
+                surfaceY={WATER_SURFACE_Y}
+            />
 
-            {/* 🛢️ SOCIAL BARRELS (Floating in water) */}
-            {/* LINKEDIN */}
-            <SocialBarrel
-                position={isMobile ? [-1.2, 0.5, -10] : [-3, 0.5, -10]}
-                rotation={[0, 0.2, 0]}
-                texturePath="/textures/contact/beczka.webp"
-                label="LINKEDIN"
-                onClick={() => window.open('https://www.linkedin.com/in/tomasz-szmajda-259337305/', '_blank')}
+            {/* 💬 QQ / WECHAT / FEISHU 3D CONTACTS */}
+            <ContactSocialModels
+                isMobile={isMobile}
                 paintOnBeforeCompile={onBeforeCompile}
-                paintUniforms={uniformsData}
-            />
-            {/* GITHUB */}
-            <SocialBarrel
-                position={isMobile ? [-1.5, -0.3, -7] : [-5, -0.3, -8]}
-                rotation={[0, 0.3, 0]}
-                texturePath="/textures/contact/beczka.webp"
-                label="GITHUB"
-                onClick={() => window.open('https://github.com/ITomPoland', '_blank')}
-                paintOnBeforeCompile={onBeforeCompile}
-                paintUniforms={uniformsData}
-            />
-            {/* FACEBOOK */}
-            <SocialBarrel
-                position={isMobile ? [1.2, 0.5, -10] : [3, 0.5, -10]}
-                rotation={[0, -0.2, 0]}
-                texturePath="/textures/contact/beczka.webp"
-                label="FACEBOOK"
-                onClick={() => window.open('https://www.facebook.com/people/ITom/61586563487664/', '_blank')}
-                paintOnBeforeCompile={onBeforeCompile}
-                paintUniforms={uniformsData}
-            />
-            {/* INSTAGRAM */}
-            <SocialBarrel
-                position={isMobile ? [1.5, -0.3, -7] : [5, -0.3, -8]}
-                rotation={[0, -0.3, 0]}
-                texturePath="/textures/contact/beczka.webp"
-                label="INSTAGRAM"
-                onClick={() => window.open('https://www.instagram.com/itom.dev/', '_blank')}
-                paintOnBeforeCompile={onBeforeCompile}
-                paintUniforms={uniformsData}
-            />
-            {/* MAIL (Triggers animation) */}
-            <SocialBarrel
-                position={isMobile ? [0, -0.7, -6] : [0, -0.7, -7]}
-                rotation={[0, 0, 0]}
-                texturePath="/textures/contact/beczka.webp"
-                label="MESSAGE"
-                onClick={handleMailSelect}
-                paintOnBeforeCompile={onBeforeCompile}
-                paintUniforms={uniformsData}
+                onInteract={() => unlockAchievement('contact_choose')}
+                onFloaterUpdate={updateFloaterInteraction}
+                waterSurfaceY={WATER_SURFACE_Y}
             />
 
 
@@ -466,51 +356,29 @@ const ContactRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                 />
             </mesh>
 
-            {/* 🗼 LATARNIA (LIGHTHOUSE) */}
+            {/* 📡 FLOATING SIGNAL STATION */}
+            <FloatingSignalStation
+                paintOnBeforeCompile={onBeforeCompile}
+                floaterInteractionRef={floaterInteractionRef}
+            />
+
+            {/* 🦆 RUBBER DUCK */}
             <mesh
-                position={LATARNIA_SETTINGS.position}
-                rotation={LATARNIA_SETTINGS.rotation}
+                ref={duckRef}
+                position={DUCK_SETTINGS.position}
+                rotation={DUCK_SETTINGS.rotation}
             >
-                <planeGeometry args={LATARNIA_SETTINGS.scale} />
-                <meshBasicMaterial color="#e0e0e0"
-                    map={latarniaTexture}
+                <planeGeometry args={DUCK_SETTINGS.scale} />
+                <meshBasicMaterial
+                    color="#ffffff"
+                    map={duckTexture}
                     transparent
-                    alphaTest={0.5}
+                    alphaTest={0.04}
+                    depthWrite={false}
                     side={THREE.DoubleSide}
                     onBeforeCompile={onBeforeCompile}
                 />
             </mesh>
-
-            {/* 🚢 STATEK (SHIP) */}
-            <mesh
-                ref={statekRef}
-                position={STATEK_SETTINGS.position}
-                rotation={STATEK_SETTINGS.rotation}
-            >
-                <planeGeometry args={STATEK_SETTINGS.scale} />
-                <meshBasicMaterial color="#e0e0e0"
-                    map={statekTexture}
-                    transparent
-                    alphaTest={0.5}
-                    side={THREE.DoubleSide}
-                    onBeforeCompile={onBeforeCompile}
-                />
-            </mesh>
-
-            {/* 📜 INTERACTIVE MESSAGE PAPER */}
-            {/* Only show when not selecting or when diving in? 
-                Actually we want it there but enabled only after selection
-            */}
-            <group visible={!showSelection}>
-                <MessagePaper
-                    position={[0, 0.07, 2]}
-                    onSend={(data) => {
-                        // console.log('📬 Contact form submitted:', data);
-                        unlockAchievement('contact_submit');
-                    }}
-                />
-            </group>
-
 
         </group>
     );

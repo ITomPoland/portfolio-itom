@@ -4,6 +4,7 @@ import { useTexture, PositionalAudio } from '@react-three/drei';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { useAudio } from '../../../context/AudioManager';
+import StoryWallDecal from './StoryWallDecal';
 
 // Global settings for automatic segment doors audio
 const SEGMENT_DOOR_AUDIO_SETTINGS = {
@@ -148,74 +149,36 @@ const SegmentDoors = ({
         }
     });
 
-    // Wall Decorations
-    const whileTrueTexture = useTexture('/textures/corridor/decorations/while_true_loop.webp');
-    const coffeeTexture = useTexture('/textures/corridor/decorations/coffee_debug.webp');
-    const ideaTexture = useTexture('/textures/corridor/decorations/idea_process.webp');
-
     return (
         <group position={[position[0], 0, position[2]]}>
-            {/* === LEFT WALL PANEL (Brainstorming) === */}
+            {/* === LEFT WALL PANEL (Growth timeline) === */}
             <mesh position={[-(doorOpeningWidth / 2 + sideWallWidth / 2), wallCenterY, 0]}>
                 <boxGeometry args={[sideWallWidth, corridorHeight, wallThickness]} />
                 <meshBasicMaterial color="#e0e0e0" map={wallTexture} roughness={0.95} />
             </mesh>
-            {/* Decoration Left (Idea Process) */}
-            {/* 
-                EDYCJA GRAFIKI LEWEJ (Idea):
-                - rotation={[x, y, z]} -> Obrót (np. z = 0.1 to lekki przechył)
-                - args={[Szerokość, Wysokość]} -> Rozmiar
-            */}
-            <mesh
+            {/* Original hand-drawn growth timeline, aspect ratio preserved. */}
+            <StoryWallDecal region="growth" height={2.85}
                 position={[-(doorOpeningWidth / 2 + sideWallWidth / 2), wallCenterY, 0.07]}
-                rotation={[0, 0, 0.05]}
-            >
-                <planeGeometry args={[1.2, 1.2 / 0.402]} />
-                <meshBasicMaterial color="#e0e0e0"
-                    map={ideaTexture}
-                    transparent={true}
-                    roughness={0.9}
-                    alphaTest={0.1}
-                />
-            </mesh>
+            />
 
-            {/* === RIGHT WALL PANEL (Coffee & Bug) === */}
+            {/* === RIGHT WALL PANEL (Exploration) === */}
             <mesh position={[(doorOpeningWidth / 2 + sideWallWidth / 2), wallCenterY, 0]}>
                 <boxGeometry args={[sideWallWidth, corridorHeight, wallThickness]} />
                 <meshBasicMaterial color="#e0e0e0" map={wallTexture} roughness={0.95} />
             </mesh>
-            {/* Decoration Right (Coffee) */}
-            {/* 
-                EDYCJA GRAFIKI PRAWEJ (Coffee):
-            */}
-            <mesh
+            {/* Original AI / cursor / paper-plane artwork. */}
+            <StoryWallDecal region="explore" height={2.85}
                 position={[(doorOpeningWidth / 2 + sideWallWidth / 2), wallCenterY, 0.08]}
-                rotation={[0, 0, -0.05]}
-            >
-                <planeGeometry args={[2.2, 2.2 / 1.833]} />
-                <meshBasicMaterial color="#e0e0e0"
-                    map={coffeeTexture}
-                    transparent={true}
-                    roughness={0.9}
-                    alphaTest={0.1}
-                />
-            </mesh>
+            />
 
-            {/* === TOP WALL PANEL (While True) === */}
+            {/* === TOP WALL PANEL (Personal motto) === */}
             <mesh position={[0, topWallCenterY, 0]}>
                 <boxGeometry args={[doorOpeningWidth, topWallHeight, wallThickness]} />
                 <meshBasicMaterial color="#e0e0e0" map={wallTexture} roughness={0.95} />
             </mesh>
-            {/* Decoration Top (While True) */}
-            <mesh position={[0, topWallCenterY, 0.07]}>
-                <planeGeometry args={[1.4, 1.4 / 1.833]} />
-                <meshBasicMaterial color="#e0e0e0"
-                    map={whileTrueTexture}
-                    transparent={true}
-                    roughness={0.9}
-                    alphaTest={0.1}
-                />
-            </mesh>
+            {/* Keep the supplied three-line calligraphy above the frame. */}
+            <StoryWallDecal region="motto" height={0.98}
+                position={[0, topWallCenterY, 0.07]} />
 
             {/* === TEXTURED FRAME === */}
             {/* Moved to Z = 0.09 to sit in front of baseboards (Z=0.07), hiding the hole edges */}

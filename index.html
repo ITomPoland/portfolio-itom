@@ -1,46 +1,41 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="preconnect" href="https://cdn.sanity.io" crossorigin />
-  <link rel="preconnect" href="https://kv5wjjmj.apicdn.sanity.io" crossorigin />
   <link rel="preload" as="image" href="/textures/paper-texture.webp" type="image/webp" fetchpriority="high" crossorigin="anonymous">
-  <link rel="icon" type="image/png" href="/favico.png" />
-  <link rel="apple-touch-icon" href="/favico.png" />
+  <link rel="icon" type="image/png" href="/assets/global/favico.png" />
+  <link rel="apple-touch-icon" href="/assets/global/favico.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="google-site-verification" content="hJ5aPZ41MvWj8wpgBteG7wWeOaKQk0TrSWgfKrTTE50" />
-  <meta name="google-site-verification" content="xHP9fuTfxKEJaZ1C9d_MYu1jQhgAsHJLSol3j5f55yA" />
   <meta name="theme-color" content="#fafafa" />
 
   <!-- SEO Meta Tags -->
-  <title>Tomasz "ITom" Szmajda | Creative 3D Portfolio</title>
+  <title>吴桐 | AI 自媒体创作者 · 3D 交互作品集</title>
   <meta name="description"
-    content="Interactive 3D developer portfolio by Tomasz 'ITom' Szmajda. Explore WebGL experiments, React projects & GSAP animations in a hand-drawn gallery." />
-  <meta name="author" content="Tomasz Szmajda" />
+    content="吴桐的 3D 交互作品集：用手绘质感的沉浸式空间展示 AI 自媒体创作、像素游戏动画科普与内容创作项目。走进走廊，探索每一扇门背后的故事。" />
+  <meta name="author" content="吴桐" />
   <meta name="keywords"
-    content="Tomasz Szmajda, ITom, Tomasz ITom Szmajda, web developer portfolio, 3D web development, Three.js developer, React portfolio, frontend engineer" />
+    content="吴桐, AI 自媒体, 内容创作, 像素动画, 3D 作品集, React Three Fiber, Three.js, 交互式网站, 自媒体创作者" />
   <meta name="robots" content="index, follow" />
-  <link rel="canonical" href="https://itomdev.com/" />
 
   <!-- Open Graph (Facebook, LinkedIn, Discord) -->
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Tomasz &quot;ITom&quot; Szmajda | Creative 3D Portfolio" />
+  <meta property="og:title" content="吴桐 | AI 自媒体创作者 · 3D 交互作品集" />
   <meta property="og:description"
-    content="Interactive 3D developer portfolio by Tomasz 'ITom' Szmajda. Explore WebGL experiments, React projects & GSAP animations in a hand-drawn gallery." />
-  <meta property="og:url" content="https://itomdev.com/" />
-  <meta property="og:site_name" content="Tomasz Szmajda Portfolio" />
-  <meta property="og:image" content="https://itomdev.com/og-image.webp" />
+    content="用手绘质感的 3D 空间展示吴桐的 AI 自媒体创作、像素动画科普与内容创作项目。" />
+  <meta property="og:url" content="https://me.wutongshuai.com/" />
+  <meta property="og:site_name" content="吴桐作品集" />
+  <meta property="og:image" content="https://me.wutongshuai.com/og-image.webp" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:locale" content="en_US" />
+  <meta property="og:locale" content="zh_CN" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Tomasz &quot;ITom&quot; Szmajda | Creative 3D Portfolio" />
+  <meta name="twitter:title" content="吴桐 | AI 自媒体创作者 · 3D 交互作品集" />
   <meta name="twitter:description"
-    content="Interactive 3D developer portfolio by Tomasz 'ITom' Szmajda. Explore WebGL experiments, React projects & GSAP animations in a hand-drawn gallery." />
-  <meta name="twitter:image" content="https://itomdev.com/og-image.webp" />
+    content="用手绘质感的 3D 空间展示吴桐的 AI 自媒体创作、像素动画科普与内容创作项目。" />
+  <meta name="twitter:image" content="https://me.wutongshuai.com/og-image.webp" />
 
   <!-- Google Fonts: Hand-drawn + Primary -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -71,138 +66,109 @@
   <!-- SEO Fallback for WebGL SPAs (2026 Crawl Optimization) -->
   <div id="seo-content" class="sr-only-seo">
     <header>
-      <h1>Tomasz Szmajda (ITom Dev) | Creative 3D Web Developer & Frontend Engineer Portfolio</h1>
-      <p>Interactive, WebGL-powered portfolio showcasing the intersection of modern frontend engineering and immersive 3D art.</p>
+      <h1>吴桐 | AI 自媒体创作者 · 3D 交互作品集</h1>
+      <p>用手绘质感的 3D 空间，展示吴桐在 AI 自媒体、像素动画与内容创作领域的探索与产出。</p>
     </header>
     
-    <nav aria-label="Main Navigation">
+    <nav aria-label="主导航">
       <ul>
-        <li><a href="/">Home (The Corridor)</a></li>
-        <li><a href="/gallery">Gallery & Projects</a></li>
-        <li><a href="/about">About Me (The Studio)</a></li>
-        <li><a href="/contact">Contact & Socials</a></li>
+        <li><a href="/">首页（3D 走廊）</a></li>
+        <li><a href="/gallery">作品集与项目</a></li>
+        <li><a href="/about">关于吴桐</a></li>
+        <li><a href="/contact">联系与社交</a></li>
       </ul>
     </nav>
     
     <main>
       <article id="home-corridor">
         <header>
-          <h2>Experience the 3D Corridor: A Journey Through Code and Art</h2>
+          <h2>3D 走廊：一段穿行于代码与创作之间的旅程</h2>
         </header>
         <section>
-          <h3>Welcome to the ITom Dev Digital Universe</h3>
+          <h3>欢迎来到吴桐的交互空间</h3>
           <p>
-            Welcome to the interactive 3D portfolio of <strong>Tomasz Szmajda</strong>, widely recognized in the digital space as <strong>ITom</strong> or <strong>ITom Dev</strong>. 
-            If you are searching for an innovative Web Developer, a passionate Frontend Engineer, or a digital artist who uses code as his brush, you have arrived at the perfect destination. 
-            This website is not just a standard resume; it is an immersive, fully interactive WebGL experience built entirely from scratch. 
-            When you enter this portfolio, you find yourself in a carefully hand-drawn 3D corridor. Every texture, every frame, and every interactive element was custom-crafted to demonstrate what is possible when modern web technologies meet unbridled creativity.
+            欢迎来到<strong>吴桐</strong>的 3D 交互作品集。这里不是一份普通的简历，而是一个完全用 WebGL 搭建、每一步都可以点击与漫游的沉浸式空间。走进这扇门，你会发现一条手绘质感的 3D 走廊：墙上的每一幅纹理、每一个交互元素，都围绕「用 AI 持续创作内容」这一理念亲手设计。
           </p>
           <p>
-            My goal as a Creative Developer is to bridge the gap between static web pages and cinematic, game-like experiences running natively in the browser. 
-            By utilizing powerful tools like React Three Fiber, Three.js, and GSAP, I ensure that this 3D corridor runs smoothly across devices, maintaining high performance without sacrificing visual fidelity. 
-            The corridor serves as the central hub, offering doors that lead to different aspects of my professional life: my projects, my biography, and my contact information. 
-            Enjoy seamless transitions, detailed texturing, and a unique interface that breaks the mold of traditional corporate portfolios.
+            我的目标是让网页不再只是静态的展示，而是像游戏一样可以在浏览器里「走进去」的体验。借助 React Three Fiber、Three.js 与 GSAP，走廊里的每一扇门都通向我的一个侧面：我的作品、我的故事、我的联系方式。希望你在探索的过程中，也能感受到创作本身的乐趣。
           </p>
         </section>
       </article>
 
       <article id="about-me">
         <header>
-          <h2>About Tomasz "ITom" Szmajda: The Engineer Behind the Screen</h2>
+          <h2>关于吴桐：屏幕背后的内容创作者</h2>
         </header>
         <section>
-          <h3>My Developer Journey</h3>
+          <h3>我的创作之路</h3>
           <p>
-            My name is <strong>Tomasz Szmajda</strong> (ITom), and I am a dedicated Frontend Developer with a profound specialization in interactive web experiences. 
-            My journey in software engineering began with a fascination for how logic and aesthetics intertwine. Over the years, I have honed my skills not just in building functional websites, but in engineering products that leave a lasting impression on the user. 
-            I believe that the web of 2026 and beyond demands more than just responsive design; it demands motion, depth, and interactivity.
+            我是<strong>吴桐</strong>，一名专注 AI 自媒体与内容创作的创作者。我的日常是把 AI 工具、内容选题与多平台分发串成一条高效的流水线，让一个人也能稳定运营多个账号。我相信 AI 时代的内容创作，拼的不只是工具，更是方法、节奏与持续输出的耐心。
           </p>
         </section>
         <section>
-          <h3>Core Technical Skills & Stack</h3>
-          <p>
-            As a modern web developer, a robust and versatile technology stack is crucial. My tech stack is meticulously chosen to deliver high performance, scalability, and maintainability.
-          </p>
+          <h3>技能与关注方向</h3>
+          <p>我长期关注并实践的方向包括：</p>
           <ul>
-            <li><strong>Core Fundamentals:</strong> Advanced JavaScript (ES6+), TypeScript, HTML5, semantic markup, and modern CSS architecture including SCSS, CSS Modules, and Tailwind CSS.</li>
-            <li><strong>Frameworks & Ecosystems:</strong> Deep expertise in <strong>React.js</strong> and <strong>Next.js</strong> for building lightning-fast, SEO-friendly web applications. I leverage the React ecosystem for state management, routing, and complex UI logic.</li>
-            <li><strong>3D Graphics & WebGL:</strong> My signature skill lies in 3D visualization using <strong>Three.js</strong> and <strong>React Three Fiber (R3F)</strong>. I create custom shaders, optimize complex geometries, and manage heavy 3D assets to ensure 60fps performance right in the browser.</li>
-            <li><strong>Animation:</strong> Mastery of <strong>GSAP (GreenSock Animation Platform)</strong> and Framer Motion to choreograph intricate, physics-based UI animations and scroll-linked experiences.</li>
-            <li><strong>Backend & Cloud:</strong> Experience integrating backend services using Node.js, Express, Firebase, and Supabase. I deploy predominantly on platforms like Vercel and Cloudflare Pages.</li>
-            <li><strong>Design Tooling:</strong> Proficient in bridging the gap between design and code using Figma, Adobe Photoshop, and Blender for 3D asset preparation.</li>
+            <li><strong>AI 工具与工作流：</strong>提示词设计、AI 出片流水线、内容中台搭建。</li>
+            <li><strong>内容创作与运营：</strong>短视频、图文、问答等多平台分发与数据复盘。</li>
+            <li><strong>像素动画科普：</strong>逐帧动画、精灵表与动画循环原理的可视化讲解。</li>
+            <li><strong>交互式网页：</strong>用 React、Three.js 与 React Three Fiber 构建沉浸式 3D 体验。</li>
+            <li><strong>游戏引擎基础：</strong>用 Godot 4.x 制作像素风格动画演示。</li>
+            <li><strong>开源与持续学习：</strong>定期公开代码、笔记与踩坑记录。</li>
           </ul>
         </section>
       </article>
 
       <article id="gallery-projects">
         <header>
-          <h2>The Gallery: Selected Works and Case Studies</h2>
+          <h2>作品集：精选项目一览</h2>
         </header>
-        <p>
-          In the 3D gallery room, you can walk through an exhibition of my most significant commercial and personal projects. Here is a detailed breakdown of the work created by Tomasz Szmajda.
-        </p>
+        <p>在 3D 作品集房间里，你可以像逛展一样浏览我近期打磨的项目。这里先列出四个核心项目：</p>
         
         <section>
-          <h3>MoneTune - Full-Stack Financial Dashboard</h3>
+          <h3>AI 自媒体内容矩阵</h3>
           <p>
-            <strong>MoneTune</strong> is an expansive, full-stack web application born out of the necessity for better personal finance tracking and management. 
-            Built with a modern React frontend and a secure, scalable backend architecture, MoneTune helps users visualize their spending habits, track recurring subscriptions, and set dynamic budgeting goals. 
-            The UI features complex data visualization charts, real-time updates, and an intuitive dashboard that makes financial planning completely frictionless. 
-            Developing MoneTune challenged me to architect robust relational databases, handle sensitive user authentication securely, and optimize massive data-sets for instantaneous frontend rendering.
+            一套把 AI 工具、内容选题与多平台分发串起来的自媒体内容中台，用数据看板统一管理短视频、文章与问答的产出节奏，让一个人也能稳定运营多个账号。
           </p>
         </section>
 
         <section>
-          <h3>TimberKitty - Interactive Web Experience</h3>
+          <h3>像素游戏动画科普</h3>
           <p>
-            <strong>TimberKitty</strong> represents my playful, creative side as a frontend engineer. This project is a highly interactive, animated web experience that utilizes modern CSS Grid, flexbox, and advanced logic to create a game-like interface within the DOM. 
-            It focuses heavily on micro-interactions—how buttons react, how items transition into view, and how the user feels while navigating the application. 
-            TimberKitty demonstrates my ability to take a whimsical design concept and bring it to life with precision, ensuring cross-browser compatibility and flawlessly smooth animations using custom hooks and GSAP. 
-            It stands as a testament to building web apps that are as fun to use as they are technically sound.
+            把像素游戏动画原理做成可交互科普的站点：从逐帧动画、精灵表到洋葱皮技巧，用直观的小游戏演示让零基础读者也能看懂，是我「边学边输出」的主要阵地。
           </p>
         </section>
 
         <section>
-          <h3>Young Multi Concept - 3D Collaboration</h3>
+          <h3>2027 秋招研究报告</h3>
           <p>
-            The <strong>Young Multi</strong> project is a cutting-edge web development initiative that heavily incorporates WebGL and Three.js capabilities. 
-            Designed as a promotional/editorial concept, this site uses scroll-based storytelling mapped to a 3D environment. 
-            As the user scrolls, the camera navigates through a custom 3D scene, dynamically triggering HTML overlays and React components. 
-            This project required advanced optimization techniques, including GLTF model compression, texture atlasing, and custom shader materials to ensure the experience remained fluid even on mid-tier mobile devices. 
-            It is a perfect example of what the modern web can achieve visually.
+            面向应届生与转行者的公开研究报告：汇总 AI 时代内容创作与开发岗位的新趋势、薪资区间与技能要求，用可视化图表呈现数据，来源公开可查、每月更新。
           </p>
         </section>
 
         <section>
-          <h3>Open Source & Continuous Learning</h3>
+          <h3>开源与持续学习</h3>
           <p>
-            Beyond these highlighted case studies, I am continuously experimenting with new frontend paradigms. Whether it's building 3D configurators, testing WebGPU performance, or contributing to various UI libraries, my code is always evolving. 
-            You can deep dive into my repositories, explore my coding style, and review my open-source contributions by visiting my official <a href="https://github.com/ITomPoland" target="_blank" rel="noopener noreferrer">GitHub profile</a>.
+            记录我参与开源项目与日常学习的笔记站：每周整理值得推荐的工具、教程与踩坑实录，并把沉淀的模板开源共享——写给别人看，更是写给我自己。
           </p>
         </section>
       </article>
 
       <article id="contact-room">
         <header>
-          <h2>Let's Build Something Extraordinary: Contact ITom</h2>
+          <h2>保持联系：找到吴桐</h2>
         </header>
         <section>
-          <h3>Freelance, Collaboration, and Career Opportunities</h3>
+          <h3>合作、交流与机会</h3>
           <p>
-            Are you looking looking to hire a passionate React developer, or perhaps seeking a specialist capable of bringing a 3D WebGL vision to life? 
-            Tomasz "ITom" Szmajda is always open to discussing new freelance projects, remote collaborations, contract work, and full-time opportunities with innovative companies. 
-            I pride myself on excellent communication, meeting strict deadlines, and delivering code that is not only functional but architecturally elegant. 
-            If your goal is to build a high-performance web application, an award-winning marketing site, or a creative digital campaign, I would love to hear from you.
+            如果你对 AI 自媒体、内容创作或像素动画感兴趣，欢迎在 3D 联系房间里找到我的社交链接，或通过留言表单直接写信给我。无论是合作交流、经验分享，还是单纯想聊聊创作，我都很乐意收到你的消息。
           </p>
         </section>
         
         <aside>
-          <h3>Connect with Tomasz Szmajda</h3>
+          <h3>社交与订阅</h3>
           <p>
-            Ready to start a conversation? You can find detailed contact forms and direct links hidden within the interactive 3D portfolio's Contact Room, or you can reach out through my professional networks right now. 
-            I actively share insights, project updates, and tech discussions on my <a href="https://www.linkedin.com/in/tomasz-szmajda-259337305/" target="_blank" rel="noopener noreferrer">LinkedIn profile</a>. 
-            For a more visual look at my work and my daily life as a creative developer, feel free to follow my journey on <a href="https://www.instagram.com/itom.dev/" target="_blank" rel="noopener noreferrer">Instagram (@itom.dev)</a>. 
-            Let us collaborate and push the boundaries of modern web development together!
+            我会在各平台持续分享内容创作心得、AI 工具技巧与像素动画科普。具体链接藏在作品集的「联系」房间里，也欢迎直接通过本作品集与我交流。
           </p>
         </aside>
       </article>
@@ -211,7 +177,7 @@
 
   <!-- Noscript strict fallback -->
   <noscript>
-    Plese enable JavaScript to experience the interactive 3D portfolio of Tomasz Szmajda (ITom Dev).
+    请启用 JavaScript 以体验吴桐的 3D 交互作品集。
   </noscript>
 
   <div id="root"></div>

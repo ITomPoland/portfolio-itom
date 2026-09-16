@@ -1,7 +1,8 @@
 /* eslint-disable react/no-unknown-property */
 import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text, useTexture, Html, useCursor } from '@react-three/drei';
+import { useTexture, Html, useCursor } from '@react-three/drei';
+import Text from '../../LocalText';
 import * as THREE from 'three';
 
 const PAPER_WIDTH = 1.51; // Legacy ratio 1197/1340
@@ -153,9 +154,8 @@ const WEB3FORMS_KEY = import.meta.env.VITE_WEB3FORMS_KEY || '';
 // Only these domains are allowed to submit the form.
 // Anyone cloning the repo and running on localhost will be silently blocked.
 const ALLOWED_ORIGINS = [
-    'itomdev.com',
-    'www.itomdev.com',
-    'portfolio-itom.pages.dev',
+    'example.com',
+    'www.example.com',
 ];
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -319,17 +319,17 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
     // Form validation
     const validateForm = () => {
         const newErrors = {};
-        if (!email.trim()) newErrors.email = 'Email required';
-        else if (!isValidEmail(email)) newErrors.email = 'Invalid email format';
-        if (!subject.trim()) newErrors.subject = 'Subject required';
-        if (!message.trim()) newErrors.message = 'Message required';
+        if (!email.trim()) newErrors.email = '请填写邮箱';
+        else if (!isValidEmail(email)) newErrors.email = '邮箱格式不正确';
+        if (!subject.trim()) newErrors.subject = '请填写主题';
+        if (!message.trim()) newErrors.message = '请填写留言内容';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     // Load textures
-    const paperTexture = useTexture('/textures/contact/paper_form.webp');
-    const buttonTexture = useTexture('/textures/contact/send_button.webp');
+    const paperTexture = useTexture('/assets/contact/paper_form.webp');
+    const buttonTexture = useTexture('/assets/contact/send_button.webp');
 
     // Configure textures
     useEffect(() => {
@@ -382,7 +382,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
             // --- 0. Rate Limiting (1 message per 30 min) ---
             const rateCheck = checkRateLimit();
             if (!rateCheck.allowed) {
-                setErrors({ message: `Please wait ${rateCheck.minutesLeft} min before sending again.` });
+                setErrors({ message: `请等待 ${rateCheck.minutesLeft} 分钟后再发送。` });
                 setIsSubmitting(false);
                 return;
             }
@@ -420,7 +420,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
             const messageAnalysis = analyzeContentAI(message, false);
 
             if (subjectAnalysis.isSpam || messageAnalysis.isSpam) {
-                setErrors({ message: 'Our AI flagged this as spam. Please write clearly.' });
+                setErrors({ message: '内容被判定为疑似垃圾信息，请重新填写。' });
                 setIsSubmitting(false);
                 return;
             }
@@ -437,7 +437,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                     // Status 0 is NOERROR. If no MX records (type 15), domain can't receive mail.
                     // Status 3 is NXDOMAIN (domain doesn't exist at all).
                     if (dnsData.Status === 3 || (dnsData.Status === 0 && (!dnsData.Answer || !dnsData.Answer.some(a => a.type === 15)))) {
-                        setErrors({ email: 'Domain does not exist or cannot receive emails.' });
+                        setErrors({ email: '该邮箱域名无效或无法接收邮件。' });
                         setIsSubmitting(false);
                         return;
                     }
@@ -454,7 +454,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                 },
                 body: JSON.stringify({
                     access_key: WEB3FORMS_KEY,
-                    from_name: 'Portfolio Contact',
+                    from_name: '吴桐的作品集',
                     email: email,
                     subject: subject,
                     message: message
@@ -594,7 +594,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                 <InteractiveTextField
                     isActive={activeField === 'email'}
                     value={email}
-                    placeholder="email..."
+                    placeholder="邮箱..."
                     cursor={cursorVisible ? '|' : ' '}
                     onClick={() => { setActiveField('email'); setTimeout(() => emailInputRef.current?.focus(), 10); }}
                     // Layout
@@ -612,7 +612,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                 <InteractiveTextField
                     isActive={activeField === 'subject'}
                     value={subject}
-                    placeholder="subject..."
+                    placeholder="主题..."
                     cursor={cursorVisible ? '|' : ' '}
                     onClick={() => { setActiveField('subject'); setTimeout(() => subjectInputRef.current?.focus(), 10); }}
                     // Layout
@@ -630,7 +630,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                 <InteractiveTextField
                     isActive={activeField === 'message'}
                     value={formattedMessage}
-                    placeholder="message..."
+                    placeholder="留言..."
                     cursor={cursorVisible ? '|' : ' '}
                     onClick={() => { setActiveField('message'); setTimeout(() => hiddenInputRef.current?.focus(), 10); }}
                     // Layout
@@ -653,7 +653,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                     onClick={handleButtonClick}
                     position={[0, 0.005, 0.68]}
                     size={[0.5, 0.13]}
-                    text={isSubmitting ? 'SENDING...' : 'SEND'}
+                    text={isSubmitting ? '发送中...' : '发送'}
                     fontPath={FONT_PATH}
                 />
 
@@ -668,7 +668,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                         anchorX="center"
                         anchorY="middle"
                     >
-                        {errors.email || errors.subject || errors.message || 'Please fill all fields'}
+                        {errors.email || errors.subject || errors.message || '请填写所有字段'}
                     </Text>
                 )}
 
@@ -683,7 +683,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                         anchorX="center"
                         anchorY="middle"
                     >
-                        Message sent! ✓
+                        已发送！✓
                     </Text>
                 )}
 
@@ -698,7 +698,7 @@ const MessagePaper = ({ position = [0, 0.05, 2], onSend }) => {
                         anchorX="center"
                         anchorY="middle"
                     >
-                        Failed to send. Try again.
+                        发送失败，请重试。
                     </Text>
                 )}
             </>

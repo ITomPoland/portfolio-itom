@@ -51,7 +51,7 @@ const GlobalOverlay = () => {
     // DUMMY RENDER MOCK - Pre-render the heaviest layout (certificate_grid) invisibly 
     // to calculate CSS layout costs on page load, NOT on first click.
     const dummyGridContent = {
-        title: 'Loading...',
+        title: '加载中…',
         layout: 'certificate_grid',
         items: [
             { label: '', date: '', image: '' },
@@ -71,7 +71,7 @@ const GlobalOverlay = () => {
 const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
     if (!content) return null;
 
-    const label = content.platformConfig?.label || 'Content';
+    const label = content.platformConfig?.label || '内容';
 
     // GSAP TextPlugin typing effect for description
     const descriptionRef = useRef(null);
@@ -398,7 +398,7 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                         <button
                             onClick={onClose}
                             className="studio-close-btn"
-                            aria-label="Close"
+                            aria-label="关闭"
                         >
                             <svg viewBox="0 0 24 24">
                                 <path d="M18 6L6 18M6 6l12 12" />
@@ -460,7 +460,7 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                                                     left: 0,
                                                     width: '100%',
                                                     height: '100%',
-                                                    objectFit: 'fill'
+                                                    objectFit: item.fit === 'contain' ? 'contain' : 'fill'
                                                 }}
                                             />
                                         </div>
@@ -509,6 +509,7 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                                 ...getStaggerStyle(200)
                             }}>
                                 <strong>{content.date}</strong>
+                                {content.format && <span>{content.format}</span>}
                                 {content.views && <span>{content.views} views</span>}
                             </div>
 
@@ -538,7 +539,7 @@ const ContentCard = ({ content, isOpen, onClose, isMobile }) => {
                                     rel="noopener noreferrer"
                                     className="studio-action-button"
                                 >
-                                    Open Link ↗
+                                    打开链接 ↗
                                 </a>
                             </div>
                         </>

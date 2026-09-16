@@ -1,33 +1,40 @@
+# Cloudflare Pages 自定义响应头（仅部署时生效，本地预览不受影响）
+
+# 未上线站点保护：默认 Pages 域名禁止被搜索引擎收录（部署到正式域名后按需移除）
 https://portfolio-itom.pages.dev/*
   X-Robots-Tag: noindex
 
-https://itomdev.com/*
+https://wutong-3d-portfolio.pages.dev/*
+  X-Robots-Tag: noindex
+
+# 全站安全响应头
+/*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
 
-# Cache static assets for 1 year (Performance & SEO Server Score)
-https://itomdev.com/*.js
+# 静态资源长缓存 1 年（提升性能与 SEO 评分）
+/*.js
   Cache-Control: public, max-age=31536000, immutable
 
-https://itomdev.com/*.css
+/*.css
   Cache-Control: public, max-age=31536000, immutable
 
-https://itomdev.com/*.webp
+/*.webp
   Cache-Control: public, max-age=31536000, immutable
 
-https://itomdev.com/*.png
+/*.png
   Cache-Control: public, max-age=31536000, immutable
 
-https://itomdev.com/*.ktx2
+/*.ktx2
   Cache-Control: public, max-age=31536000, immutable
 
-https://itomdev.com/*.glb
+/*.glb
   Cache-Control: public, max-age=31536000, immutable
 
-https://itomdev.com/*.mp3
+/*.mp3
   Cache-Control: public, max-age=31536000, immutable
 
-https://itomdev.com/fonts/*
+/fonts/*
   Cache-Control: public, max-age=31536000, immutable

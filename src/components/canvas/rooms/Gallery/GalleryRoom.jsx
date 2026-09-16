@@ -1,6 +1,7 @@
 import { useRef, useState, useMemo, useEffect, forwardRef, useImperativeHandle, memo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Text, useTexture, Float, PositionalAudio } from '@react-three/drei';
+import { useTexture, Float, PositionalAudio } from '@react-three/drei';
+import Text from '../../LocalText';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { Observer } from 'gsap/all';
@@ -9,6 +10,7 @@ import { useScene } from '../../../../context/SceneContext';
 gsap.registerPlugin(Observer);
 import { useAchievements } from '../../../../context/AchievementsContext';
 import PaperMaterial from './PaperMaterial';
+import ProfilePaperMaterial from './ProfilePaperMaterial';
 import GalleryClouds from './GalleryClouds';
 import { useAudio } from '../../../../context/AudioManager';
 import { usePaintMaterial } from './usePaintMaterial';
@@ -84,6 +86,13 @@ const BIRD_HEIGHT = 0.35;
 // 0.0 = No crop
 // 0.2 = 20% crop from the right (corridor side)
 const RIGHT_CROP_AMOUNT = 0.2;
+
+const GALLERY_PALETTE = Object.freeze({
+    paper: '#fffdf1',
+    sageInk: '#566b4c',
+    sageLine: '#819d6d',
+    sky: '#eef1d4',
+});
 
 const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
     const { openOverlay, isTeleporting } = useScene();
@@ -228,23 +237,14 @@ const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
     const paintedTextures = useTexture(paintedUrls);
 
     // Load the universal back texture and the button texture conditionally
-    const backTextureRaw = useTexture(canHover ? '/textures/gallery/tylkartki_painted.webp' : '/textures/gallery/tylkartki.webp');
-    const overlayTextureRaw = useTexture(canHover ? '/textures/gallery/przyciskdotylukartki_painted.webp' : '/textures/gallery/przyciskdotylukartki.webp');
+    const backTextureRaw = useTexture(canHover ? '/textures/gallery/sage/tylkartki_painted.webp' : '/textures/gallery/sage/tylkartki.webp');
+    const overlayTextureRaw = useTexture(canHover ? '/textures/gallery/sage/przyciskdotylukartki_painted.webp' : '/textures/gallery/sage/przyciskdotylukartki.webp');
 
     // Preload tech stack logos to prevent stuttering on first flip
-    // We use the same conditional logic: painted on desktop, regular on touch
+    // The local project data already points at the final themed icon set.
     const allLogos = useMemo(() => {
-        const names = [
-            'csslogo', 'elementorlogo', 'firebaselogo', 'htmllogo',
-            'jslogo', 'netlifylogo', 'phplogo', 'reactlogo',
-            'tailwindlogo', 'wordpresslogo'
-        ];
-        return names.map(name => {
-            if (!canHover) return `/textures/gallery/${name}.webp`;
-            if (name === 'csslogo') return `/textures/gallery/css3logo_painted.webp`;
-            return `/textures/gallery/${name}_painted.webp`;
-        });
-    }, [canHover]);
+        return [...new Set(activeProjects.flatMap(project => project.techStack || []))];
+    }, [activeProjects]);
     
     useTexture(allLogos);
 
@@ -273,13 +273,7 @@ const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                 overlayTextureRaw.colorSpace = THREE.SRGBColorSpace;
             }
 
-            // Map tech stack logos to the correct version (painted or regular)
-            const techStack = projectData.techStack.map(path => {
-                if (!canHover) return path; // Keep regular
-                const name = path.split('/').pop().replace('.webp', '');
-                if (name === 'csslogo') return '/textures/gallery/css3logo_painted.webp';
-                return `/textures/gallery/${name}_painted.webp`;
-            });
+            const techStack = projectData.techStack;
 
             return {
                 ...projectData,
@@ -291,7 +285,7 @@ const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                 techStack: techStack
             };
         });
-    }, [projectTextures, backTextureRaw, overlayTextureRaw]);
+    }, [activeProjects, projectTextures, paintedTextures, canHover, backTextureRaw, overlayTextureRaw]);
 
     // Function to scroll to a specific project index
     const scrollToIndex = (index, onComplete) => {
@@ -360,12 +354,12 @@ const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
     });
 
     // --- GEOMETRY & MATERIALS ---
-    const floorTexture = useTexture('/textures/gallery/floor.webp');
-    const railingTexture = useTexture('/textures/gallery/railing.webp');
-    const housesTexture = useTexture('/textures/gallery/domki.webp');
-    const cityTexture = useTexture('/textures/gallery/miastotlo.webp');
-    const birdTexture = useTexture('/textures/gallery/bird_gray.webp');
-    const clothespinTexture = useTexture('/textures/gallery/klamerka.webp');
+    const floorTexture = useTexture('/textures/gallery/sage/floor.webp');
+    const railingTexture = useTexture('/textures/gallery/sage/railing-modern-tile.webp?v=3');
+    const housesTexture = useTexture('/textures/gallery/sage/domki.webp');
+    const cityTexture = useTexture('/textures/gallery/sage/miastotlo.webp');
+    const birdTexture = useTexture('/textures/gallery/sage/bird_gray.webp');
+    const clothespinTexture = useTexture('/textures/gallery/sage/klamerka.webp');
 
     useEffect(() => {
         if (floorTexture) {
@@ -376,7 +370,9 @@ const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
         }
         if (railingTexture) {
             railingTexture.wrapS = railingTexture.wrapT = THREE.RepeatWrapping;
-            railingTexture.repeat.set(7, 1);
+            // The texture is one seamless bay, cropped through the centre of
+            // both edge posts so repeated tiles never create doubled columns.
+            railingTexture.repeat.set(42, 1);
             railingTexture.needsUpdate = true;
         }
     }, [floorTexture, railingTexture]);
@@ -384,20 +380,20 @@ const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
     const materials = useMemo(() => {
         const floorMat = new THREE.MeshBasicMaterial({
             map: floorTexture,
-            color: '#e0e0e0',
+            color: GALLERY_PALETTE.paper,
             side: THREE.DoubleSide
         });
         floorMat.onBeforeCompile = onBeforeCompile;
         floorMat.transparent = true;
         floorMat.needsUpdate = true;
         
-        const ropeMat = new THREE.MeshBasicMaterial({ color: '#666666' });
+        const ropeMat = new THREE.MeshBasicMaterial({ color: GALLERY_PALETTE.sageInk });
         ropeMat.onBeforeCompile = onBeforeCompile;
         ropeMat.transparent = true;
         ropeMat.needsUpdate = true;
 
         const thresholdMat = new THREE.MeshBasicMaterial({
-            color: '#e0e0e0',
+            color: GALLERY_PALETTE.paper,
             map: (() => {
                 const t = new THREE.TextureLoader().load('/textures/corridor/texturadoprogow.webp');
                 t.colorSpace = THREE.SRGBColorSpace;
@@ -476,13 +472,13 @@ const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                             itemSize={3}
                         />
                     </bufferGeometry>
-                    <lineBasicMaterial color="#999999" onBeforeCompile={onBeforeCompile} transparent={true} needsUpdate={true} />
+                    <lineBasicMaterial color={GALLERY_PALETTE.sageLine} onBeforeCompile={onBeforeCompile} transparent={true} needsUpdate={true} />
                 </line>
 
                 {/* Railing */}
                 <mesh position={[0, RAILING_HEIGHT / 2, -3.9]}>
                     <planeGeometry args={[20, RAILING_HEIGHT]} />
-                    <meshBasicMaterial color="#e0e0e0"
+                    <meshBasicMaterial color={GALLERY_PALETTE.paper}
                         map={railingTexture}
                         transparent={true}
                         side={THREE.DoubleSide}
@@ -532,7 +528,7 @@ const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                 {/* Houses - center */}
                 <mesh position={[0, -1, -9]} scale={[1, 1, 1]}>
                     <planeGeometry args={[15, 15 / 2.357]} />
-                    <meshBasicMaterial color="#e0e0e0"
+                    <meshBasicMaterial color={GALLERY_PALETTE.paper}
                         map={housesTexture}
                         transparent={true}
                         alphaTest={0.1}
@@ -543,7 +539,7 @@ const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                 {/* Houses - left side (mirrored) */}
                 <mesh position={[-15, -1, -9]} scale={[-1, 1, 1]}>
                     <planeGeometry args={[15, 15 / 2.357]} />
-                    <meshBasicMaterial color="#e0e0e0"
+                    <meshBasicMaterial color={GALLERY_PALETTE.paper}
                         map={housesTexture}
                         transparent={true}
                         alphaTest={0.1}
@@ -562,7 +558,7 @@ const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                 {/* City skyline - center */}
                 <mesh position={[0, 3.4, -17]} scale={[1, 1, 1]}>
                     <planeGeometry args={[30, 30 / 2.357]} />
-                    <meshBasicMaterial color="#e0e0e0"
+                    <meshBasicMaterial color={GALLERY_PALETTE.paper}
                         map={cityTexture}
                         transparent={true}
                         alphaTest={0.1}
@@ -573,7 +569,7 @@ const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                 {/* City skyline - left (mirrored) */}
                 <mesh position={[-30, 3.4, -17]} scale={[-1, 1, 1]}>
                     <planeGeometry args={[30, 30 / 2.357]} />
-                    <meshBasicMaterial color="#e0e0e0"
+                    <meshBasicMaterial color={GALLERY_PALETTE.paper}
                         map={cityTexture}
                         transparent={true}
                         alphaTest={0.1}
@@ -584,7 +580,7 @@ const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                 {/* City skyline - right (mirrored) */}
                 <mesh position={[30, 3.4, -17]} scale={[-1, 1, 1]}>
                     <planeGeometry args={[30, 30 / 2.357]} />
-                    <meshBasicMaterial color="#e0e0e0"
+                    <meshBasicMaterial color={GALLERY_PALETTE.paper}
                         map={cityTexture}
                         transparent={true}
                         alphaTest={0.1}
@@ -602,7 +598,7 @@ const GalleryRoom = ({ showRoom, onReady, isExiting, isWarmup }) => {
                 {/* Skybox/Environment */}
                 <mesh position={[0, 5, -20]}>
                     <sphereGeometry args={[40, 32, 32]} />
-                    <meshBasicMaterial color="#f0f0f0" side={THREE.BackSide} transparent opacity={0.5} onBeforeCompile={onBeforeCompile} />
+                    <meshBasicMaterial color={GALLERY_PALETTE.sky} side={THREE.BackSide} transparent opacity={0.82} onBeforeCompile={onBeforeCompile} />
                 </mesh>
             </group>
         </group>
@@ -676,7 +672,7 @@ const FlyingBird = ({ texture }) => {
     return (
         <mesh ref={birdRef} position={[startX, 4.5, -10]} scale={[BIRD_WIDTH, BIRD_HEIGHT, 1]}>
             <planeGeometry args={[1.5, 1.5]} />
-            <meshBasicMaterial color="#e0e0e0"
+            <meshBasicMaterial color={GALLERY_PALETTE.paper}
                 map={texture}
                 transparent={true}
                 alphaTest={0.1}
@@ -703,6 +699,8 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
     const [btnHovered, setBtnHovered] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);  // True ONLY during flip animation
     const [isScrolling, setIsScrolling] = useState(false);  // True during scroll phase
+    const isProfileCard = project.layout === 'profile';
+    const CardMaterial = isProfileCard ? ProfilePaperMaterial : PaperMaterial;
 
     // Random sway properties
     const swaySpeed = useRef(Math.random() * 0.2 + 0.3); // Slower sway speed
@@ -947,12 +945,13 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
 
         // Custom GSAP Paint logic for texts
         // We delay the text reveal slightly so the card paints first (p > 0.4)
-        if (textRef.current && paintProgress) {
+        if (paintProgress) {
             const p = paintProgress.value;
             // Instantly reveal if we teleported
             const expectedOpacity = p >= 1.0 ? 1.0 : THREE.MathUtils.clamp((p - 0.3) * 2.0, 0.0, 1.0);
-            
-            if (textRef.current.fillOpacity !== expectedOpacity) {
+            const opacityProbe = textRef.current || detailsTextRef1.current || detailsTextRef2.current;
+
+            if (opacityProbe && opacityProbe.fillOpacity !== expectedOpacity) {
                 const applyOpacity = (ref) => {
                     if (ref.current) {
                         ref.current.fillOpacity = expectedOpacity;
@@ -1129,8 +1128,9 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
             >
                 <mesh>
                     <planeGeometry args={[1.5, 2, 16, 16]} />
-                    <PaperMaterial
+                    <CardMaterial
                         ref={materialRef}
+                        {...(isProfileCard ? { photoUrl: project.photo, signatureUrl: project.signature } : {})}
                         color="#ffffff"
                         map={project.frontTexture}
                         mapBack={project.backTexture}
@@ -1143,7 +1143,7 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                 </mesh>
 
                 {/* === PRZYCISK: OPEN NA PLECACH KARTKI === */}
-                <group
+                {!isProfileCard && <group
                     ref={buttonGroupRef}
                     position={[0, 0.75, 0]}
                     rotation={[Math.PI, 0, 0]}
@@ -1197,17 +1197,17 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                         <planeGeometry args={[1.2, 1.2 / 3.613]} />
                         <meshBasicMaterial color="#e0e0e0" transparent={true} opacity={0} />
                     </mesh>
-                </group>
+                </group>}
 
                 {/* === TEKST NA PLECACH KARTKI (PROJECT DETAILS) === */}
-                <group
+                {!isProfileCard && <group
                     ref={detailsGroupRef}
-                    position={[0, -0.5, 0]} // Miejsce u góry (gdy Y=0.75 to dół, to Y=-0.4 to góra)
+                    position={[0, -0.5, 0]}
                     rotation={[Math.PI, 0, 0]}
                 >
                     <Text
                         ref={detailsTextRef1}
-                        position={[0, 0.28, 0.01]} // Względem środka detailsGroupRef, wyżej
+                        position={[0, 0.28, 0.01]}
                         fontSize={0.10}
                         color="#1c1c1c"
                         font="/fonts/CabinSketch-Bold.ttf"
@@ -1220,23 +1220,25 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
 
                     <Text
                         ref={detailsTextRef2}
-                        position={[0, 0.2, 0.01]} // Poniżej nagłówka
+                        position={[0, 0.2, 0.01]}
                         fontSize={0.06}
                         color="#333333"
                         font="/fonts/CabinSketch-Bold.ttf"
                         anchorX="center"
                         anchorY="top"
                         maxWidth={1.1} // Maksymalna szerokość zanim zacznie łamać linie
+                        overflowWrap="break-word" // 中文无空格，强制按宽度换行，避免溢出边框
                         lineHeight={1.4}
                         textAlign="center"
                         fillOpacity={0} // Start hidden
                     >
                         {project.description || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco."}
                     </Text>
-                </group>
+
+                </group>}
 
                 {/* === SEKCJA TECH STACK NA PLECACH KARTKI === */}
-                <group
+                {!isProfileCard && <group
                     ref={techStackGroupRef}
                     position={[0, 0.30, 0]} // Pomiędzy Project Details a przyciskiem Open Project
                     rotation={[Math.PI, 0, 0]}
@@ -1267,7 +1269,7 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                             );
                         })}
                     </group>
-                </group>
+                </group>}
 
                 {/* 
                   === TEKST / TYTUŁY PROJEKTÓW ===
@@ -1282,7 +1284,7 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                   color: kolor napisu
                   font: opcjonalnie dajesz tu inną czcionkę z folderu /public/fonts/
                 */}
-                <Text
+                {!project.hideFrontTitle && <Text
                     ref={textRef}
                     position={[0, 0.7, 0]} // Tylko dwa pierwsze parametry [X, Y] mają tutaj znaczenie
                     fontSize={0.20}
@@ -1293,7 +1295,7 @@ const ProjectCard = memo(forwardRef(({ index, project, clothespinTexture, curren
                     fillOpacity={0} // Start hidden
                 >
                     {project.title}
-                </Text>
+                </Text>}
 
                 <PositionalAudio
                     ref={paperAudioRef}
@@ -1338,7 +1340,7 @@ const RightSideHouses = ({ texture, baseWidth, baseHeight, cropAmount }) => {
     return (
         <mesh position={[newX, -1, -9]} scale={[-1, 1, 1]}>
             <planeGeometry args={[newWidth, baseHeight]} />
-            <meshBasicMaterial color="#e0e0e0"
+            <meshBasicMaterial color={GALLERY_PALETTE.paper}
                 map={croppedTexture}
                 transparent={true}
                 alphaTest={0.1}

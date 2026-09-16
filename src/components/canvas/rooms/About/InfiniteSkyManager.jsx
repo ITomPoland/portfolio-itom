@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { useFrame, useLoader, useThree } from '@react-three/fiber';
-import { Text, PositionalAudio } from '@react-three/drei';
+import { PositionalAudio } from '@react-three/drei';
+import Text from '../../LocalText';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import SkyChunk, { CHUNK_LENGTH, ROOM_Z } from './SkyChunk';
@@ -8,6 +9,7 @@ import { useScene } from '../../../../context/SceneContext';
 import '../../shaders/RevealBasicMaterial'; // Registers brush-stroke reveal for BasicMaterial
 import { isTouchDevice } from '../../../../utils/deviceDetect';
 import { useAwards } from '../../../../hooks/useSanityData';
+import { ABOUT_BODY_FONT, ABOUT_DISPLAY_FONT, ABOUT_INK, ABOUT_MUTED_INK } from './aboutTheme';
 
 // Reusable Vector3 to avoid allocations in event handlers
 const _tempVec3 = new THREE.Vector3();
@@ -132,7 +134,7 @@ const AwardButton = ({ onClick, texture, paintedTexture, width, height, position
                 color="#1a1a1a"
                 anchorX="center"
                 anchorY="middle"
-                font="/fonts/CabinSketch-Bold.ttf"
+                font={ABOUT_DISPLAY_FONT}
             >
                 VIEW
             </Text>
@@ -259,7 +261,7 @@ const InfiniteSkyManager = ({ scrollProgressRef }) => {
  */
 const IntroMilestone = ({ z, scrollProgressRef }) => {
     // Load avatar texture
-    const avatarTexture = useLoader(THREE.TextureLoader, '/textures/about/awatarnachmurce.webp');
+    const avatarTexture = useLoader(THREE.TextureLoader, '/assets/about/awatarnachmurce.webp');
     const { camera, viewport } = useThree();
     const isTouch = isTouchDevice();
 
@@ -318,25 +320,24 @@ const IntroMilestone = ({ z, scrollProgressRef }) => {
             spreadFactor = 1;
         }
 
-        // Apply spread to elements (move left/right) - MORE AGGRESSIVE
-        const maxSpread = 15; // How far elements spread (increased!)
+        // Keep the editorial composition together while still letting it breathe on approach.
+        const layoutScale = isTouch ? 0.72 : 1;
 
         if (titleRef.current) {
-            titleRef.current.position.x = -spreadFactor * maxSpread * 0.8;
+            titleRef.current.position.x = (-1.25 - spreadFactor * 1.6) * layoutScale;
         }
         if (brandRef.current) {
-            brandRef.current.position.x = spreadFactor * maxSpread * 0.6;
+            brandRef.current.position.x = (1.35 + spreadFactor * 1.25) * layoutScale;
         }
         if (avatarRef.current) {
-            // Avatar: floating + spread upward
-            avatarRef.current.position.y = baseY + Math.sin(time * 0.8) * 0.15 + spreadFactor * 3;
-            avatarRef.current.position.x = -spreadFactor * maxSpread * 0.3;
+            avatarRef.current.position.y = baseY + Math.sin(time * 0.8) * 0.15 + spreadFactor * 0.65;
+            avatarRef.current.position.x = (-0.1 - spreadFactor * 0.55) * layoutScale;
         }
         if (motto1Ref.current) {
-            motto1Ref.current.position.x = spreadFactor * maxSpread * 0.7;
+            motto1Ref.current.position.x = (1.05 + spreadFactor * 1.15) * layoutScale;
         }
         if (motto2Ref.current) {
-            motto2Ref.current.position.x = -spreadFactor * maxSpread * 0.5;
+            motto2Ref.current.position.x = (-0.95 - spreadFactor) * layoutScale;
         }
     });
 
@@ -345,27 +346,29 @@ const IntroMilestone = ({ z, scrollProgressRef }) => {
             {/* Main title - Name (spreads left) */}
             <Text
                 ref={titleRef}
-                position={[0, 5, 0.1]}
-                fontSize={0.8}
-                color="#1a1a1a"
+                position={[-1.25, 5, 0.1]}
+                fontSize={0.92}
+                color={ABOUT_INK}
                 anchorX="center"
                 anchorY="middle"
-                font="/fonts/RubikScribble-Regular.ttf"
+                font={ABOUT_DISPLAY_FONT}
+                letterSpacing={0.04}
             >
-                TOMASZ SZMAJDA
+                吴桐
             </Text>
 
             {/* Subtitle - Brand (spreads right) */}
             <Text
                 ref={brandRef}
-                position={[0, 4.3, 0.1]}
-                fontSize={0.45}
-                color="#4a4a4a"
+                position={[1.35, 4.25, 0.1]}
+                fontSize={0.37}
+                color={ABOUT_MUTED_INK}
                 anchorX="center"
                 anchorY="middle"
-                font="/fonts/CabinSketch-Regular.ttf"
+                font={ABOUT_BODY_FONT}
+                letterSpacing={0.05}
             >
-                (ITOM)
+                (AI 设计师)
             </Text>
 
             {/* Avatar on cloud - floating + spreads up-left */}
@@ -382,29 +385,29 @@ const IntroMilestone = ({ z, scrollProgressRef }) => {
             {/* Motto - Line 1 (spreads right) */}
             <Text
                 ref={motto1Ref}
-                position={[0, 0, 0.1]}
-                fontSize={0.32}
-                color="#555555"
+                position={[1.05, 0.1, 0.1]}
+                fontSize={0.3}
+                color={ABOUT_MUTED_INK}
                 anchorX="center"
                 anchorY="middle"
-                font="/fonts/CabinSketch-Regular.ttf"
-                fontStyle="italic"
+                font={ABOUT_BODY_FONT}
+                letterSpacing={0.025}
             >
-                "Crafting digital experiences
+                "用 AI 与好奇心，
             </Text>
 
             {/* Motto - Line 2 (spreads left) */}
             <Text
                 ref={motto2Ref}
-                position={[0, -0.5, 0]}
-                fontSize={0.32}
-                color="#555555"
+                position={[-0.95, -0.5, 0]}
+                fontSize={0.3}
+                color={ABOUT_MUTED_INK}
                 anchorX="center"
                 anchorY="middle"
-                font="/fonts/CabinSketch-Regular.ttf"
-                fontStyle="italic"
+                font={ABOUT_BODY_FONT}
+                letterSpacing={0.025}
             >
-                that push creative boundaries"
+                AI 是我的下一站"
             </Text>
         </group>
     );
@@ -417,15 +420,15 @@ const AWARDS_DATA = {
     featured: {
         id: 'award-featured',
         layout: 'certificate_grid',
-        title: 'Featured Projects Collection',
+        title: '精选项目合集',
         items: [
-            { label: 'Featured - Awwwards', date: 'May 2025', image: '/textures/about/FEATURED.webp', url: 'https://awwwards.com' },
-            { label: 'Featured - CSS Design Awards', date: 'June 2025', image: '/textures/about/FEATURED.webp', url: 'https://cssdesignawards.com' },
-            { label: 'Featured - The FWA', date: 'July 2025', image: '/textures/about/FEATURED.webp', url: 'https://thefwa.com' },
-            { label: 'Featured - Behance', date: 'August 2025', image: '/textures/about/FEATURED.webp', url: 'https://behance.net' },
+            { label: '精选 - Awwwards', date: '2025年5月', image: '/textures/about/FEATURED.webp', url: 'https://example.com' },
+            { label: '精选 - CSS Design Awards', date: '2025年6月', image: '/textures/about/FEATURED.webp', url: 'https://example.com' },
+            { label: '精选 - The FWA', date: '2025年7月', image: '/textures/about/FEATURED.webp', url: 'https://example.com' },
+            { label: '精选 - Behance', date: '2025年8月', image: '/textures/about/FEATURED.webp', url: 'https://example.com' },
         ],
         platformConfig: {
-            label: 'HONOR',
+            label: '荣誉',
             color: '#1a1a1a',
             icon: '⭐'
         }
@@ -433,15 +436,15 @@ const AWARDS_DATA = {
     sotd: {
         id: 'award-sotd',
         layout: 'certificate_grid',
-        title: 'Site of the Day Awards',
+        title: '每日精选荣誉',
         items: [
-            { label: 'SOTD - GSAP', date: 'February 13, 2026', image: '/textures/about/SOTDAYYOUNGMULTIGSAP.webp', url: 'https://www.linkedin.com/posts/greensock_site-of-the-day-young-multi-this-immersive-activity-7427567524940017664-zU2n?utm_source=share&utm_medium=member_desktop&rcm=ACoAAE3TV6UBqXoaJXUN5-1s3ij6SQJwTRAcbCM' },
-            { label: 'SOTD - CSS Winner', date: 'January 24, 2026', image: '/textures/about/SOTDAYYOUNGMULTICSSWINNER.webp', url: 'https://www.csswinner.com/details/young-multi-official-experience/19045' },
-            { label: 'SOTD - Orpetron', date: 'January 29, 2026', image: '/textures/about/SOTDAYYOUNGMULTIORPETRON.webp', url: 'https://orpetron.com/sites/young-multi/' },
-            { label: 'SOTD - Design Nominess', date: 'February 17, 2026', image: '/textures/about/SOTDAYYOUNGMULTIDESIGNNOMINESS.webp', url: 'https://www.designnominees.com/sites/young-multi' }
+            { label: '每日精选 - GSAP', date: '2026年2月13日', image: '/assets/about/SOTDAYYOUNGMULTIGSAP.webp', url: 'https://example.com' },
+            { label: '每日精选 - CSS Winner', date: '2026年1月24日', image: '/assets/about/SOTDAYYOUNGMULTICSSWINNER.webp', url: 'https://example.com' },
+            { label: '每日精选 - Orpetron', date: '2026年1月29日', image: '/assets/about/SOTDAYYOUNGMULTIORPETRON.webp', url: 'https://example.com' },
+            { label: '每日精选 - Design Nominess', date: '2026年2月17日', image: '/assets/about/SOTDAYYOUNGMULTIDESIGNNOMINESS.webp', url: 'https://example.com' }
         ],
         platformConfig: {
-            label: 'AWARD',
+            label: '奖项',
             color: '#1a1a1a',
             icon: '🏆'
         }
@@ -449,10 +452,10 @@ const AWARDS_DATA = {
     sotm: {
         id: 'award-sotm',
         layout: 'certificate_grid',
-        title: 'Site of the Month Awards',
+        title: '月度精选荣誉',
         items: [],
         platformConfig: {
-            label: 'AWARD',
+            label: '奖项',
             color: '#1a1a1a',
             icon: '📅'
         }
@@ -460,10 +463,10 @@ const AWARDS_DATA = {
     other: {
         id: 'award-other',
         layout: 'certificate_grid',
-        title: 'Other Awards',
+        title: '其他荣誉',
         items: [],
         platformConfig: {
-            label: 'PRESTIGE',
+            label: '殊荣',
             color: '#1a1a1a',
             icon: '👑'
         }
@@ -499,12 +502,12 @@ const AwardsMilestone = ({ z, scrollProgressRef }) => {
     const sotyHideDelayRef = useRef();
 
     // Load textures
-    const sotyTexture = useLoader(THREE.TextureLoader, '/textures/about/SOTY.webp');
-    const sotdTexture = useLoader(THREE.TextureLoader, '/textures/about/SOTD.webp');
-    const sotmTexture = useLoader(THREE.TextureLoader, '/textures/about/SOTM.webp');
-    const sotyPaintedTexture = useLoader(THREE.TextureLoader, isTouch ? '/textures/about/SOTY.webp' : '/textures/about/SOTY_painted.webp');
-    const sotdPaintedTexture = useLoader(THREE.TextureLoader, isTouch ? '/textures/about/SOTD.webp' : '/textures/about/SOTD_painted.webp');
-    const sotmPaintedTexture = useLoader(THREE.TextureLoader, isTouch ? '/textures/about/SOTM.webp' : '/textures/about/SOTM_painted.webp');
+    const sotyTexture = useLoader(THREE.TextureLoader, '/assets/about/SOTY.webp');
+    const sotdTexture = useLoader(THREE.TextureLoader, '/assets/about/SOTD.webp');
+    const sotmTexture = useLoader(THREE.TextureLoader, '/assets/about/SOTM.webp');
+    const sotyPaintedTexture = useLoader(THREE.TextureLoader, isTouch ? '/assets/about/SOTY.webp' : '/assets/about/SOTY_painted.webp');
+    const sotdPaintedTexture = useLoader(THREE.TextureLoader, isTouch ? '/assets/about/SOTD.webp' : '/assets/about/SOTD_painted.webp');
+    const sotmPaintedTexture = useLoader(THREE.TextureLoader, isTouch ? '/assets/about/SOTM.webp' : '/assets/about/SOTM_painted.webp');
     const buttonTexture = useLoader(THREE.TextureLoader, '/textures/about/button.webp');
     const buttonPaintedTexture = useLoader(THREE.TextureLoader, isTouch ? '/textures/about/button.webp' : '/textures/about/button_painted.webp');
 
@@ -622,9 +625,9 @@ const AwardsMilestone = ({ z, scrollProgressRef }) => {
                 color="#1a1a1a"
                 anchorX="center"
                 anchorY="middle"
-                font="/fonts/RubikScribble-Regular.ttf"
+                font={ABOUT_DISPLAY_FONT}
             >
-                AWARDS
+                奖项
             </Text>
 
             {/* === SOTD (behind SOTY, rendered second) === */}
@@ -671,9 +674,9 @@ const AwardsMilestone = ({ z, scrollProgressRef }) => {
                     color="#1a1a1a"
                     anchorX="center"
                     anchorY="middle"
-                    font="/fonts/CabinSketch-Bold.ttf"
+                    font={ABOUT_DISPLAY_FONT}
                 >
-                    SOTD
+                    校园精选
                 </Text>
                 {/* AWARD COUNT */}
                 <Text
@@ -682,7 +685,7 @@ const AwardsMilestone = ({ z, scrollProgressRef }) => {
                     color="#1a1a1a"
                     anchorX="center"
                     anchorY="middle"
-                    font="/fonts/CabinSketch-Bold.ttf"
+                    font={ABOUT_DISPLAY_FONT}
                 >
                     {awardsData.sotd.items.length}
                 </Text>
@@ -732,9 +735,9 @@ const AwardsMilestone = ({ z, scrollProgressRef }) => {
                     color="#1a1a1a"
                     anchorX="center"
                     anchorY="middle"
-                    font="/fonts/CabinSketch-Bold.ttf"
+                    font={ABOUT_DISPLAY_FONT}
                 >
-                    SOTM
+                    社会精选
                 </Text>
                 {/* AWARD COUNT */}
                 <Text
@@ -743,7 +746,7 @@ const AwardsMilestone = ({ z, scrollProgressRef }) => {
                     color="#1a1a1a"
                     anchorX="center"
                     anchorY="middle"
-                    font="/fonts/CabinSketch-Bold.ttf"
+                    font={ABOUT_DISPLAY_FONT}
                 >
                     {awardsData.sotm.items.length}
                 </Text>
@@ -792,9 +795,9 @@ const AwardsMilestone = ({ z, scrollProgressRef }) => {
                     color="#1a1a1a"
                     anchorX="center"
                     anchorY="middle"
-                    font="/fonts/CabinSketch-Bold.ttf"
+                    font={ABOUT_DISPLAY_FONT}
                 >
-                    OTHER
+                    AI荣誉
                 </Text>
                 {/* AWARD COUNT */}
                 <Text
@@ -803,7 +806,7 @@ const AwardsMilestone = ({ z, scrollProgressRef }) => {
                     color="#1a1a1a"
                     anchorX="center"
                     anchorY="middle"
-                    font="/fonts/CabinSketch-Bold.ttf"
+                    font={ABOUT_DISPLAY_FONT}
                 >
                     {awardsData.other.items.length}
                 </Text>
@@ -812,33 +815,46 @@ const AwardsMilestone = ({ z, scrollProgressRef }) => {
     );
 };
 
+const JOURNEY_ITEMS = [
+    {
+        label: '身体力行',
+        texture: '/textures/clouds/candy-cloud-10.webp',
+        position: [-3.8, 1.45, 0.05],
+        phase: 0.2,
+        scale: 0.94,
+    },
+    {
+        label: 'AI先锋',
+        texture: '/textures/clouds/candy-cloud-10.webp',
+        position: [0, 2.35, 0.45],
+        phase: 1.8,
+        scale: 1.08,
+    },
+    {
+        label: '工作室大手子',
+        texture: '/textures/clouds/candy-cloud-10.webp',
+        position: [3.8, 1.35, 0.1],
+        phase: 3.4,
+        scale: 0.96,
+    },
+];
+
 /**
- * JOURNEY Milestone - Floating Islands
- * UO Island (left) and Freelance Island (right) floating in clouds
+ * JOURNEY Milestone - three personal role markers on the custom cloud family.
  */
 const JourneyMilestone = ({ z, scrollProgressRef }) => {
-    const { camera, viewport } = useThree();
     const isTouch = isTouchDevice();
     const groupRef = useRef();
-    const uoRef = useRef();
-    const freelanceRef = useRef();
+    const itemRefs = useRef([]);
 
-    // Load textures
-    const uoTexture = useLoader(THREE.TextureLoader, '/textures/about/uowyspa.webp');
-    const freelanceTexture = useLoader(THREE.TextureLoader, '/textures/about/freelancewyspa.webp');
+    const journeyTextures = useLoader(
+        THREE.TextureLoader,
+        JOURNEY_ITEMS.map((item) => item.texture)
+    );
 
-    // Texture settings
-    uoTexture.colorSpace = THREE.SRGBColorSpace;
-    freelanceTexture.colorSpace = THREE.SRGBColorSpace;
-
-    // Calculate aspect ratios to keep images 1:1 (not stretched)
-    // LEGACY FIX: Use original dimensions (2816x1536)
-    const islandLegacyAspect = 2816 / 1536;
-    const uoAspect = islandLegacyAspect;
-    const freelanceAspect = islandLegacyAspect;
-
-    // Base height for islands - width will adjust automatically
-    const islandHeight = 4.5;
+    journeyTextures.forEach((texture) => {
+        texture.colorSpace = THREE.SRGBColorSpace;
+    });
 
     useFrame((state) => {
         if (!groupRef.current) return;
@@ -868,28 +884,25 @@ const JourneyMilestone = ({ z, scrollProgressRef }) => {
             revealFactor = 1;
         }
 
-        // Floating animation (bobbing)
-        // UO Island (Left)
-        if (uoRef.current) {
-            // === EDYTUJ POZYCJE TUTAJ (UO) ===
-            const startY = -2;
-            const endY = 1.5;
+        const layoutScale = isTouch ? 0.7 : 1;
 
-            const currentBaseY = startY + revealFactor * (endY - startY);
-            uoRef.current.position.y = currentBaseY + Math.sin(time * 0.5) * 0.2;
-            uoRef.current.rotation.z = Math.sin(time * 0.3) * 0.05;
-        }
+        itemRefs.current.forEach((itemRef, index) => {
+            if (!itemRef) return;
 
-        // Freelance Island (Right)
-        if (freelanceRef.current) {
-            // === EDYTUJ POZYCJE TUTAJ (Freelance) ===
-            const startY = -1;
-            const endY = 2.5;
+            const item = JOURNEY_ITEMS[index];
+            const staggeredReveal = THREE.MathUtils.clamp(
+                revealFactor * 1.18 - index * 0.09,
+                0,
+                1
+            );
+            const startY = item.position[1] - 3.2;
+            const currentBaseY = startY + staggeredReveal * (item.position[1] - startY);
 
-            const currentBaseY = startY + revealFactor * (endY - startY);
-            freelanceRef.current.position.y = currentBaseY + Math.sin(time * 0.4 + 2) * 0.25;
-            freelanceRef.current.rotation.z = Math.sin(time * 0.2 + 1) * -0.05;
-        }
+            itemRef.position.x = item.position[0] * layoutScale;
+            itemRef.position.y = currentBaseY + Math.sin(time * 0.46 + item.phase) * 0.16;
+            itemRef.rotation.z = Math.sin(time * 0.28 + item.phase) * 0.035;
+            itemRef.scale.setScalar(item.scale * layoutScale);
+        });
     });
 
     return (
@@ -901,9 +914,9 @@ const JourneyMilestone = ({ z, scrollProgressRef }) => {
                 color="#1a1a1a"
                 anchorX="center"
                 anchorY="middle"
-                font="/fonts/RubikScribble-Regular.ttf"
+                font={ABOUT_DISPLAY_FONT}
             >
-                JOURNEY
+                旅程
             </Text>
 
             {/* Subtitle */}
@@ -913,56 +926,45 @@ const JourneyMilestone = ({ z, scrollProgressRef }) => {
                 color="#555555"
                 anchorX="center"
                 anchorY="middle"
-                font="/fonts/CabinSketch-Regular.ttf"
+                font={ABOUT_BODY_FONT}
             >
-                My path so far...
+                一路走来的轨迹...
             </Text>
 
-            {/* === UO ISLAND (Left) === */}
-            <group ref={uoRef} position={[-3.5, -1, 0]}>
-                <mesh>
-                    <planeGeometry args={[islandHeight * uoAspect, islandHeight]} />
-                    <meshBasicMaterial color="#e0e0e0"
-                        map={uoTexture}
-                        transparent
-                        side={THREE.DoubleSide}
-                    />
-                </mesh>
-                {/* NAPIS NA WYSPIE (UO) - EDYTUJ TUTAJ */}
-                <Text
-                    position={[0.1, -0.85, 0.1]} // POZYCJA (X, Y, Z)
-                    fontSize={0.4}           // WIELKOŚĆ
-                    color="#1a1a1a"
-                    anchorX="center"
-                    anchorY="middle"
-                    font="/fonts/CabinSketch-Bold.ttf"
+            {JOURNEY_ITEMS.map((item, index) => (
+                <group
+                    key={item.label}
+                    ref={(node) => { itemRefs.current[index] = node; }}
+                    position={item.position}
                 >
-                    2025-NOW
-                </Text>
-            </group>
-
-            {/* === FREELANCE ISLAND (Right) === */}
-            <group ref={freelanceRef} position={[3.5, -2, 0.5]}>
-                <mesh>
-                    <planeGeometry args={[islandHeight * freelanceAspect, islandHeight]} />
-                    <meshBasicMaterial color="#e0e0e0"
-                        map={freelanceTexture}
-                        transparent
-                        side={THREE.DoubleSide}
-                    />
-                </mesh>
-                {/* NAPIS NA WYSPIE (Freelance) - EDYTUJ TUTAJ */}
-                <Text
-                    position={[0, -0.65, 0.1]} // POZYCJA (X, Y, Z)
-                    fontSize={0.5}           // WIELKOŚĆ
-                    color="#1a1a1a"
-                    anchorX="center"
-                    anchorY="middle"
-                    font="/fonts/CabinSketch-Bold.ttf"
-                >
-                    2023-NOW
-                </Text>
-            </group>
+                    <mesh>
+                        <planeGeometry args={[5.2, 3]} />
+                        <meshBasicMaterial
+                            color="#ffffff"
+                            map={journeyTextures[index]}
+                            transparent
+                            depthWrite={false}
+                            side={THREE.DoubleSide}
+                            toneMapped={false}
+                        />
+                    </mesh>
+                    <Text
+                        position={[0, -0.03, 0.12]}
+                        fontSize={item.label.length > 4 ? 0.56 : 0.68}
+                        color={ABOUT_INK}
+                        renderOrder={8}
+                        anchorX="center"
+                        anchorY="middle"
+                        font={ABOUT_DISPLAY_FONT}
+                        letterSpacing={item.label.length > 4 ? 0.015 : 0.035}
+                        outlineWidth={0.025}
+                        outlineColor="#fff9e8"
+                        material-depthTest={false}
+                    >
+                        {item.label}
+                    </Text>
+                </group>
+            ))}
         </group>
     );
 };
@@ -975,21 +977,58 @@ const JourneyMilestone = ({ z, scrollProgressRef }) => {
 // Balloon configuration: size category, texture path, position offset
 // === EDYTUJ WYSOKOŚĆ TUTAJ (zmień wartość 'y' dla każdego balona) ===
 const BALLOON_CONFIG = [
-    // Large balloons (main skills) - front and center
-    { texture: '/textures/about/reactduzybalon.webp', paintedTexture: '/textures/about/reactduzybalon_painted.webp', label: 'React', size: 'large', x: -2.5, y: 2, z: 0.3, phase: 0 },
-    { texture: '/textures/about/threejsduzybalon.webp', paintedTexture: '/textures/about/threejsduzybalon_painted.webp', label: 'Three.js', size: 'large', x: 2.5, y: 2.5, z: 0.2, phase: 1.5 },
-    { texture: '/textures/about/GSAPduzybalon.webp', paintedTexture: '/textures/about/GSAPduzybalon_painted.webp', label: 'GSAP', size: 'large', x: 0, y: 3, z: 0.5, phase: 3 },
+    // Primary skills
+    {
+        texture: '/textures/about/skills/ai-coding-sketch.webp',
+        paintedTexture: '/textures/about/skills/ai-coding-painted.webp',
+        label: 'AI Coding',
+        description: 'Codex、Claude Code、Trea\nPRD 撰写',
+        size: 'large', x: -3.6, y: 2.8, z: 0.3, phase: 0, aspect: 0.5,
+    },
+    {
+        texture: '/textures/about/skills/python-sketch.webp',
+        paintedTexture: '/textures/about/skills/python-painted.webp',
+        label: 'Python',
+        description: 'API、脚本、数据处理分析',
+        size: 'large', x: 0, y: 2.5, z: 0.4, phase: 1.1, aspect: 0.5,
+    },
+    {
+        texture: '/textures/about/skills/lora-sketch.webp',
+        paintedTexture: '/textures/about/skills/lora-painted.webp',
+        label: 'LoRA',
+        description: '数据整理、模型训练与风格应用',
+        size: 'large', x: 3.6, y: 2.9, z: 0.2, phase: 2.2, aspect: 0.5,
+    },
 
-    // Medium balloons - scattered around
-    { texture: '/textures/about/JSSREDNIBALON.webp', paintedTexture: '/textures/about/JSSREDNIBALON_painted.webp', label: 'JavaScript', size: 'medium', x: -4, y: 1, z: -0.3, phase: 0.8 },
-    { texture: '/textures/about/csssrednibalon.webp', paintedTexture: '/textures/about/csssrednibalon_painted.webp', label: 'CSS', size: 'medium', x: 4, y: 1.5, z: -0.2, phase: 2.2 },
-    { texture: '/textures/about/nextjssrednibalon.webp', paintedTexture: '/textures/about/nextjssrednibalon_painted.webp', label: 'Next.js', size: 'medium', x: 0, y: 0.5, z: -0.4, phase: 4 },
-
-    // Small balloons - background accents
-    { texture: '/textures/about/htmlmalybalon.webp', paintedTexture: '/textures/about/htmlmalybalon_painted.webp', label: 'HTML', size: 'small', x: -5.5, y: 2.5, z: -0.8, phase: 1.2 },
-    { texture: '/textures/about/gitmalybalon.webp', paintedTexture: '/textures/about/gitmalybalon_painted.webp', label: 'Git', size: 'small', x: 5.5, y: 3, z: -0.7, phase: 2.8 },
-    { texture: '/textures/about/figmamalybalon.webp', paintedTexture: '/textures/about/figmamalybalon_painted.webp', label: 'Figma', size: 'small', x: -3, y: 4.5, z: -0.5, phase: 3.5 },
-    { texture: '/textures/about/firebasemalybalon.webp', paintedTexture: '/textures/about/firebasemalybalon_painted.webp', label: 'Firebase', size: 'small', x: 3.5, y: 4, z: -0.6, phase: 4.5 },
+    // Supporting tools
+    {
+        texture: '/textures/about/skills/feishu-sketch.webp',
+        paintedTexture: '/textures/about/skills/feishu-painted.webp',
+        label: '飞书',
+        description: '知识库、多维表格',
+        size: 'medium', x: -5.4, y: 0.6, z: -0.3, phase: 0.7, aspect: 0.5,
+    },
+    {
+        texture: '/textures/about/skills/illustrator-sketch.webp',
+        paintedTexture: '/textures/about/skills/illustrator-painted.webp',
+        label: 'Illustrator',
+        description: '矢量设计、包装刀版',
+        size: 'medium', x: -1.8, y: 0.3, z: -0.15, phase: 2.1, aspect: 0.5,
+    },
+    {
+        texture: '/textures/about/skills/photoshop-sketch.webp',
+        paintedTexture: '/textures/about/skills/photoshop-painted.webp',
+        label: 'PS',
+        description: '图像合成、修图与 AIGC 后期',
+        size: 'medium', x: 1.8, y: 0.3, z: -0.1, phase: 3.5, aspect: 0.5,
+    },
+    {
+        texture: '/textures/about/reactduzybalon.webp',
+        paintedTexture: '/textures/about/reactduzybalon_painted.webp',
+        label: 'React',
+        description: '组件化开发、交互界面与前端实现',
+        size: 'medium', x: 5.4, y: 0.8, z: -0.25, phase: 4.8, aspect: 736 / 1447,
+    },
 ];
 
 // Size multipliers for balloon categories
@@ -1001,7 +1040,6 @@ const SIZE_MULTIPLIERS = {
 
 // Individual balloon component
 const SkillBalloon = ({ config, revealFactorRef, spreadFactorRef, timeRef }) => {
-    const { viewport } = useThree();
     const isTouch = isTouchDevice();
     const texture = useLoader(THREE.TextureLoader, config.texture);
     const paintedTextureUrl = isTouch ? config.texture : config.paintedTexture;
@@ -1021,6 +1059,7 @@ const SkillBalloon = ({ config, revealFactorRef, spreadFactorRef, timeRef }) => 
     const paintedMatRef = useRef(); // Painted balloon material opacity control
     const hideDelayRef = useRef(); // Track pending gsap.delayedCall
     const textRef = useRef();
+    const detailTextRef = useRef();
 
     // Audio Ref
     const balloonAudioRef = useRef();
@@ -1044,7 +1083,7 @@ const SkillBalloon = ({ config, revealFactorRef, spreadFactorRef, timeRef }) => 
     };
     
     const filename = config.texture.split('/').pop();
-    const aspect = legacyAspects[filename] || legacyAspects['default_small_medium'];
+    const aspect = config.aspect || legacyAspects[filename] || legacyAspects['default_small_medium'];
     const baseHeight = SIZE_MULTIPLIERS[config.size];
 
     const outerGroupRef = useRef();
@@ -1072,10 +1111,10 @@ const SkillBalloon = ({ config, revealFactorRef, spreadFactorRef, timeRef }) => 
     // Handle text fade out timer
     useEffect(() => {
         if (isPopping) {
-            // Start fading out text after 3 seconds
+            // Leave enough time to read the skill detail before the balloon respawns.
             const timer = setTimeout(() => {
                 setIsFadingOutText(true);
-            }, 3000);
+            }, 4200);
             return () => clearTimeout(timer);
         }
     }, [isPopping]);
@@ -1165,6 +1204,7 @@ const SkillBalloon = ({ config, revealFactorRef, spreadFactorRef, timeRef }) => 
                 // Immediately reset opacities to prevent flashing
                 if (balloonRevealRef.current) balloonRevealRef.current.opacity = 1;
                 if (textRef.current) textRef.current.fillOpacity = 0;
+                if (detailTextRef.current) detailTextRef.current.fillOpacity = 0;
                 // Reset reveal state on respawn
                 if (balloonRevealRef.current) balloonRevealRef.current.uProgress = 0;
                 if (paintedMatRef.current) paintedMatRef.current.opacity = 0;
@@ -1188,6 +1228,10 @@ const SkillBalloon = ({ config, revealFactorRef, spreadFactorRef, timeRef }) => 
             // Combine pop-in and fade-out opacities
             textRef.current.fillOpacity = popRef.current * textFadeRef.current;
             textRef.current.outlineOpacity = popRef.current * textFadeRef.current;
+        }
+        if (detailTextRef.current && isPopping) {
+            detailTextRef.current.fillOpacity = popRef.current * textFadeRef.current;
+            detailTextRef.current.outlineOpacity = popRef.current * textFadeRef.current;
         }
     });
 
@@ -1299,23 +1343,43 @@ const SkillBalloon = ({ config, revealFactorRef, spreadFactorRef, timeRef }) => 
                     />
                 </mesh>
 
-                {/* Stack Name Text that fades in then out */}
+                {/* Skill name and click-to-read description */}
                 {isPopping && textFadeRef.current > 0.01 && (
-                    <Text
-                        ref={textRef}
-                        position={[0, 0, 0.1]}
-                        fontSize={baseHeight * 0.4}
-                        color="#1a1a1a"
-                        anchorX="center"
-                        anchorY="middle"
-                        font="/fonts/RubikScribble-Regular.ttf"
-                        fillOpacity={0}
-                        outlineWidth={0.02}
-                        outlineColor="#fff"
-                        outlineOpacity={0}
-                    >
-                        {config.label}
-                    </Text>
+                    <group position={[0, 0, 0.1]}>
+                        <Text
+                            ref={textRef}
+                            position={[0, baseHeight * 0.16, 0]}
+                            fontSize={baseHeight * 0.23}
+                            color="#111111"
+                            anchorX="center"
+                            anchorY="middle"
+                            font={ABOUT_DISPLAY_FONT}
+                            fillOpacity={0}
+                            outlineWidth={0.018}
+                            outlineColor="#fff"
+                            outlineOpacity={0}
+                        >
+                            {config.label}
+                        </Text>
+                        <Text
+                            ref={detailTextRef}
+                            position={[0, -baseHeight * 0.17, 0]}
+                            fontSize={baseHeight * 0.105}
+                            maxWidth={baseHeight * 2.15}
+                            lineHeight={1.38}
+                            textAlign="center"
+                            color="#343434"
+                            anchorX="center"
+                            anchorY="middle"
+                            font={ABOUT_BODY_FONT}
+                            fillOpacity={0}
+                            outlineWidth={0.012}
+                            outlineColor="#fff"
+                            outlineOpacity={0}
+                        >
+                            {config.description}
+                        </Text>
+                    </group>
                 )}
 
                 <PositionalAudio
@@ -1397,9 +1461,9 @@ const SkillsMilestone = ({ z, scrollProgressRef }) => {
                 color="#1a1a1a"
                 anchorX="center"
                 anchorY="middle"
-                font="/fonts/RubikScribble-Regular.ttf"
+                font={ABOUT_DISPLAY_FONT}
             >
-                SKILLS
+                技能
             </Text>
 
             {/* Subtitle */}
@@ -1409,9 +1473,9 @@ const SkillsMilestone = ({ z, scrollProgressRef }) => {
                 color="#555555"
                 anchorX="center"
                 anchorY="middle"
-                font="/fonts/CabinSketch-Regular.ttf"
+                font={ABOUT_BODY_FONT}
             >
-                Technologies I love working with
+                我热爱的工具与技术
             </Text>
 
             {/* === FLOATING BALLOONS === */}

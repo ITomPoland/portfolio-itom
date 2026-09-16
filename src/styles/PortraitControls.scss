@@ -1,0 +1,255 @@
+.portrait-inspect-layer {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 24px;
+    pointer-events: none;
+    font-family: 'Cabin Sketch', 'Microsoft YaHei', sans-serif;
+}
+
+.portrait-interaction-shell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    max-width: calc(100vw - 32px);
+    pointer-events: none;
+}
+
+.portrait-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: calc(100vw - 32px);
+    padding: 10px 12px;
+    color: #293829;
+    background:
+        linear-gradient(rgba(249, 250, 229, 0.9), rgba(238, 243, 215, 0.9)),
+        url('/textures/paper-texture.webp') center / cover;
+    border: 1.5px solid rgba(52, 72, 51, 0.78);
+    border-radius: 5px 8px 4px 7px;
+    box-shadow: 0 8px 24px rgba(43, 57, 39, 0.16);
+    pointer-events: auto;
+    animation: portrait-controls-in 260ms ease-out both;
+}
+
+.portrait-chat {
+    width: min(520px, calc(100vw - 32px));
+    overflow: hidden;
+    color: #293829;
+    background:
+        linear-gradient(rgba(249, 250, 229, 0.96), rgba(238, 243, 215, 0.96)),
+        url('/textures/paper-texture.webp') center / cover;
+    border: 1.5px solid rgba(52, 72, 51, 0.78);
+    border-radius: 7px 5px 8px 4px;
+    box-shadow: 0 12px 34px rgba(43, 57, 39, 0.2);
+    pointer-events: auto;
+    animation: portrait-controls-in 220ms ease-out both;
+}
+
+.portrait-chat__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-bottom: 1px dashed rgba(52, 72, 51, 0.4);
+
+    > div {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+    }
+
+    strong {
+        font-size: 16px;
+    }
+
+    span {
+        color: rgba(41, 56, 41, 0.72);
+        font-size: 12px;
+    }
+
+    button {
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        color: #293829;
+        font: 22px/1 inherit;
+        background: rgba(255, 255, 244, 0.72);
+        border: 1px solid rgba(52, 72, 51, 0.55);
+        border-radius: 50%;
+        cursor: pointer;
+    }
+}
+
+.portrait-chat__messages {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 92px;
+    max-height: 210px;
+    padding: 12px;
+    overflow-y: auto;
+}
+
+.portrait-chat__message {
+    width: fit-content;
+    max-width: 86%;
+    margin: 0;
+    padding: 8px 10px;
+    font-size: 14px;
+    line-height: 1.55;
+    border: 1px solid rgba(52, 72, 51, 0.34);
+}
+
+.portrait-chat__message--assistant {
+    align-self: flex-start;
+    background: rgba(255, 255, 244, 0.78);
+    border-radius: 4px 9px 9px 8px;
+}
+
+.portrait-chat__message--user {
+    align-self: flex-end;
+    background: rgba(205, 224, 176, 0.72);
+    border-radius: 9px 4px 8px 9px;
+}
+
+.portrait-chat__form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 10px 12px 12px;
+    border-top: 1px dashed rgba(52, 72, 51, 0.34);
+
+    input,
+    button {
+        color: #293829;
+        font: inherit;
+        font-size: 14px;
+        border: 1.25px solid rgba(52, 72, 51, 0.58);
+    }
+
+    input {
+        min-width: 0;
+        padding: 9px 10px;
+        background: rgba(255, 255, 250, 0.86);
+        border-radius: 4px 7px 4px 6px;
+        outline: none;
+    }
+
+    input:focus {
+        border-color: rgba(52, 72, 51, 0.9);
+        box-shadow: 0 0 0 2px rgba(126, 157, 100, 0.18);
+    }
+
+    button {
+        min-width: 64px;
+        padding: 8px 12px;
+        background: rgba(205, 224, 176, 0.84);
+        border-radius: 5px 7px 4px 6px;
+        cursor: pointer;
+    }
+
+    button:disabled,
+    input:disabled {
+        opacity: 0.55;
+        cursor: wait;
+    }
+}
+
+.portrait-controls__hint {
+    margin-right: 4px;
+    font-size: 15px;
+    white-space: nowrap;
+}
+
+.portrait-controls__actions {
+    display: flex;
+    gap: 6px;
+}
+
+.portrait-controls button {
+    min-width: 42px;
+    min-height: 36px;
+    padding: 6px 10px;
+    color: #263526;
+    font: inherit;
+    font-size: 14px;
+    background: rgba(255, 255, 244, 0.72);
+    border: 1.25px solid rgba(52, 72, 51, 0.72);
+    border-radius: 4px 6px 3px 5px;
+    cursor: pointer;
+    transition: transform 160ms ease, background-color 160ms ease;
+}
+
+.portrait-controls button:hover:not(:disabled),
+.portrait-controls button:focus-visible {
+    background: rgba(218, 232, 190, 0.94);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.portrait-controls button[aria-pressed='true'] {
+    color: #172817;
+    background: rgba(196, 219, 164, 0.96);
+    box-shadow: inset 0 0 0 1px rgba(52, 72, 51, 0.18);
+}
+
+.portrait-controls button:disabled {
+    opacity: 0.45;
+    cursor: wait;
+}
+
+.portrait-controls__exit {
+    margin-left: 2px;
+}
+
+.portrait-controls kbd {
+    margin-left: 4px;
+    padding: 1px 4px;
+    font: 11px/1.4 monospace;
+    border: 1px solid rgba(52, 72, 51, 0.5);
+    border-radius: 3px;
+}
+
+@keyframes portrait-controls-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px) rotate(-0.5deg);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) rotate(0);
+    }
+}
+
+@media (max-width: 640px) {
+    .portrait-inspect-layer {
+        padding: 14px;
+    }
+
+    .portrait-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .portrait-controls__hint {
+        flex-basis: 100%;
+        margin: 0;
+        text-align: center;
+    }
+
+    .portrait-chat__messages {
+        max-height: 150px;
+    }
+
+    .portrait-chat__header > div {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 2px;
+    }
+}

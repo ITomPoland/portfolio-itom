@@ -57,7 +57,7 @@ const AchievementPopup = () => {
                         <span className="description">{data.label}</span>
                     ) : (
                         <span className="description">
-                            Click a door to enter. Audio is currently
+                            点击一扇门即可进入。当前音频
                             <button
                                 className={`inline-sound-toggle ${!isMuted ? 'on' : 'off'}`}
                                 onClick={(e) => {
@@ -80,7 +80,7 @@ const AchievementPopup = () => {
                                     }
                                 }}
                             >
-                                {!isMuted ? " [🔊 ON]" : " [🔇 OFF]"}
+                                {!isMuted ? " [🔊 开]" : " [🔇 关]"}
                             </button>
                         </span>
                     )}

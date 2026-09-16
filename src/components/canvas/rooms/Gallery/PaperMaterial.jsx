@@ -10,7 +10,7 @@ import { useFrame } from '@react-three/fiber';
  * - uBend: Float. Controls the amount of bending along the vertical axis.
  * - uBendAxis: Vector2. Direction of bending (not yet implemented, defaults to Y-axis bend).
  */
-const PaperMaterial = forwardRef(({ color = '#e0e0e0', roughness = 0.6, map, side = THREE.DoubleSide, paintProgress, roomOrigin, ...props }, ref) => {
+const PaperMaterial = forwardRef(({ color = '#e0e0e0', roughness = 0.6, map, side = THREE.DoubleSide, paintProgress, roomOrigin, profilePhoto, profileSignature, ...props }, ref) => {
     const materialRef = useRef();
 
     // Shader injection logic
@@ -25,6 +25,12 @@ const PaperMaterial = forwardRef(({ color = '#e0e0e0', roughness = 0.6, map, sid
         shader.uniforms.uProgress = { value: 0.0 }; // Reveal progress
         shader.uniforms.uPaintProgress = paintProgress || { value: 1.0 };
         shader.uniforms.uRoomOrigin = roomOrigin || { value: new THREE.Vector3(0, 0, 0) };
+        if (profilePhoto) {
+            shader.uniforms.uProfilePhoto = { value: profilePhoto };
+            shader.uniforms.uProfileSignature = { value: profileSignature };
+            shader.uniforms.uProfilePhotoAspect = { value: profilePhoto.image.width / profilePhoto.image.height };
+            shader.uniforms.uProfileSignatureAspect = { value: profileSignature.image.width / profileSignature.image.height };
+        }
 
         // Prepend uniforms to vertex shader
         shader.vertexShader = `
@@ -61,6 +67,12 @@ const PaperMaterial = forwardRef(({ color = '#e0e0e0', roughness = 0.6, map, sid
             uniform float uProgress;
             uniform float uPaintProgress;
             uniform vec3 uRoomOrigin;
+            ${profilePhoto ? `
+                uniform sampler2D uProfilePhoto;
+                uniform sampler2D uProfileSignature;
+                uniform float uProfilePhotoAspect;
+                uniform float uProfileSignatureAspect;
+            ` : ''}
             varying vec3 vWorldPositionColor;
 
             float revealRand(vec2 n) { 
@@ -99,6 +111,37 @@ const PaperMaterial = forwardRef(({ color = '#e0e0e0', roughness = 0.6, map, sid
                 // And keep X standard (vMapUv.x) to create a mirror effect (since back view naturally mirrors)
                 vec2 backUv = vec2(vMapUv.x, 1.0 - vMapUv.y);
                 vec4 backColor = texture2D( mapBack, backUv );
+
+                ${profilePhoto ? `
+                    // Sample an unmarked paper area. The hanging face stays blank,
+                    // including on hover; the content is printed on the reverse only.
+                    vec4 blankPaper = texture2D(mapBack, vec2(0.22, 0.60) + backUv * vec2(0.56, 0.24));
+                    texColor = blankPaper;
+
+                    // Retain only the upper hand-drawn photo frame. The lower
+                    // TECH STACK panel and its four baked-in boxes are not sampled.
+                    backColor = mix(blankPaper, backColor, smoothstep(0.473, 0.485, backUv.y));
+
+                    vec4 photoRect = vec4(0.118, 0.524, 0.764, 0.398);
+                    vec2 photoUv = (backUv - photoRect.xy) / photoRect.zw;
+                    if (all(greaterThanEqual(photoUv, vec2(0.0))) && all(lessThanEqual(photoUv, vec2(1.0)))) {
+                        // Cover the landscape frame without stretching the portrait.
+                        float frameAspect = (1.5 * photoRect.z) / (2.0 * photoRect.w);
+                        photoUv = (photoUv - 0.5) * vec2(
+                            min(1.0, frameAspect / uProfilePhotoAspect),
+                            min(1.0, uProfilePhotoAspect / frameAspect)
+                        ) + 0.5;
+                        // Counter the legacy paper brightness boost for natural photo colors.
+                        backColor = texture2D(uProfilePhoto, photoUv) / vec4(vec3(1.4), 1.0);
+                    }
+
+                    float signatureHeight = 0.85 * 1.5 / (2.0 * uProfileSignatureAspect);
+                    vec2 signatureUv = (backUv - vec2(0.075, 0.255 - signatureHeight * 0.5)) / vec2(0.85, signatureHeight);
+                    if (all(greaterThanEqual(signatureUv, vec2(0.0))) && all(lessThanEqual(signatureUv, vec2(1.0)))) {
+                        vec4 handwriting = texture2D(uProfileSignature, signatureUv);
+                        backColor.rgb = mix(backColor.rgb, handwriting.rgb / 1.4, handwriting.a);
+                    }
+                ` : ''}
                 
                 vec4 sampledDiffuseColor = gl_FrontFacing ? texColor : backColor;
                 
@@ -168,7 +211,7 @@ const PaperMaterial = forwardRef(({ color = '#e0e0e0', roughness = 0.6, map, sid
         if (props.mapPainted && shader.uniforms.mapPainted) {
             shader.uniforms.mapPainted.value = props.mapPainted;
         }
-    }, [props.mapBack, props.mapPainted]);
+    }, [props.mapBack, props.mapPainted, paintProgress, roomOrigin, profilePhoto, profileSignature]);
 
     useImperativeHandle(ref, () => ({
         // Getter/Setter for bend
@@ -225,6 +268,7 @@ const PaperMaterial = forwardRef(({ color = '#e0e0e0', roughness = 0.6, map, sid
             roughness={roughness}
             side={side}
             onBeforeCompile={onBeforeCompile}
+            customProgramCacheKey={() => profilePhoto ? 'profile-paper-photo-signature-v1' : 'gallery-paper-v1'}
             needsUpdate={true}
             {...props}
         />

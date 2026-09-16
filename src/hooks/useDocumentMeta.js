@@ -12,28 +12,28 @@ import { useScene } from '../context/SceneContext';
 const ROOM_META = {
     null: {
         path: '/',
-        title: 'ITom — Creative 3D Portfolio',
-        description: 'Interactive 3D developer portfolio by Tomasz "ITom" Szmajda. Explore WebGL experiments, React projects & GSAP animations in a hand-drawn gallery.',
+        title: '吴桐 — 3D 交互作品集',
+        description: '吴桐的 3D 交互作品集：走进手绘质感的沉浸式走廊，探索 AI 自媒体创作、像素动画科普与内容创作项目。',
     },
     about: {
         path: '/about',
-        title: 'About Me — ITom Portfolio',
-        description: 'Learn about Tomasz "ITom" Szmajda — a creative frontend developer specializing in 3D web experiences, React, Three.js, and GSAP animations.',
+        title: '关于 — 吴桐作品集',
+        description: '了解吴桐——专注 AI 自媒体与内容创作的创作者，研究 AI 工具、内容选题与多平台分发，也做像素动画科普。',
     },
     gallery: {
         path: '/gallery',
-        title: 'Gallery & Projects — ITom Portfolio',
-        description: 'Browse the interactive 3D gallery of web development projects by ITom. Each project is displayed as a hand-drawn card you can flip and explore.',
+        title: '作品集与项目 — 吴桐作品集',
+        description: '浏览吴桐的交互式 3D 作品展厅：每个项目都是一张可翻转的手绘卡片，记录 AI 自媒体与内容创作的点滴积累。',
     },
     studio: {
         path: '/studio',
-        title: 'The Studio — ITom Portfolio',
-        description: 'Explore ITom\'s content studio — YouTube videos, blog posts, and TikToks displayed on floating monitors in an immersive 3D space.',
+        title: '创作室 — 吴桐作品集',
+        description: '逛逛吴桐的创作室：YouTube 视频、博客文章与短视频内容，陈列在沉浸式 3D 空间的悬浮屏幕之上。',
     },
     contact: {
         path: '/contact',
-        title: 'Contact — ITom Portfolio',
-        description: 'Get in touch with Tomasz "ITom" Szmajda. Find social media links and contact information in this interactive 3D contact room.',
+        title: '联系 — 吴桐作品集',
+        description: '在 3D 联系房间里找到吴桐的社交链接与留言表单，交流 AI 自媒体、内容创作与像素动画。',
     },
 };
 
@@ -82,12 +82,12 @@ export function useDocumentMeta() {
         if (ogDesc) ogDesc.setAttribute('content', meta.description);
 
         const ogUrl = document.querySelector('meta[property="og:url"]');
-        if (ogUrl) ogUrl.setAttribute('content', `https://itomdev.com${meta.path}`);
+        if (ogUrl) ogUrl.setAttribute('content', `${window.location.origin}${meta.path}`);
 
         // Update canonical link to ensure virtual routes are correctly indexable as separate pages
         const canonicalTag = document.querySelector('link[rel="canonical"]');
         if (canonicalTag) {
-            canonicalTag.setAttribute('href', `https://itomdev.com${meta.path}`);
+            canonicalTag.setAttribute('href', `${window.location.origin}${meta.path}`);
         }
 
         // Push to browser history (only if not handling a popstate event and room actually changed)

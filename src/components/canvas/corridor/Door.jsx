@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Text, Plane, useTexture } from '@react-three/drei';
+import { Plane, useTexture } from '@react-three/drei';
+import Text from '../LocalText';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { PositionalAudio } from '@react-three/drei';

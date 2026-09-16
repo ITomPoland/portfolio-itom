@@ -1,0 +1,2050 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-23T09:36:52.967Z",
+  "theme": {
+    "id": "sage-gallery-v1",
+    "name": "High-key cream and sage gallery",
+    "reference": "ChatGPT Image 2026年8月23日 17_24_57.png",
+    "referenceUsage": "Palette and material direction only; no reference pixels are copied.",
+    "outputFormat": "Lossless WebP, retaining each source filename and dimensions"
+  },
+  "safety": {
+    "sourceRoot": "public/textures",
+    "outputRoot": "tmp/sage-gallery-theme",
+    "runtimeAssetsOverwritten": false,
+    "geometryOrCodeChanged": false,
+    "excludedContent": [
+      "public/textures/corridor/painting1.png",
+      "public/textures/corridor/painting2.gif",
+      "public/textures/corridor/painting3.png",
+      "public/textures/corridor/avatar_anim/**",
+      "public/textures/entrance/avatar_window.webp"
+    ]
+  },
+  "algorithm": {
+    "version": 1,
+    "method": "deterministic luminance-ramp recolor with restrained source chroma and paper grain",
+    "encoder": "lossless WebP",
+    "invariants": [
+      "same width",
+      "same height",
+      "same alpha byte at every pixel",
+      "same relative filename"
+    ],
+    "profiles": {
+      "creamWall": {
+        "label": "warm ivory wall with pale sage linework",
+        "palette": [
+          "#48533f",
+          "#899277",
+          "#cdd3ae",
+          "#eceecf",
+          "#fffced"
+        ],
+        "stops": [
+          0,
+          0.18,
+          0.46,
+          0.74,
+          1
+        ],
+        "contrast": 0.82,
+        "lift": 0.09,
+        "gamma": 0.78,
+        "chromaRetention": 0.025,
+        "grain": 1.25
+      },
+      "paleWood": {
+        "label": "sunlit pale yellow wood",
+        "palette": [
+          "#59604d",
+          "#99936b",
+          "#d2c38e",
+          "#edddb0",
+          "#fff2ce"
+        ],
+        "stops": [
+          0,
+          0.2,
+          0.5,
+          0.78,
+          1
+        ],
+        "contrast": 0.96,
+        "lift": 0.055,
+        "gamma": 0.84,
+        "chromaRetention": 0.055,
+        "grain": 1.25
+      },
+      "creamPaper": {
+        "label": "warm cream paper and sign stock",
+        "palette": [
+          "#4b5142",
+          "#85866d",
+          "#cbc6a3",
+          "#eae1bd",
+          "#fff7dc"
+        ],
+        "stops": [
+          0,
+          0.2,
+          0.5,
+          0.78,
+          1
+        ],
+        "contrast": 0.9,
+        "lift": 0.06,
+        "gamma": 0.82,
+        "chromaRetention": 0.035,
+        "grain": 1.6
+      },
+      "sageAccent": {
+        "label": "muted sage-green architectural accent",
+        "palette": [
+          "#32452f",
+          "#566b4c",
+          "#819d6d",
+          "#b6c69c",
+          "#e9ebce"
+        ],
+        "stops": [
+          0,
+          0.2,
+          0.5,
+          0.79,
+          1
+        ],
+        "contrast": 1.02,
+        "lift": 0.025,
+        "gamma": 0.9,
+        "chromaRetention": 0.045,
+        "grain": 0.9
+      },
+      "foliage": {
+        "label": "soft natural sage foliage",
+        "palette": [
+          "#2f472d",
+          "#4f7045",
+          "#769a62",
+          "#a9bf82",
+          "#e1e6bd"
+        ],
+        "stops": [
+          0,
+          0.2,
+          0.5,
+          0.78,
+          1
+        ],
+        "contrast": 1.04,
+        "lift": 0.015,
+        "gamma": 0.93,
+        "chromaRetention": 0.12,
+        "grain": 0.7
+      },
+      "creamSageDoor": {
+        "label": "cream door panel with sage ornamental values",
+        "palette": [
+          "#334632",
+          "#5c7450",
+          "#8eaa76",
+          "#dad8ac",
+          "#fff3d5"
+        ],
+        "stops": [
+          0,
+          0.18,
+          0.43,
+          0.7,
+          1
+        ],
+        "contrast": 1.08,
+        "lift": 0.025,
+        "gamma": 0.9,
+        "chromaRetention": 0.075,
+        "grain": 0.85
+      },
+      "paleSage": {
+        "label": "pale sage ceiling and secondary trim",
+        "palette": [
+          "#46533f",
+          "#77896a",
+          "#aab991",
+          "#d1d9b5",
+          "#f1f2d9"
+        ],
+        "stops": [
+          0,
+          0.2,
+          0.5,
+          0.78,
+          1
+        ],
+        "contrast": 0.88,
+        "lift": 0.075,
+        "gamma": 0.8,
+        "chromaRetention": 0.035,
+        "grain": 1
+      }
+    }
+  },
+  "targetCount": 64,
+  "files": [
+    {
+      "file": "public/textures/entrance/wall_bricks_2.webp",
+      "role": "entrance wall",
+      "profile": "creamWall",
+      "source": {
+        "bytes": 618734,
+        "sha256": "eb3019eb212f80debabcbd81c8d2d7446a1eb91ab8b100c14c14c923fe79b92f",
+        "format": "webp",
+        "width": 2048,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "37ec64e1f11a89d19d0f6af01da27935bfdba39dd94f10a78758b94c26e76d6d"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/entrance/wall_bricks_2.webp",
+        "bytes": 1191922,
+        "sha256": "592c852957328bb279bd6ed963ab932b59104ea2c6b784af1970c9ee779c08b2",
+        "format": "webp",
+        "width": 2048,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "37ec64e1f11a89d19d0f6af01da27935bfdba39dd94f10a78758b94c26e76d6d"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/entrance/floor_paper.webp",
+      "role": "entrance floor",
+      "profile": "paleWood",
+      "source": {
+        "bytes": 99334,
+        "sha256": "ff57e36e97e479725e581df9e45a37d322f4b527025cb38b5020aaf4f1e11ffe",
+        "format": "webp",
+        "width": 1024,
+        "height": 512,
+        "hasAlpha": false,
+        "alphaSha256": "043e238a765f7cfbc62596a50e53c8ffb6b188a99357b0ebede251725d67589f"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/entrance/floor_paper.webp",
+        "bytes": 218242,
+        "sha256": "09cb7cb1e0b6e89096928698db7c10b4da1ee5d5ce2fd6158f195759f93f4727",
+        "format": "webp",
+        "width": 1024,
+        "height": 512,
+        "hasAlpha": false,
+        "alphaSha256": "043e238a765f7cfbc62596a50e53c8ffb6b188a99357b0ebede251725d67589f"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/entrance/stone-path.webp",
+      "role": "entrance path",
+      "profile": "creamPaper",
+      "source": {
+        "bytes": 94498,
+        "sha256": "57fb31856c79212cc74d807866a8868c8eeff0e385219a677236aab09d1e0937",
+        "format": "webp",
+        "width": 389,
+        "height": 779,
+        "hasAlpha": true,
+        "alphaSha256": "7bc73d203960168ce502db0cd308e9d3d43057a95efcc6bdaa78f8117ce1ab86"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/entrance/stone-path.webp",
+        "bytes": 202236,
+        "sha256": "20c1e256e307d116cd8f5ff03f850ffc2f585507052a17156c45055c570addc2",
+        "format": "webp",
+        "width": 389,
+        "height": 779,
+        "hasAlpha": true,
+        "alphaSha256": "7bc73d203960168ce502db0cd308e9d3d43057a95efcc6bdaa78f8117ce1ab86"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/entrance/belka.webp",
+      "role": "entrance sign mount",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 62676,
+        "sha256": "e3afcaad0bf668f358c1ab36fcf25ddcd18f6ffd9590de4bf7972554831660ea",
+        "format": "webp",
+        "width": 2048,
+        "height": 256,
+        "hasAlpha": true,
+        "alphaSha256": "c487f2e4c0da1762aef9f6a7786eac0d701e593de0ca302e353a964c5d58d627"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/entrance/belka.webp",
+        "bytes": 210876,
+        "sha256": "63709e3d0764b3c3e824242e9baacd0c38f1d13fdacff869a061ff701c865ea9",
+        "format": "webp",
+        "width": 2048,
+        "height": 256,
+        "hasAlpha": true,
+        "alphaSha256": "c487f2e4c0da1762aef9f6a7786eac0d701e593de0ca302e353a964c5d58d627"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/entrance/sign.webp",
+      "role": "entrance sign",
+      "profile": "creamPaper",
+      "source": {
+        "bytes": 91540,
+        "sha256": "ecb9f586a781883a438593322837a0cf603fff2b07089573b06ff7ecc57c1946",
+        "format": "webp",
+        "width": 1802,
+        "height": 901,
+        "hasAlpha": true,
+        "alphaSha256": "9a7e26358a8206585e8d44f0fa2f6de757364b917584c8d3f73bf5f2b27fbda5"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/entrance/sign.webp",
+        "bytes": 782044,
+        "sha256": "faaee5c72ee8e297f3cde064aee51cfc38fc0716ab6f07b7b1b4ef09cb4daaea",
+        "format": "webp",
+        "width": 1802,
+        "height": 901,
+        "hasAlpha": true,
+        "alphaSha256": "9a7e26358a8206585e8d44f0fa2f6de757364b917584c8d3f73bf5f2b27fbda5"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/entrance/window_sketch.webp",
+      "role": "entrance window frame",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 88758,
+        "sha256": "87ff234c15f2b66c07220159cbde134fbb239dea7befd2e5614e0b8afe1bb7a4",
+        "format": "webp",
+        "width": 1024,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "d987e23dbc095faade25f35f5bc42146857bb87a26dab36c88d9047371e36a9a"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/entrance/window_sketch.webp",
+        "bytes": 319006,
+        "sha256": "25aefe6899291ef3fe31374fba20fdbb1f2c2863f2054ce4e776b62b138163b7",
+        "format": "webp",
+        "width": 1024,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "d987e23dbc095faade25f35f5bc42146857bb87a26dab36c88d9047371e36a9a"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/entrance/tree_sketch.webp",
+      "role": "entrance foliage",
+      "profile": "foliage",
+      "source": {
+        "bytes": 102420,
+        "sha256": "996b12df5244c6b802dafc173a14e5f1f54c37d0d699825f821dc4917a987965",
+        "format": "webp",
+        "width": 1024,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "9956df7cdd934b5951de5ebac429ded97256cd94bd789d4cd3e098710f28f257"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/entrance/tree_sketch.webp",
+        "bytes": 119184,
+        "sha256": "9d4615643e2f182a8cb095fcb83948a9e4b2be4e5e2d37ba60df3dbdff6cdf69",
+        "format": "webp",
+        "width": 1024,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "9956df7cdd934b5951de5ebac429ded97256cd94bd789d4cd3e098710f28f257"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/doors/frame_sketch.webp",
+      "role": "entrance door frame",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 21180,
+        "sha256": "d144662d65d0151746f82db61fbdaebdc9da3f5f6e43487b885d21e0d2637ca2",
+        "format": "webp",
+        "width": 718,
+        "height": 877,
+        "hasAlpha": true,
+        "alphaSha256": "9ef4240053d37afdf55792fe77ddd04349a5f55f62eaaa058f1595e5b0c72cc6"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/doors/frame_sketch.webp",
+        "bytes": 61394,
+        "sha256": "85a1bf8fcce013cbf79a8c6c92f5060b6b88536b2a5239ad3afb88ac8ee04348",
+        "format": "webp",
+        "width": 718,
+        "height": 877,
+        "hasAlpha": true,
+        "alphaSha256": "9ef4240053d37afdf55792fe77ddd04349a5f55f62eaaa058f1595e5b0c72cc6"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/doors/door_left_sketch.webp",
+      "role": "entrance left door sketch",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 24716,
+        "sha256": "64f478a25e204c7f0f72395e1fa466b11ef624fd68d83ad556996a7f2dc3ea8b",
+        "format": "webp",
+        "width": 332,
+        "height": 848,
+        "hasAlpha": false,
+        "alphaSha256": "92df675c57c7015aeac5b702daab921b1b4f1bf3f37435594b90f4f1dc2ffe55"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/doors/door_left_sketch.webp",
+        "bytes": 52280,
+        "sha256": "13d681b9059bf90e888d637d809ad37aad1a5f7b5bee59c807151f0432b7720c",
+        "format": "webp",
+        "width": 332,
+        "height": 848,
+        "hasAlpha": false,
+        "alphaSha256": "92df675c57c7015aeac5b702daab921b1b4f1bf3f37435594b90f4f1dc2ffe55"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/doors/door_left_painted.webp",
+      "role": "entrance left door painted",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 52568,
+        "sha256": "edd89cd5ae757dc7af5edfbe6642cd23ba30d20d0a57d84405ce90863b918fd3",
+        "format": "webp",
+        "width": 332,
+        "height": 848,
+        "hasAlpha": false,
+        "alphaSha256": "92df675c57c7015aeac5b702daab921b1b4f1bf3f37435594b90f4f1dc2ffe55"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/doors/door_left_painted.webp",
+        "bytes": 183428,
+        "sha256": "1cd4c95a1f66f62ad25b1682e88fd5bdf84be1d744ba5fcb6c2a73852f947441",
+        "format": "webp",
+        "width": 332,
+        "height": 848,
+        "hasAlpha": false,
+        "alphaSha256": "92df675c57c7015aeac5b702daab921b1b4f1bf3f37435594b90f4f1dc2ffe55"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/doors/door_right_sketch.webp",
+      "role": "entrance right door sketch",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 33892,
+        "sha256": "fa85735a271bedc820b37932113f5615575b92d9b6aab6e13e02a5ae25809b3e",
+        "format": "webp",
+        "width": 332,
+        "height": 848,
+        "hasAlpha": false,
+        "alphaSha256": "92df675c57c7015aeac5b702daab921b1b4f1bf3f37435594b90f4f1dc2ffe55"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/doors/door_right_sketch.webp",
+        "bytes": 56116,
+        "sha256": "4a5fb322cdf3940f346d15ed58c20dcbc0012313d7d23426c64cd4d4475bc23d",
+        "format": "webp",
+        "width": 332,
+        "height": 848,
+        "hasAlpha": false,
+        "alphaSha256": "92df675c57c7015aeac5b702daab921b1b4f1bf3f37435594b90f4f1dc2ffe55"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/doors/door_right_painted.webp",
+      "role": "entrance right door painted",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 57782,
+        "sha256": "b06f9df71dcbec73ebb990c15a7dc5afdaabb2dae695851c4006cc27a74acf21",
+        "format": "webp",
+        "width": 332,
+        "height": 848,
+        "hasAlpha": false,
+        "alphaSha256": "92df675c57c7015aeac5b702daab921b1b4f1bf3f37435594b90f4f1dc2ffe55"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/doors/door_right_painted.webp",
+        "bytes": 227902,
+        "sha256": "c2ec8f883d81f170a9e444ac1e9567d62e098603587f8ce193d8b1443cf742d5",
+        "format": "webp",
+        "width": 332,
+        "height": 848,
+        "hasAlpha": false,
+        "alphaSha256": "92df675c57c7015aeac5b702daab921b1b4f1bf3f37435594b90f4f1dc2ffe55"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/doors/handle_left_sketch.webp",
+      "role": "entrance left handle sketch",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 2792,
+        "sha256": "846c1c05d2db26b29fb7580e52b02a8545e1601171198f82732a1745844bbc6b",
+        "format": "webp",
+        "width": 332,
+        "height": 848,
+        "hasAlpha": true,
+        "alphaSha256": "9a75d83d97c3b712cd15ad4ae6ec8e5a27a38beb809abd5c6ed24eea3adf27ef"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/doors/handle_left_sketch.webp",
+        "bytes": 3466,
+        "sha256": "4a6848ca6edda65c4a18dd0836033ac6d74f8c88c251cabfd6201161810acb20",
+        "format": "webp",
+        "width": 332,
+        "height": 848,
+        "hasAlpha": true,
+        "alphaSha256": "9a75d83d97c3b712cd15ad4ae6ec8e5a27a38beb809abd5c6ed24eea3adf27ef"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/doors/handle_left_painted.webp",
+      "role": "entrance left handle painted",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 31570,
+        "sha256": "9b8e558021d40489eeb77923f44c4fda006211b82cca691897a497a248954328",
+        "format": "webp",
+        "width": 1280,
+        "height": 3328,
+        "hasAlpha": true,
+        "alphaSha256": "ba706407085f51f2e998250cb09540d3117a6a46051168a3e2a9eaee941cd7ca"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/doors/handle_left_painted.webp",
+        "bytes": 43100,
+        "sha256": "e92cf2e3ce32c5a17bdb115f4a2a5ed37cfa043f92c9959c2624e012059fbf9f",
+        "format": "webp",
+        "width": 1280,
+        "height": 3328,
+        "hasAlpha": true,
+        "alphaSha256": "ba706407085f51f2e998250cb09540d3117a6a46051168a3e2a9eaee941cd7ca"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/doors/handle_right_sketch.webp",
+      "role": "entrance right handle sketch",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 2988,
+        "sha256": "94c56eb11d252f76797381f448813649672231510daece24f4860c07128f5b9c",
+        "format": "webp",
+        "width": 332,
+        "height": 848,
+        "hasAlpha": true,
+        "alphaSha256": "fd1b2a9900d59ba39095ad71208eb4a9c9f06a9e60a7f48208bf244b514c30fa"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/doors/handle_right_sketch.webp",
+        "bytes": 3184,
+        "sha256": "48dd2a4c7eb70a477d704c666a2e5a5e67a2ae53e5229dac8ed0261618b35067",
+        "format": "webp",
+        "width": 332,
+        "height": 848,
+        "hasAlpha": true,
+        "alphaSha256": "fd1b2a9900d59ba39095ad71208eb4a9c9f06a9e60a7f48208bf244b514c30fa"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/doors/handle_right_painted.webp",
+      "role": "entrance right handle painted",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 10328,
+        "sha256": "8003f3bf4153a6890dd39b31d5a27c4806f5acd9c3fa5f3048928fce6c8957a4",
+        "format": "webp",
+        "width": 787,
+        "height": 2048,
+        "hasAlpha": true,
+        "alphaSha256": "ceb535c17ee6fa88259f9bb8dd9afbe9b11adf700bca0e0c4b9822f7eb682719"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/doors/handle_right_painted.webp",
+        "bytes": 18972,
+        "sha256": "8b9f91479273fc23c00fdb572c3433f2e3c468036042878d19e566325d443e96",
+        "format": "webp",
+        "width": 787,
+        "height": 2048,
+        "hasAlpha": true,
+        "alphaSha256": "ceb535c17ee6fa88259f9bb8dd9afbe9b11adf700bca0e0c4b9822f7eb682719"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/doors/door_back_left_sketch.webp",
+      "role": "entrance door back sketch",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 77776,
+        "sha256": "6cfeef254984cd30ebdfc846733887c6fe4b7d5fb3fda6e7ce0b6d897704bec5",
+        "format": "webp",
+        "width": 844,
+        "height": 2196,
+        "hasAlpha": false,
+        "alphaSha256": "969545deb6c49083f137951dd4d747ee934ae55f8ae0b6f047980e203ffa7633"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/doors/door_back_left_sketch.webp",
+        "bytes": 1402030,
+        "sha256": "c5207b051894ec9a55bb75ed7345d3a7ad03c371d0723d2d38cbda6296fef44a",
+        "format": "webp",
+        "width": 844,
+        "height": 2196,
+        "hasAlpha": false,
+        "alphaSha256": "969545deb6c49083f137951dd4d747ee934ae55f8ae0b6f047980e203ffa7633"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/doors/door_back.webp",
+      "role": "entrance door back",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 20534,
+        "sha256": "0ac01a958f5909e9e7eb7abba083a9fa1db7acb82d991773a7898c027adc9ba0",
+        "format": "webp",
+        "width": 332,
+        "height": 848,
+        "hasAlpha": false,
+        "alphaSha256": "92df675c57c7015aeac5b702daab921b1b4f1bf3f37435594b90f4f1dc2ffe55"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/doors/door_back.webp",
+        "bytes": 53442,
+        "sha256": "dc23bf6b74a66115de1cae532e0abfbc5c1fc1344c9919120eae49c599cb13ec",
+        "format": "webp",
+        "width": 332,
+        "height": 848,
+        "hasAlpha": false,
+        "alphaSha256": "92df675c57c7015aeac5b702daab921b1b4f1bf3f37435594b90f4f1dc2ffe55"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/doors/pien_sketch.webp",
+      "role": "entrance door edge sketch",
+      "profile": "paleWood",
+      "source": {
+        "bytes": 2312,
+        "sha256": "4134b3e18db937ad90490033ba2113981b5766c14268bd216c1c4fe1b5b0c42a",
+        "format": "webp",
+        "width": 44,
+        "height": 391,
+        "hasAlpha": false,
+        "alphaSha256": "8790c2e0c88a84e70c57f217dcc0de93d346dfd13706d8f3deccfeabd5160c12"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/doors/pien_sketch.webp",
+        "bytes": 5364,
+        "sha256": "abd2de57f69bf59749ad344f5bbdafbfbdbfa245247d425c1504410365ef3eae",
+        "format": "webp",
+        "width": 44,
+        "height": 391,
+        "hasAlpha": false,
+        "alphaSha256": "8790c2e0c88a84e70c57f217dcc0de93d346dfd13706d8f3deccfeabd5160c12"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/doors/pien.webp",
+      "role": "entrance door edge",
+      "profile": "paleWood",
+      "source": {
+        "bytes": 77624,
+        "sha256": "54511eb5b07bf00f2b4435413265474a5fa00e9d6e32bff1904bc983bd6c8118",
+        "format": "webp",
+        "width": 780,
+        "height": 2030,
+        "hasAlpha": false,
+        "alphaSha256": "942437d4eea11fab3bea6a16f8083d37a89f545d54cc322b0600ea8087da25fd"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/doors/pien.webp",
+        "bytes": 1123368,
+        "sha256": "f74e0dc7b7432b2bb79578293009e19be8944acd7396422486169a2981b7c122",
+        "format": "webp",
+        "width": 780,
+        "height": 2030,
+        "hasAlpha": false,
+        "alphaSha256": "942437d4eea11fab3bea6a16f8083d37a89f545d54cc322b0600ea8087da25fd"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/wall_texture.webp",
+      "role": "corridor wall",
+      "profile": "creamWall",
+      "source": {
+        "bytes": 7928,
+        "sha256": "2beed9531b152df2d61c0ada1db376b9ea1499b7700a5c01df582480885a4c2d",
+        "format": "webp",
+        "width": 1024,
+        "height": 512,
+        "hasAlpha": false,
+        "alphaSha256": "043e238a765f7cfbc62596a50e53c8ffb6b188a99357b0ebede251725d67589f"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/wall_texture.webp",
+        "bytes": 99922,
+        "sha256": "597f1f66549c166ab23f8758695013f422adde1516b27d9567696362e4586482",
+        "format": "webp",
+        "width": 1024,
+        "height": 512,
+        "hasAlpha": false,
+        "alphaSha256": "043e238a765f7cfbc62596a50e53c8ffb6b188a99357b0ebede251725d67589f"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/kawalekpodlogi.webp",
+      "role": "corridor floor",
+      "profile": "paleWood",
+      "source": {
+        "bytes": 99252,
+        "sha256": "e90934d464a569ee0ef6178b70723f24b43557a48f418d3b8599e2ed363e4c21",
+        "format": "webp",
+        "width": 1024,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "f5fb04aa5b882706b9309e885f19477261336ef76a150c3b4d3489dfac3953ec"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/kawalekpodlogi.webp",
+        "bytes": 650796,
+        "sha256": "b63dcf8b1b1c6a3d8cd15f05213b2a9de6aeee8650fbffe43169dbc17754871b",
+        "format": "webp",
+        "width": 1024,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "f5fb04aa5b882706b9309e885f19477261336ef76a150c3b4d3489dfac3953ec"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/texturadoprogow.webp",
+      "role": "corridor baseboard and threshold",
+      "profile": "paleSage",
+      "source": {
+        "bytes": 8004,
+        "sha256": "278cdfcf65143c5d1fd4d61772c8a10e1e68d01fd7546a1003ac3ed02ca73e10",
+        "format": "webp",
+        "width": 1024,
+        "height": 64,
+        "hasAlpha": false,
+        "alphaSha256": "71189f7fb6aed638640078fba3a35fda6c39c8962e74dcc75935aac948da9063"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/texturadoprogow.webp",
+        "bytes": 26504,
+        "sha256": "74f86d7808041e134efe84f110f87b8160121592b6b023d57644e62a869e0b79",
+        "format": "webp",
+        "width": 1024,
+        "height": 64,
+        "hasAlpha": false,
+        "alphaSha256": "71189f7fb6aed638640078fba3a35fda6c39c8962e74dcc75935aac948da9063"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/ceiling_texture.webp",
+      "role": "corridor ceiling",
+      "profile": "paleSage",
+      "source": {
+        "bytes": 23308,
+        "sha256": "0ebd116f45eb9e767e9f018c1f21da6589ed66e840c6675218626664c33942e8",
+        "format": "webp",
+        "width": 1024,
+        "height": 512,
+        "hasAlpha": false,
+        "alphaSha256": "043e238a765f7cfbc62596a50e53c8ffb6b188a99357b0ebede251725d67589f"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/ceiling_texture.webp",
+        "bytes": 37650,
+        "sha256": "951bb67faa0723ecd6f84fa4de5e0d882fe7bb5dd58824c3a73ff521708fa21b",
+        "format": "webp",
+        "width": 1024,
+        "height": 512,
+        "hasAlpha": false,
+        "alphaSha256": "043e238a765f7cfbc62596a50e53c8ffb6b188a99357b0ebede251725d67589f"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/texturadrewnadonozekbiurka.webp",
+      "role": "table legs",
+      "profile": "paleWood",
+      "source": {
+        "bytes": 32252,
+        "sha256": "211d82e7f7c5d0fe3af8067a7e9cf16c0e40d63d794618e2d9d2c819d2b004c0",
+        "format": "webp",
+        "width": 2048,
+        "height": 128,
+        "hasAlpha": false,
+        "alphaSha256": "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/texturadrewnadonozekbiurka.webp",
+        "bytes": 132982,
+        "sha256": "79aa3b3b46ff718ce30320ca08cf9dc50c8374603c9592643601b1d5bbc2de36",
+        "format": "webp",
+        "width": 2048,
+        "height": 128,
+        "hasAlpha": false,
+        "alphaSha256": "3b874d3ba46c638fc3094f8e92fb744ca974893873f8885f54e23760f9b6311b"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/gorastolika.webp",
+      "role": "table top",
+      "profile": "paleWood",
+      "source": {
+        "bytes": 96594,
+        "sha256": "c6b4f0161ff5932aeb4e2bbed14a7177d354f9dc08499b260fff8950e8c27cf3",
+        "format": "webp",
+        "width": 2048,
+        "height": 512,
+        "hasAlpha": false,
+        "alphaSha256": "f5fb04aa5b882706b9309e885f19477261336ef76a150c3b4d3489dfac3953ec"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/gorastolika.webp",
+        "bytes": 557934,
+        "sha256": "2e7866acfd47c77d422e0ad1bb9cd29e838e26b462a90a447d948bba844bdabc",
+        "format": "webp",
+        "width": 2048,
+        "height": 512,
+        "hasAlpha": false,
+        "alphaSha256": "f5fb04aa5b882706b9309e885f19477261336ef76a150c3b4d3489dfac3953ec"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/szafkaprzod.webp",
+      "role": "cabinet front",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 97268,
+        "sha256": "9fa8340fa66cc2872b085e8f03c4dfcdf0eaba9cac22d52fc1a251b1bd7d1531",
+        "format": "webp",
+        "width": 1024,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "f5fb04aa5b882706b9309e885f19477261336ef76a150c3b4d3489dfac3953ec"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/szafkaprzod.webp",
+        "bytes": 413090,
+        "sha256": "862c1462efabfd34305cf65298fd392c15434270e0195d5eb6e9bb6b0785ab9a",
+        "format": "webp",
+        "width": 1024,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "f5fb04aa5b882706b9309e885f19477261336ef76a150c3b4d3489dfac3953ec"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/szafkaprzodgora.webp",
+      "role": "cabinet body",
+      "profile": "paleSage",
+      "source": {
+        "bytes": 54458,
+        "sha256": "f807c4fe0222b12c96cd23eb32534c3fa883452f22cab9b0cd75e54161242b44",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "043e238a765f7cfbc62596a50e53c8ffb6b188a99357b0ebede251725d67589f"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/szafkaprzodgora.webp",
+        "bytes": 256992,
+        "sha256": "4fb17c0ba0589a218618a56e54ad32f2d22234608c364761a861d14433de57f3",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "043e238a765f7cfbc62596a50e53c8ffb6b188a99357b0ebede251725d67589f"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/drzewkowdoniczce.webp",
+      "role": "potted tree",
+      "profile": "foliage",
+      "source": {
+        "bytes": 263516,
+        "sha256": "e43e9621b6068b9036077deb0f7fe3b9331c865e0edc6992c4cef53d7536e6e2",
+        "format": "webp",
+        "width": 1024,
+        "height": 2048,
+        "hasAlpha": true,
+        "alphaSha256": "cc6b7ecdb8ff176d4fce80138c39e87134673780eee6897265afc5afc096a97a"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/drzewkowdoniczce.webp",
+        "bytes": 701210,
+        "sha256": "8c510ae148d28f22a90db9b9c1d1298976e8bb25b784e607281e098d00b37e97",
+        "format": "webp",
+        "width": 1024,
+        "height": 2048,
+        "hasAlpha": true,
+        "alphaSha256": "cc6b7ecdb8ff176d4fce80138c39e87134673780eee6897265afc5afc096a97a"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/kwiatekwdoniczce.webp",
+      "role": "small potted plant",
+      "profile": "foliage",
+      "source": {
+        "bytes": 11110,
+        "sha256": "cca8d22ba82b6d70b8104642cbf8f095f616729c560c606c881daa157e087c3b",
+        "format": "webp",
+        "width": 128,
+        "height": 256,
+        "hasAlpha": true,
+        "alphaSha256": "c60453d451aa084a7d2f9c256de250a05a6fd560bd1404969d4be969a8ecaaf7"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/kwiatekwdoniczce.webp",
+        "bytes": 19550,
+        "sha256": "604670f34563fb89ecc64d8fdf53f6866a47f8de35bc55882de4ce0febcc59ea",
+        "format": "webp",
+        "width": 128,
+        "height": 256,
+        "hasAlpha": true,
+        "alphaSha256": "c60453d451aa084a7d2f9c256de250a05a6fd560bd1404969d4be969a8ecaaf7"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/kratkawentylacyjna.webp",
+      "role": "vent grille",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 35684,
+        "sha256": "1037bd9a9a807a4cae268cc4ea38e10a6620aa4e82593290156a52f197b10836",
+        "format": "webp",
+        "width": 2048,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "cddc5489eb190d57caf321cabdc8ecc65f54bd73f838fd3ed29b5140553ea4eb"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/kratkawentylacyjna.webp",
+        "bytes": 250726,
+        "sha256": "9ad554bf71f8840dd5c3404b4bd2e0e90f6e3f692aef5b039af268bc181203ab",
+        "format": "webp",
+        "width": 2048,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "cddc5489eb190d57caf321cabdc8ecc65f54bd73f838fd3ed29b5140553ea4eb"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/kratanalampy.webp",
+      "role": "lamp grille",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 88050,
+        "sha256": "13e6e3febec1a7aba239804cf1646b98452bc6933983f0c9334df910922c54ae",
+        "format": "webp",
+        "width": 1515,
+        "height": 757,
+        "hasAlpha": true,
+        "alphaSha256": "aa441560adcc5293663768f96a0df6a4e9cbfadf7702dfdddbf4fc6a3b4e142c"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/kratanalampy.webp",
+        "bytes": 253170,
+        "sha256": "cd0c11da65197572298040feb906288353962fadb7ca66ac9c3031be4f28d10a",
+        "format": "webp",
+        "width": 1515,
+        "height": 757,
+        "hasAlpha": true,
+        "alphaSha256": "aa441560adcc5293663768f96a0df6a4e9cbfadf7702dfdddbf4fc6a3b4e142c"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/bokilampy.webp",
+      "role": "lamp housing",
+      "profile": "paleSage",
+      "source": {
+        "bytes": 634,
+        "sha256": "572463cb2d0654b23392868fa2d5fda737e7fb2e1a126cc082b20c30647dbeb7",
+        "format": "webp",
+        "width": 1024,
+        "height": 64,
+        "hasAlpha": false,
+        "alphaSha256": "71189f7fb6aed638640078fba3a35fda6c39c8962e74dcc75935aac948da9063"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/bokilampy.webp",
+        "bytes": 2812,
+        "sha256": "6c98718f6b5524a87ad325fd428695ab4715ac0b1d75df71de795ad06b7b7bb9",
+        "format": "webp",
+        "width": 1024,
+        "height": 64,
+        "hasAlpha": false,
+        "alphaSha256": "71189f7fb6aed638640078fba3a35fda6c39c8962e74dcc75935aac948da9063"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/ramkanazdjecieduza.webp",
+      "role": "large picture frame sketch",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 67222,
+        "sha256": "cf8388bc3f722a31ad54978efacfc931cf1dda8ef37eb76679e57234cdfbee2f",
+        "format": "webp",
+        "width": 2048,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "3fd9274acf91862d277f6e6ec16a1209304feca8e94d488c8318c78dec293479"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/ramkanazdjecieduza.webp",
+        "bytes": 243640,
+        "sha256": "48e7c380b17ba154391b2858d0ee1c898ebf3703b80e4ecc508cead89847f80f",
+        "format": "webp",
+        "width": 2048,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "3fd9274acf91862d277f6e6ec16a1209304feca8e94d488c8318c78dec293479"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/ramkanazdjecieduza_painted.webp",
+      "role": "large picture frame painted",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 76140,
+        "sha256": "a086e5fe5e7ff82bae623b1502ce4a8decf13ae230ad18c2dd4bdc6ed6af6594",
+        "format": "webp",
+        "width": 2048,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "4bda3a28f4ffe603c0ec1258c0034d65a1a0d35ab7bd523a834608adabf03cc5"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/ramkanazdjecieduza_painted.webp",
+        "bytes": 703520,
+        "sha256": "2a050e44a739a9d0da6df4402f2f066ed622205a1ca6d0dd0cb85816e744aaa9",
+        "format": "webp",
+        "width": 2048,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "4bda3a28f4ffe603c0ec1258c0034d65a1a0d35ab7bd523a834608adabf03cc5"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/ramkanazdjeciemala.webp",
+      "role": "small standing frame",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 44876,
+        "sha256": "2772837893cbcc869371dc7d2f3e74195354bd58b4981562a1196df139dd991e",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "fa1d3171821692e8c4a7e9511dc5e4702f50ad9bd719924b22e392f28bd79037"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/ramkanazdjeciemala.webp",
+        "bytes": 139604,
+        "sha256": "3f1bc9b037ca0fa0f782052a8759ca338f1462228729dc8f75f64af95e8b7421",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "fa1d3171821692e8c4a7e9511dc5e4702f50ad9bd719924b22e392f28bd79037"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/pustatabliczka.webp",
+      "role": "corridor sign plate",
+      "profile": "creamPaper",
+      "source": {
+        "bytes": 92314,
+        "sha256": "61c2aff68e5583a0f1bb991db51e7714b3e3dc568817b458868e164c5d8eef97",
+        "format": "webp",
+        "width": 2048,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "4bda3a28f4ffe603c0ec1258c0034d65a1a0d35ab7bd523a834608adabf03cc5"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/pustatabliczka.webp",
+        "bytes": 1003444,
+        "sha256": "68f5e75ca9ba059e3ec4a778d68201f4a108e4339400e06946776eb2f2c5cdf8",
+        "format": "webp",
+        "width": 2048,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "4bda3a28f4ffe603c0ec1258c0034d65a1a0d35ab7bd523a834608adabf03cc5"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/strzalka.webp",
+      "role": "corridor direction arrow",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 1128,
+        "sha256": "83556ecbe78a20890289dab9a8acf1559b6ed5eb73e744f8984eec7bf7869adc",
+        "format": "webp",
+        "width": 128,
+        "height": 64,
+        "hasAlpha": true,
+        "alphaSha256": "93c4069843be72dc067065375d7d9cde91482c3530aa66dfa0d33e770ee6861a"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/strzalka.webp",
+        "bytes": 1482,
+        "sha256": "ae03e7b6787338b8c9c6787dd7828d5880d7da31b3e2ad7fcacf9184f99a1a4a",
+        "format": "webp",
+        "width": 128,
+        "height": 64,
+        "hasAlpha": true,
+        "alphaSha256": "93c4069843be72dc067065375d7d9cde91482c3530aa66dfa0d33e770ee6861a"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/frame_sketch.webp",
+      "role": "corridor end-door frame",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 13686,
+        "sha256": "04bb23d3f4c720180ea5f211ada5e26dd985a325b2564eac3d8d723a2b4f55df",
+        "format": "webp",
+        "width": 512,
+        "height": 512,
+        "hasAlpha": true,
+        "alphaSha256": "c016e05b7db8d32a177dbb027db1f9c3a5dd4d7e0d77a74f665139ad42f83702"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/frame_sketch.webp",
+        "bytes": 38212,
+        "sha256": "43c66f961c40858b6f38a6b75fd7896dd93eed6fbb6be1d5f1756d4985e8822c",
+        "format": "webp",
+        "width": 512,
+        "height": 512,
+        "hasAlpha": true,
+        "alphaSha256": "c016e05b7db8d32a177dbb027db1f9c3a5dd4d7e0d77a74f665139ad42f83702"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/doorrleft.webp",
+      "role": "corridor end door left",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 19198,
+        "sha256": "85ed9e0bb7b2f2cb09e6cec3f57f6878145c461d5b48b14c3e5379dcd62a48ba",
+        "format": "webp",
+        "width": 256,
+        "height": 512,
+        "hasAlpha": false,
+        "alphaSha256": "b5a41c3758763bbec72769fab4a2533bf2db0b6312d93d25a695f9e4b9e02260"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/doorrleft.webp",
+        "bytes": 62320,
+        "sha256": "d4f09f9f2fb4d7e435e68c0b8169c945ac5f61a4b0396dd137684ffa3ad79f25",
+        "format": "webp",
+        "width": 256,
+        "height": 512,
+        "hasAlpha": false,
+        "alphaSha256": "b5a41c3758763bbec72769fab4a2533bf2db0b6312d93d25a695f9e4b9e02260"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/dorright.webp",
+      "role": "corridor end door right",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 18904,
+        "sha256": "2ca63f4d42be97a09cc7e7d38a82fc76b5385f057f8cfe4768f8c3237fec195e",
+        "format": "webp",
+        "width": 256,
+        "height": 512,
+        "hasAlpha": false,
+        "alphaSha256": "b5a41c3758763bbec72769fab4a2533bf2db0b6312d93d25a695f9e4b9e02260"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/dorright.webp",
+        "bytes": 62376,
+        "sha256": "54ebc212c532e9cb80c3e53a80976d2f4ad3113e663466f933be213cc9ae45d6",
+        "format": "webp",
+        "width": 256,
+        "height": 512,
+        "hasAlpha": false,
+        "alphaSha256": "b5a41c3758763bbec72769fab4a2533bf2db0b6312d93d25a695f9e4b9e02260"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/handle_left_sketch.webp",
+      "role": "corridor end handle left",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 2016,
+        "sha256": "7c59571589fa401e808bc9e5474da2fd2097a7889d5d0afae36cd7440458c5c7",
+        "format": "webp",
+        "width": 256,
+        "height": 512,
+        "hasAlpha": true,
+        "alphaSha256": "182c06a9da181e79df89f5f4d851f74bd071fda44401149d5afe82e1a27fb336"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/handle_left_sketch.webp",
+        "bytes": 2766,
+        "sha256": "53c7c19629fa1b391be8e98b412536176aa3cd18e3600718afbae1d89106a9b3",
+        "format": "webp",
+        "width": 256,
+        "height": 512,
+        "hasAlpha": true,
+        "alphaSha256": "182c06a9da181e79df89f5f4d851f74bd071fda44401149d5afe82e1a27fb336"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/handle_right_sketch.webp",
+      "role": "corridor end handle right",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 1794,
+        "sha256": "a6c9e91d46deefcd65ff4522eed499e615e09ee042ca57f1dd663a806ec2871d",
+        "format": "webp",
+        "width": 256,
+        "height": 512,
+        "hasAlpha": true,
+        "alphaSha256": "017f06dad35ed04e378cbaa8b4ac63c797c3ce12af46ab46a4c18710c11b2803"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/handle_right_sketch.webp",
+        "bytes": 2726,
+        "sha256": "1816b7b39f4108950ac4c3885e3c791c17ea55c6cf59349ff0cea7b3a3ffc5b2",
+        "format": "webp",
+        "width": 256,
+        "height": 512,
+        "hasAlpha": true,
+        "alphaSha256": "017f06dad35ed04e378cbaa8b4ac63c797c3ce12af46ab46a4c18710c11b2803"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/door_back.webp",
+      "role": "corridor end door back",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 9636,
+        "sha256": "1dafe7c4a227fea10fcca5b48e7150ff0014532ac2d3099e0f011839bcef82dc",
+        "format": "webp",
+        "width": 256,
+        "height": 512,
+        "hasAlpha": false,
+        "alphaSha256": "b5a41c3758763bbec72769fab4a2533bf2db0b6312d93d25a695f9e4b9e02260"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/door_back.webp",
+        "bytes": 32246,
+        "sha256": "48312007d6bfacae030d424210d3e773933180db95df5582f3a4bbb12e8c1916",
+        "format": "webp",
+        "width": 256,
+        "height": 512,
+        "hasAlpha": false,
+        "alphaSha256": "b5a41c3758763bbec72769fab4a2533bf2db0b6312d93d25a695f9e4b9e02260"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/pien.webp",
+      "role": "corridor end door edge",
+      "profile": "paleWood",
+      "source": {
+        "bytes": 724,
+        "sha256": "828bfb4907e8a9190cf36c5ad16a56fa9477f81a1fd6c594a47b924da1c64109",
+        "format": "webp",
+        "width": 32,
+        "height": 256,
+        "hasAlpha": false,
+        "alphaSha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/pien.webp",
+        "bytes": 2912,
+        "sha256": "d541b7475008d5066b9daa0739decfe294f1e4bce86eb3dc560614dc81953e9a",
+        "format": "webp",
+        "width": 32,
+        "height": 256,
+        "hasAlpha": false,
+        "alphaSha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/ramkasingledoors.webp",
+      "role": "room door frame",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 31510,
+        "sha256": "06a8e22d698c2abc3965b9e2b16339ef7026a0119b38006616a31df7b08dd393",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "baf3d8ba5a2b14dd71594bcb7287a724f83b5d8d4712b62c6ed9d84b1d440701"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/ramkasingledoors.webp",
+        "bytes": 94224,
+        "sha256": "88e75db4d5ef3abb435e6db896723acbf1b2f1f9c87c94b793d0d59c055d838c",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "baf3d8ba5a2b14dd71594bcb7287a724f83b5d8d4712b62c6ed9d84b1d440701"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/klamkadodrzwi.webp",
+      "role": "room handle sketch",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 4276,
+        "sha256": "060bbca0c5b034008ef2843acee088608db94ae18d2aacf5101905e1a1c981cd",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "dff42fceebc279021be54063847347b21b60851007495e86f3b9916312ad4e79"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/klamkadodrzwi.webp",
+        "bytes": 6432,
+        "sha256": "63a3dcbf715d19a3a84f90540e3f184d7b5e9072bdb4c7262a52f6267c17661a",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "dff42fceebc279021be54063847347b21b60851007495e86f3b9916312ad4e79"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/klamkadodrzwi_painted.webp",
+      "role": "room handle painted",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 4598,
+        "sha256": "9a54e12eff8ac3a67f72c0b7c792a3f6003bfa12a4855921780c8bf8bd785b1a",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "bb91e76c713917b2c232a2f73d19ec5b99090d6213de8517d7f0a83f919de650"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/klamkadodrzwi_painted.webp",
+        "bytes": 7280,
+        "sha256": "d28db09e489c60687b6fd69c6a76932579054b19c5114df26e735ad09ed4e49d",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": true,
+        "alphaSha256": "bb91e76c713917b2c232a2f73d19ec5b99090d6213de8517d7f0a83f919de650"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/backsingledoors.webp",
+      "role": "room door back",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 23392,
+        "sha256": "6d815bc480522d5aaa54c95e8250c8b947f3a8484c196fa47d6f5abcc79d41ac",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "043e238a765f7cfbc62596a50e53c8ffb6b188a99357b0ebede251725d67589f"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/backsingledoors.webp",
+        "bytes": 111220,
+        "sha256": "b71bb564222754445a4f02b599cc7fce3ee4f99606d63492f2ec599a710308f1",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "043e238a765f7cfbc62596a50e53c8ffb6b188a99357b0ebede251725d67589f"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/drzwiprojekty.webp",
+      "role": "gallery door sketch",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 77904,
+        "sha256": "3ff5b9c9babf7d340398687c212fa500ec04c779a55242f9ffb1538ba79187ff",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "043e238a765f7cfbc62596a50e53c8ffb6b188a99357b0ebede251725d67589f"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/drzwiprojekty.webp",
+        "bytes": 281130,
+        "sha256": "b6351c68afe917dde20186e8751408b3c88c85c82040b5f8e81b9e7a37e22a09",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "043e238a765f7cfbc62596a50e53c8ffb6b188a99357b0ebede251725d67589f"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/drzwiprojekty_painted.webp",
+      "role": "gallery door painted",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 91476,
+        "sha256": "edd2071b427433004aafbb0b9392f450b7dcc8213c42b3ca525e55e8101f9534",
+        "format": "webp",
+        "width": 880,
+        "height": 1761,
+        "hasAlpha": false,
+        "alphaSha256": "7928e252bf6a7ae14c00d540038394efd7f39f62a4572e858d2f4c398bed6aac"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/drzwiprojekty_painted.webp",
+        "bytes": 1230948,
+        "sha256": "50c00a9f954c9221fa8a5ce8140ecc5a0ce857067c8ecc1a74ad0a12fae27739",
+        "format": "webp",
+        "width": 880,
+        "height": 1761,
+        "hasAlpha": false,
+        "alphaSha256": "7928e252bf6a7ae14c00d540038394efd7f39f62a4572e858d2f4c398bed6aac"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/drzwisocial.webp",
+      "role": "studio door sketch",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 82204,
+        "sha256": "213a9c9ba0c41b8dd7d5b536575c0f44d3601fb0a43f5b658c0a42b52ce91990",
+        "format": "webp",
+        "width": 1024,
+        "height": 2048,
+        "hasAlpha": false,
+        "alphaSha256": "4bda3a28f4ffe603c0ec1258c0034d65a1a0d35ab7bd523a834608adabf03cc5"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/drzwisocial.webp",
+        "bytes": 803340,
+        "sha256": "93d43d42da193e79fdba13267ebe9ec9bcd25d24fee8db661d54ec5224f1cb04",
+        "format": "webp",
+        "width": 1024,
+        "height": 2048,
+        "hasAlpha": false,
+        "alphaSha256": "4bda3a28f4ffe603c0ec1258c0034d65a1a0d35ab7bd523a834608adabf03cc5"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/drzwisocial_painted.webp",
+      "role": "studio door painted",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 94888,
+        "sha256": "a5e226f07aea071488c93fcea3f8652d3c62a01fcc4cad8efa01cb04f26ad808",
+        "format": "webp",
+        "width": 1024,
+        "height": 2048,
+        "hasAlpha": false,
+        "alphaSha256": "4bda3a28f4ffe603c0ec1258c0034d65a1a0d35ab7bd523a834608adabf03cc5"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/drzwisocial_painted.webp",
+        "bytes": 1720360,
+        "sha256": "bed2d580085b78f6ee6adb8cea5ba51abac77a74f269491160c111ccdfedcde6",
+        "format": "webp",
+        "width": 1024,
+        "height": 2048,
+        "hasAlpha": false,
+        "alphaSha256": "4bda3a28f4ffe603c0ec1258c0034d65a1a0d35ab7bd523a834608adabf03cc5"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/drzwiabout.webp",
+      "role": "about door sketch",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 33862,
+        "sha256": "fc8a1e8aa4b5f9075eba8d1f1ba2326dde52d2f3b93ce15be68e347686d62277",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "043e238a765f7cfbc62596a50e53c8ffb6b188a99357b0ebede251725d67589f"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/drzwiabout.webp",
+        "bytes": 159192,
+        "sha256": "cd7ef8df23b00c098cfdeafd9426f73f7a4f9673e5645b2e5e913ebe4dd24d29",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "043e238a765f7cfbc62596a50e53c8ffb6b188a99357b0ebede251725d67589f"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/drzwiabout_painted.webp",
+      "role": "about door painted",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 83712,
+        "sha256": "c8faf747774955a4e04edbd5d75fe7aa893ad6b268fd369f83895d06eb9f696b",
+        "format": "webp",
+        "width": 1024,
+        "height": 2048,
+        "hasAlpha": false,
+        "alphaSha256": "4bda3a28f4ffe603c0ec1258c0034d65a1a0d35ab7bd523a834608adabf03cc5"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/drzwiabout_painted.webp",
+        "bytes": 1583118,
+        "sha256": "850a1b4bfaf44e074fd2cdda912f3b6f0674aae911905aa030a55cf80845c847",
+        "format": "webp",
+        "width": 1024,
+        "height": 2048,
+        "hasAlpha": false,
+        "alphaSha256": "4bda3a28f4ffe603c0ec1258c0034d65a1a0d35ab7bd523a834608adabf03cc5"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/drzwikontakt.webp",
+      "role": "contact door sketch",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 36668,
+        "sha256": "32d989cb0ca19460757e5a618319610d2457471729189ba465144f4b46818d8b",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "043e238a765f7cfbc62596a50e53c8ffb6b188a99357b0ebede251725d67589f"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/drzwikontakt.webp",
+        "bytes": 178900,
+        "sha256": "55b779fa5af059808b70f7d9b0990e1a1dcf858b74a203370e82fa62357a8e09",
+        "format": "webp",
+        "width": 512,
+        "height": 1024,
+        "hasAlpha": false,
+        "alphaSha256": "043e238a765f7cfbc62596a50e53c8ffb6b188a99357b0ebede251725d67589f"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/doors/drzwikontakt_painted.webp",
+      "role": "contact door painted",
+      "profile": "creamSageDoor",
+      "source": {
+        "bytes": 75408,
+        "sha256": "085fa7829920769b067aabd0b3fc4647c410402846fb1fbf68bc40750040bdf5",
+        "format": "webp",
+        "width": 880,
+        "height": 1761,
+        "hasAlpha": false,
+        "alphaSha256": "7928e252bf6a7ae14c00d540038394efd7f39f62a4572e858d2f4c398bed6aac"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/doors/drzwikontakt_painted.webp",
+        "bytes": 1246498,
+        "sha256": "80fb7b58a22d4b1525fec3b66df99da906b577dccd1dbfdab17e4fb24c82f504",
+        "format": "webp",
+        "width": 880,
+        "height": 1761,
+        "hasAlpha": false,
+        "alphaSha256": "7928e252bf6a7ae14c00d540038394efd7f39f62a4572e858d2f4c398bed6aac"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/decorations/while_true_loop.webp",
+      "role": "code doodle",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 49136,
+        "sha256": "b89dc12b0feac0cefdd956b4c4c458469f93554fe3e8e48ea306fa5230e58f15",
+        "format": "webp",
+        "width": 1249,
+        "height": 624,
+        "hasAlpha": true,
+        "alphaSha256": "bdddd2eade0d1c92c678a9632ca1d421041e465e279926afb9f2cd8792e535ba"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/decorations/while_true_loop.webp",
+        "bytes": 146134,
+        "sha256": "3fb90cd1b8a30f20afe0e6bd9820c43f97bf6ee49ca6af330d9ef722f3ccfd28",
+        "format": "webp",
+        "width": 1249,
+        "height": 624,
+        "hasAlpha": true,
+        "alphaSha256": "bdddd2eade0d1c92c678a9632ca1d421041e465e279926afb9f2cd8792e535ba"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/decorations/coffee_debug.webp",
+      "role": "coffee debug doodle",
+      "profile": "creamPaper",
+      "source": {
+        "bytes": 58252,
+        "sha256": "10758d287465502973fa461992244ab0e5c883a9c52719ba9b4ced7392bc5309",
+        "format": "webp",
+        "width": 1761,
+        "height": 880,
+        "hasAlpha": true,
+        "alphaSha256": "2b041c02830150cff605259e2a3e243fe4ea0b6f7ad11d4a1b2ef0bd4f8cd443"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/decorations/coffee_debug.webp",
+        "bytes": 116880,
+        "sha256": "e3d1931149de23074a29c10c20c9df49a69d40e9368a765e2db10b7b1519e475",
+        "format": "webp",
+        "width": 1761,
+        "height": 880,
+        "hasAlpha": true,
+        "alphaSha256": "2b041c02830150cff605259e2a3e243fe4ea0b6f7ad11d4a1b2ef0bd4f8cd443"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/decorations/idea_process.webp",
+      "role": "idea doodle",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 95094,
+        "sha256": "f233320c9a564eebe55c0a56bb1bea90c7b0f7382b04c38ec0e6d4069271e471",
+        "format": "webp",
+        "width": 604,
+        "height": 1208,
+        "hasAlpha": true,
+        "alphaSha256": "8bf11adbd308ddf508e2af017bba5dfd81dd534f29eb9e69e4ea1778e5b86908"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/decorations/idea_process.webp",
+        "bytes": 171756,
+        "sha256": "0e277e3ee8ed7e3cd714eac8b5a4daaa02bf1feba8eb464729fd892b2a34f437",
+        "format": "webp",
+        "width": 604,
+        "height": 1208,
+        "hasAlpha": true,
+        "alphaSha256": "8bf11adbd308ddf508e2af017bba5dfd81dd534f29eb9e69e4ea1778e5b86908"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/decorations/paper_ball.webp",
+      "role": "paper ball",
+      "profile": "creamPaper",
+      "source": {
+        "bytes": 8006,
+        "sha256": "2e40ec6290fb33fe520e60bca028a676b252442fea2149524fc4c87ecec3ec85",
+        "format": "webp",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "alphaSha256": "d4f81e088c161a84fb0192e62d54fe5c4ebf4ef10db3a3bdaab0781bceb82e5d"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/decorations/paper_ball.webp",
+        "bytes": 19736,
+        "sha256": "78918d2642ef1ac8c223670541c0748f57c9f5eb806a3358078b52ebb8126830",
+        "format": "webp",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "alphaSha256": "d4f81e088c161a84fb0192e62d54fe5c4ebf4ef10db3a3bdaab0781bceb82e5d"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/decorations/paper_airplane.webp",
+      "role": "paper airplane",
+      "profile": "creamPaper",
+      "source": {
+        "bytes": 3660,
+        "sha256": "68edfbe8832e73ed6c365aad98d2646766737b17579b48e798b9ab0c1f4bbc90",
+        "format": "webp",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "alphaSha256": "d6aea619f7a56bed1b3dcbefb402f9ee56dd3a4ce969f9e47839398bdf0d6862"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/decorations/paper_airplane.webp",
+        "bytes": 8074,
+        "sha256": "483f7bc61803e9650d0fd65de7966a81542029444b1d8f9c2a6db6877ad540bb",
+        "format": "webp",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "alphaSha256": "d6aea619f7a56bed1b3dcbefb402f9ee56dd3a4ce969f9e47839398bdf0d6862"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/decorations/pencil.webp",
+      "role": "pencil",
+      "profile": "paleWood",
+      "source": {
+        "bytes": 4066,
+        "sha256": "d5915ffaa802052d5a9a584cdbc2bff1b001a366be4a9e498a280fb127c0af1f",
+        "format": "webp",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "alphaSha256": "7ab6fbe2c6d9be711f77039692352dfcceb91eeec64febb4b6f92a8bb8f5f31c"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/decorations/pencil.webp",
+        "bytes": 8860,
+        "sha256": "ad45dd857c943c0bba7ed2f1b093e2e34274847f65220dcfabf975e32f4bcbd3",
+        "format": "webp",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "alphaSha256": "7ab6fbe2c6d9be711f77039692352dfcceb91eeec64febb4b6f92a8bb8f5f31c"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    },
+    {
+      "file": "public/textures/corridor/decorations/coffee_cup.webp",
+      "role": "coffee cup",
+      "profile": "sageAccent",
+      "source": {
+        "bytes": 4748,
+        "sha256": "991ae1f27ce0a574805badba81d174de0c6ddc522cdb9d6f3ca97981a9bfe8d6",
+        "format": "webp",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "alphaSha256": "57487716f743be8a04a80e384d98a3ca0b934d05a4f148feb1eb7f0a724ffca8"
+      },
+      "staged": {
+        "file": "tmp/sage-gallery-theme/public/textures/corridor/decorations/coffee_cup.webp",
+        "bytes": 11392,
+        "sha256": "fb291965658c97326497043ea8668b6c3c122cd56625220307731ab07b6d4ae0",
+        "format": "webp",
+        "width": 256,
+        "height": 256,
+        "hasAlpha": true,
+        "alphaSha256": "57487716f743be8a04a80e384d98a3ca0b934d05a4f148feb1eb7f0a724ffca8"
+      },
+      "checks": {
+        "dimensionsMatch": true,
+        "alphaBytesMatch": true,
+        "sourceWasNotModified": true
+      }
+    }
+  ]
+}
